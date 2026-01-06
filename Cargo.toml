@@ -1,0 +1,20 @@
+[package]
+name = "nostrnative"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+nostr-sdk = { version = "0.36.0", features = ["nip04", "nip59"] }
+tauri = { version = "2.0", optional = true }
+tokio = { version = "1", features = ["full"] }
+
+[features]
+default = ["keys"]
+full = ["keys", "calendar", "profile", "messages"]
+keys = []
+calendar = ["keys"]
+profile = ["keys"]
+messages = ["keys"]
+tauri-plugin = ["dep:tauri"]
