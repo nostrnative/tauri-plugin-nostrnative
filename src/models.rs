@@ -47,6 +47,14 @@ pub struct UserProfile {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum BookmarkSource {
+    Public,
+    Private,
+    Website,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EventResponse {
     pub id: String,
     pub pubkey: String,
@@ -55,4 +63,25 @@ pub struct EventResponse {
     pub tags: Vec<Vec<String>>,
     pub content: String,
     pub is_private: bool,
+    pub bech32: Option<String>,
+    pub private_tags: Option<Vec<Vec<String>>>,
+    pub source: Option<BookmarkSource>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ChatMessageRequest {
+    pub content: String,
+    pub conversation_id: String, // d-tag
+    pub role: String,            // user/assistant
+    pub client: String,
+    pub reply_to: Option<String>, // e-tag
+    pub event_id: Option<String>,
+    pub context_ids: Option<Vec<String>>,
+    pub blob_hashes: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PnsDerivedKeys {
+    pub public_key: String,
+    pub secret_key: String,
 }

@@ -17,6 +17,15 @@ pub mod profile;
 #[cfg(feature = "messages")]
 pub mod messages;
 
+#[cfg(feature = "bookmarks")]
+pub mod bookmarks;
+
+#[cfg(feature = "blossom")]
+pub mod blossom;
+
+#[cfg(feature = "chat")]
+pub mod chat;
+
 #[cfg(feature = "tauri-plugin")]
 pub mod tauri_plugin;
 

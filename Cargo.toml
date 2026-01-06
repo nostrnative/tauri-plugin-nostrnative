@@ -9,12 +9,21 @@ serde_json = "1.0"
 nostr-sdk = { version = "0.36.0", features = ["nip04", "nip59"] }
 tauri = { version = "2.0", optional = true }
 tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json", "blocking"], optional = true }
+base64 = { version = "0.22", optional = true }
+urlencoding = { version = "2.1", optional = true }
+sha2 = { version = "0.10", optional = true }
+hkdf = { version = "0.12", optional = true }
+hex = { version = "0.4", optional = true }
 
 [features]
 default = ["keys"]
-full = ["keys", "calendar", "profile", "messages"]
+full = ["keys", "calendar", "profile", "messages", "bookmarks", "blossom", "chat"]
 keys = []
 calendar = ["keys"]
 profile = ["keys"]
 messages = ["keys"]
+bookmarks = ["keys", "dep:hex"]
+blossom = ["keys", "dep:reqwest", "dep:base64", "dep:urlencoding", "dep:sha2"]
+chat = ["keys", "dep:hkdf", "dep:sha2", "dep:hex"]
 tauri-plugin = ["dep:tauri"]

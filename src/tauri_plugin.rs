@@ -15,7 +15,19 @@ use crate::profile;
 #[cfg(feature = "messages")]
 use crate::messages;
 
-use crate::models::{CalendarEventRequest, CalendarRequest, Contact, EventResponse, UserProfile};
+#[cfg(feature = "bookmarks")]
+use crate::bookmarks;
+
+#[cfg(feature = "blossom")]
+use crate::blossom;
+
+#[cfg(feature = "chat")]
+use crate::chat;
+
+use crate::models::{
+    BookmarkSource, CalendarEventRequest, CalendarRequest, ChatMessageRequest, Contact,
+    EventResponse, PnsDerivedKeys, UserProfile,
+};
 
 #[tauri::command]
 #[cfg(feature = "keys")]
@@ -177,6 +189,142 @@ async fn send_direct_message(
     messages::send_direct_message_core(&nsec, &receiver_pubkey, &message, &relays).await
 }
 
+#[tauri::command]
+#[cfg(feature = "bookmarks")]
+async fn fetch_bookmarks(
+    pubkey: String,
+    nsec: Option<String>,
+    relays: Vec<String>,
+) -> Result<Vec<EventResponse>, String> {
+    bookmarks::fetch_bookmarks_core(&pubkey, nsec.as_deref(), &relays).await
+}
+
+#[tauri::command]
+#[cfg(feature = "bookmarks")]
+async fn fetch_event_details(
+    identifiers: Vec<String>,
+    relays: Vec<String>,
+) -> Result<Vec<EventResponse>, String> {
+    bookmarks::fetch_event_details_core(identifiers, &relays).await
+}
+
+#[tauri::command]
+#[cfg(feature = "bookmarks")]
+async fn save_bookmark(
+    nsec: String,
+    relays: Vec<String>,
+    event_id: String,
+    source: BookmarkSource,
+) -> Result<String, String> {
+    bookmarks::save_bookmark_core(&nsec, &relays, event_id, source).await
+}
+
+#[tauri::command]
+#[cfg(feature = "bookmarks")]
+async fn remove_bookmark(
+    nsec: String,
+    relays: Vec<String>,
+    event_id: String,
+    source: BookmarkSource,
+) -> Result<String, String> {
+    bookmarks::remove_bookmark_core(&nsec, &relays, event_id, source).await
+}
+
+#[tauri::command]
+#[cfg(feature = "blossom")]
+async fn blossom_mirror(server_url: String, nsec: String, url: String) -> Result<String, String> {
+    blossom::blossom_mirror_core(&server_url, &nsec, &url).await
+}
+
+#[tauri::command]
+#[cfg(feature = "blossom")]
+async fn blossom_upload(server_url: String, nsec: String, file_path: String) -> Result<String, String> {
+    blossom::blossom_upload_core(&server_url, &nsec, &file_path).await
+}
+
+#[tauri::command]
+#[cfg(feature = "blossom")]
+async fn blossom_upload_content(
+    server_url: String,
+    nsec: String,
+    content: String,
+    filename: Option<String>,
+    media_type: Option<String>,
+) -> Result<String, String> {
+    blossom::blossom_upload_content_core(&server_url, &nsec, content, filename, media_type).await
+}
+
+#[tauri::command]
+#[cfg(feature = "blossom")]
+async fn blossom_get_blob(server_url: String, hash: String) -> Result<Vec<u8>, String> {
+    blossom::blossom_get_blob_core(&server_url, &hash).await
+}
+
+#[tauri::command]
+#[cfg(feature = "chat")]
+async fn derive_pns_keys(device_key_hex: String) -> Result<PnsDerivedKeys, String> {
+    chat::derive_pns_keys_core(&device_key_hex)
+}
+
+#[tauri::command]
+#[cfg(feature = "chat")]
+async fn create_discovery_event(
+    nsec: String,
+    device_key_to_store: String,
+    relays: Vec<String>,
+) -> Result<String, String> {
+    chat::create_discovery_event_core(&nsec, device_key_to_store, &relays).await
+}
+
+#[tauri::command]
+#[cfg(feature = "chat")]
+async fn decrypt_discovery_event(nsec: String, content: String) -> Result<String, String> {
+    chat::decrypt_discovery_event_core(&nsec, &content)
+}
+
+#[tauri::command]
+#[cfg(feature = "chat")]
+async fn publish_chat_message(
+    pns_nsec: String,
+    main_pubkey: String,
+    msg: ChatMessageRequest,
+    relays: Vec<String>,
+) -> Result<String, String> {
+    chat::publish_chat_message_core(&pns_nsec, &main_pubkey, msg, &relays).await
+}
+
+#[tauri::command]
+#[cfg(feature = "chat")]
+async fn decrypt_pns_event(pns_nsec: String, content: String) -> Result<serde_json::Value, String> {
+    chat::decrypt_pns_event_core(&pns_nsec, &content)
+}
+
+#[tauri::command]
+#[cfg(feature = "chat")]
+async fn fetch_pns_events(
+    pns_pubkey: String,
+    event_id: Option<String>,
+    relays: Vec<String>,
+) -> Result<Vec<EventResponse>, String> {
+    chat::fetch_pns_events_core(&pns_pubkey, event_id, &relays).await
+}
+
+#[tauri::command]
+#[cfg(feature = "chat")]
+async fn delete_chat_messages(
+    pns_nsec: String,
+    relays: Vec<String>,
+    event_ids: Vec<String>,
+) -> Result<String, String> {
+    chat::delete_chat_messages_core(&pns_nsec, &relays, event_ids).await
+}
+
+#[tauri::command]
+#[cfg(feature = "chat")]
+async fn fetch_discovery_events(pubkey: String, relays: Vec<String>) -> Result<Vec<EventResponse>, String> {
+    chat::fetch_discovery_events_core(&pubkey, &relays).await
+}
+
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("nostrnative")
         .invoke_handler(tauri::generate_handler![
@@ -216,6 +364,38 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             publish_rsvp,
             #[cfg(feature = "messages")]
             send_direct_message,
+            #[cfg(feature = "bookmarks")]
+            fetch_bookmarks,
+            #[cfg(feature = "bookmarks")]
+            fetch_event_details,
+            #[cfg(feature = "bookmarks")]
+            save_bookmark,
+            #[cfg(feature = "bookmarks")]
+            remove_bookmark,
+            #[cfg(feature = "blossom")]
+            blossom_mirror,
+            #[cfg(feature = "blossom")]
+            blossom_upload,
+            #[cfg(feature = "blossom")]
+            blossom_upload_content,
+            #[cfg(feature = "blossom")]
+            blossom_get_blob,
+            #[cfg(feature = "chat")]
+            derive_pns_keys,
+            #[cfg(feature = "chat")]
+            create_discovery_event,
+            #[cfg(feature = "chat")]
+            decrypt_discovery_event,
+            #[cfg(feature = "chat")]
+            publish_chat_message,
+            #[cfg(feature = "chat")]
+            decrypt_pns_event,
+            #[cfg(feature = "chat")]
+            fetch_pns_events,
+            #[cfg(feature = "chat")]
+            delete_chat_messages,
+            #[cfg(feature = "chat")]
+            fetch_discovery_events,
         ])
         .build()
 }

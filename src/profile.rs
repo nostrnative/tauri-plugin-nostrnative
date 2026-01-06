@@ -25,7 +25,7 @@ pub async fn fetch_profiles_core(
     let filter = Filter::new().authors(pks).kind(Kind::Metadata);
 
     let events = client
-        .fetch_events(filter, Duration::from_secs(10))
+        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -61,7 +61,7 @@ pub async fn fetch_contact_list_core(
         .kind(Kind::ContactList);
 
     let events = client
-        .fetch_events(filter, Duration::from_secs(10))
+        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -73,7 +73,7 @@ pub async fn fetch_contact_list_core(
             .tags
             .iter()
             .filter_map(|tag| {
-                let t = tag.as_vec();
+                let t = tag.clone().to_vec();
                 if t.len() >= 2 && t[0] == "p" {
                     let pubkey = t[1].clone();
                     let alias = if t.len() >= 4 {
@@ -113,11 +113,11 @@ pub async fn update_contact_list_core(
             }
             seen_pubkeys.insert(hex.clone());
 
-            tags.push(Tag::contact(pubkey, None, contact.alias));
+            tags.push(Tag::custom(TagKind::from("p"), vec![hex, "".to_string(), contact.alias.unwrap_or_default()]));
         }
     }
 
-    let event_builder = EventBuilder::new(Kind::ContactList, "").tags(tags);
+    let event_builder = EventBuilder::new(Kind::ContactList, "", tags);
 
     let event_id = client
         .send_event_builder(event_builder)

@@ -25,7 +25,7 @@ pub async fn fetch_rsvps_core(
     };
 
     let events = client
-        .fetch_events(filter, Duration::from_secs(10))
+        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -34,11 +34,14 @@ pub async fn fetch_rsvps_core(
         .map(|e| EventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
-            created_at: e.created_at.as_secs() as i64,
+            created_at: e.created_at.as_u64() as i64,
             kind: e.kind.as_u16(),
-            tags: e.tags.iter().map(|t| t.as_vec().clone()).collect(),
+            tags: e.tags.iter().map(|t| t.clone().to_vec()).collect(),
             content: e.content.to_string(),
             is_private: false,
+            bech32: None,
+            private_tags: None,
+            source: None,
         })
         .collect();
 
@@ -56,7 +59,7 @@ pub async fn fetch_user_rsvps_core(
     let filter = Filter::new().kind(Kind::from(31925)).author(pk).limit(1000);
 
     let events = client
-        .fetch_events(filter, Duration::from_secs(10))
+        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -65,11 +68,14 @@ pub async fn fetch_user_rsvps_core(
         .map(|e| EventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
-            created_at: e.created_at.as_secs() as i64,
+            created_at: e.created_at.as_u64() as i64,
             kind: e.kind.as_u16(),
-            tags: e.tags.iter().map(|t| t.as_vec().clone()).collect(),
+            tags: e.tags.iter().map(|t| t.clone().to_vec()).collect(),
             content: e.content.to_string(),
             is_private: false,
+            bech32: None,
+            private_tags: None,
+            source: None,
         })
         .collect();
 
@@ -87,7 +93,7 @@ pub async fn fetch_received_rsvps_core(
     let filter = Filter::new().kind(Kind::from(31925)).pubkey(pk).limit(1000);
 
     let events = client
-        .fetch_events(filter, Duration::from_secs(10))
+        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -96,11 +102,14 @@ pub async fn fetch_received_rsvps_core(
         .map(|e| EventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
-            created_at: e.created_at.as_secs() as i64,
+            created_at: e.created_at.as_u64() as i64,
             kind: e.kind.as_u16(),
-            tags: e.tags.iter().map(|t| t.as_vec().clone()).collect(),
+            tags: e.tags.iter().map(|t| t.clone().to_vec()).collect(),
             content: e.content.to_string(),
             is_private: false,
+            bech32: None,
+            private_tags: None,
+            source: None,
         })
         .collect();
 
@@ -146,7 +155,7 @@ pub async fn publish_rsvp_core(
     let identifier = Keys::generate().public_key().to_hex();
     tags.push(Tag::identifier(identifier));
 
-    let event_builder = EventBuilder::new(Kind::from(31925), "").tags(tags);
+    let event_builder = EventBuilder::new(Kind::from(31925), "", tags);
 
     let event_id = client
         .send_event_builder(event_builder)
