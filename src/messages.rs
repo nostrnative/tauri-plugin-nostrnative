@@ -22,7 +22,7 @@ pub async fn send_direct_message_core(
         vec![r_pubkey.to_hex()],
     )];
 
-    let event_builder = EventBuilder::new(kind, encrypted_content, tags);
+    let event_builder = EventBuilder::new(kind, encrypted_content).tags(tags);
 
     let event_id = client
         .send_event_builder(event_builder)

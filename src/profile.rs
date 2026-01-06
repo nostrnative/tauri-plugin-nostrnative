@@ -25,7 +25,7 @@ pub async fn fetch_profiles_core(
     let filter = Filter::new().authors(pks).kind(Kind::Metadata);
 
     let events = client
-        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
+        .fetch_events(filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -61,7 +61,7 @@ pub async fn fetch_contact_list_core(
         .kind(Kind::ContactList);
 
     let events = client
-        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
+        .fetch_events(filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -120,7 +120,7 @@ pub async fn update_contact_list_core(
         }
     }
 
-    let event_builder = EventBuilder::new(Kind::ContactList, "", tags);
+    let event_builder = EventBuilder::new(Kind::ContactList, "").tags(tags);
 
     let event_id = client
         .send_event_builder(event_builder)

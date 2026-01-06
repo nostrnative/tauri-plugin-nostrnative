@@ -36,7 +36,11 @@ pub fn get_event_bech32(event: &Event, relays: Option<Vec<String>>) -> String {
     let is_replaceable = (10000..20000).contains(&kind_u16);
     let is_parameterized_replaceable = (30000..40000).contains(&kind_u16);
 
-    let relay_urls: Vec<String> = relays.unwrap_or_default();
+    let relay_urls: Vec<RelayUrl> = relays
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|url| RelayUrl::parse(&url).ok())
+        .collect();
 
     if is_replaceable || is_parameterized_replaceable {
         let identifier = event
@@ -52,7 +56,8 @@ pub fn get_event_bech32(event: &Event, relays: Option<Vec<String>>) -> String {
         }
     }
 
-    if let Ok(nevent) = Nip19Event::new(event.id, relay_urls)
+    if let Ok(nevent) = Nip19Event::new(event.id)
+        .relays(relay_urls)
         .author(event.pubkey)
         .to_bech32()
     {

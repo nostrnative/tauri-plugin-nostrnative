@@ -22,7 +22,7 @@ pub async fn fetch_bookmarks_core(
     ]);
 
     let list_events = client
-        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
+        .fetch_events(filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -82,7 +82,7 @@ pub async fn fetch_bookmarks_core(
             responses.push(EventResponse {
                 id: e.id.to_hex(),
                 pubkey: e.pubkey.to_hex(),
-                created_at: e.created_at.as_u64() as i64,
+                created_at: e.created_at.as_secs() as i64,
                 kind: e.kind.as_u16(),
                 tags: e.tags.iter().map(|t| t.clone().to_vec()).collect(),
                 content: e.content.to_string(),
@@ -185,19 +185,13 @@ pub async fn fetch_event_details_core(
 
     if !event_ids.is_empty() {
         let filter = Filter::new().ids(event_ids);
-        if let Ok(events) = client
-            .fetch_events(vec![filter], Some(Duration::from_secs(10)))
-            .await
-        {
+        if let Ok(events) = client.fetch_events(filter, Duration::from_secs(10)).await {
             all_events.extend(events);
         }
     }
 
     for filter in coordinate_filters {
-        if let Ok(events) = client
-            .fetch_events(vec![filter], Some(Duration::from_secs(5)))
-            .await
-        {
+        if let Ok(events) = client.fetch_events(filter, Duration::from_secs(5)).await {
             all_events.extend(events);
         }
     }
@@ -207,7 +201,7 @@ pub async fn fetch_event_details_core(
         .map(|e| EventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
-            created_at: e.created_at.as_u64() as i64,
+            created_at: e.created_at.as_secs() as i64,
             kind: e.kind.as_u16(),
             tags: e.tags.iter().map(|t| t.clone().to_vec()).collect(),
             content: e.content.to_string(),
@@ -237,7 +231,7 @@ pub async fn save_bookmark_core(
         .limit(1);
 
     let events = client
-        .fetch_events(vec![filter], Some(Duration::from_secs(5)))
+        .fetch_events(filter, Duration::from_secs(5))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -326,7 +320,7 @@ pub async fn save_bookmark_core(
         .into_iter()
         .filter_map(|t| Tag::parse(&t).ok())
         .collect();
-    let builder = EventBuilder::new(Kind::from(30001), content, tags);
+    let builder = EventBuilder::new(Kind::from(30001), content).tags(tags);
     let id = client
         .send_event_builder(builder)
         .await
@@ -351,7 +345,7 @@ pub async fn remove_bookmark_core(
         .limit(1);
 
     let events = client
-        .fetch_events(vec![filter], Some(Duration::from_secs(5)))
+        .fetch_events(filter, Duration::from_secs(5))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -426,7 +420,7 @@ pub async fn remove_bookmark_core(
                 .into_iter()
                 .filter_map(|t| Tag::parse(&t).ok())
                 .collect();
-            let builder = EventBuilder::new(Kind::from(30001), content, tags);
+            let builder = EventBuilder::new(Kind::from(30001), content).tags(tags);
             let id = client
                 .send_event_builder(builder)
                 .await

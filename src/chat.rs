@@ -30,7 +30,7 @@ pub fn derive_pns_keys_core(device_key_hex: &str) -> Result<PnsDerivedKeys, Stri
     };
 
     let pns_key_bytes = derive_pns_key_raw(&device_key_bytes);
-    let keys = Keys::parse(hex::encode(pns_key_bytes)).map_err(|e| e.to_string())?;
+    let keys = Keys::parse(&hex::encode(pns_key_bytes)).map_err(|e| e.to_string())?;
 
     Ok(PnsDerivedKeys {
         public_key: keys.public_key().to_hex(),
@@ -50,7 +50,8 @@ pub async fn create_discovery_event_core(
         nip04::encrypt(keys.secret_key(), &keys.public_key(), device_key_to_store)
             .map_err(|e| e.to_string())?;
 
-    let event_builder = EventBuilder::new(Kind::from(KIND_DISCOVERY_U16), encrypted_content, []);
+    let event_builder =
+        EventBuilder::new(Kind::from(KIND_DISCOVERY_U16), encrypted_content).tags([]);
     let event_id = client
         .send_event_builder(event_builder)
         .await
@@ -113,7 +114,7 @@ pub async fn publish_chat_message_core(
         "kind": KIND_INNER_U16,
         "content": msg.content,
         "pubkey": main_pubkey,
-        "created_at": Timestamp::now().as_u64(),
+        "created_at": Timestamp::now().as_secs(),
         "tags": inner_tags,
     })
     .to_string();
@@ -126,7 +127,7 @@ pub async fn publish_chat_message_core(
     )
     .map_err(|e| e.to_string())?;
 
-    let event_builder = EventBuilder::new(Kind::from(KIND_PNS_U16), encrypted_inner, []);
+    let event_builder = EventBuilder::new(Kind::from(KIND_PNS_U16), encrypted_inner).tags([]);
 
     let event_id = client
         .send_event_builder(event_builder)
@@ -162,7 +163,7 @@ pub async fn fetch_pns_events_core(
     }
 
     let events = client
-        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
+        .fetch_events(filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -171,7 +172,7 @@ pub async fn fetch_pns_events_core(
         .map(|e| EventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
-            created_at: e.created_at.as_u64() as i64,
+            created_at: e.created_at.as_secs() as i64,
             kind: e.kind.as_u16(),
             tags: e.tags.iter().map(|t| t.clone().to_vec()).collect(),
             content: e.content.to_string(),
@@ -198,7 +199,7 @@ pub async fn delete_chat_messages_core(
         .map(|id| EventId::from_hex(&id).map_err(|e| e.to_string()))
         .collect();
 
-    let event_builder = EventBuilder::delete(ids?);
+    let event_builder = EventBuilder::delete(EventDeletionRequest::new().ids(ids?));
 
     let event_id = client
         .send_event_builder(event_builder)
@@ -221,7 +222,7 @@ pub async fn fetch_discovery_events_core(
         .kind(Kind::from(KIND_DISCOVERY_U16));
 
     let events = client
-        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
+        .fetch_events(filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -230,7 +231,7 @@ pub async fn fetch_discovery_events_core(
         .map(|e| EventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
-            created_at: e.created_at.as_u64() as i64,
+            created_at: e.created_at.as_secs() as i64,
             kind: e.kind.as_u16(),
             tags: e.tags.iter().map(|t| t.clone().to_vec()).collect(),
             content: e.content.to_string(),

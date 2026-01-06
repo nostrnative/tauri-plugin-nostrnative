@@ -50,7 +50,7 @@ pub async fn fetch_calendar_events_core(
     }
 
     let owned_events = client
-        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
+        .fetch_events(filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -74,7 +74,7 @@ pub async fn fetch_calendar_events_core(
     }
 
     let invited_events = client
-        .fetch_events(vec![invited_filter], Some(Duration::from_secs(10)))
+        .fetch_events(invited_filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -102,7 +102,7 @@ pub async fn fetch_calendar_events_core(
                 }
             }
 
-            let start = start_val.unwrap_or(e.created_at.as_u64() as i64);
+            let start = start_val.unwrap_or(e.created_at.as_secs() as i64);
 
             let mut include = true;
             if let Some(rs) = range_start {
@@ -168,7 +168,7 @@ pub async fn fetch_calendar_events_core(
                 Some(EventResponse {
                     id: e.id.to_hex(),
                     pubkey: e.pubkey.to_hex(),
-                    created_at: e.created_at.as_u64() as i64,
+                    created_at: e.created_at.as_secs() as i64,
                     kind: e.kind.as_u16(),
                     tags: response_tags,
                     content: final_content,
@@ -199,7 +199,8 @@ pub async fn publish_batch_calendar_events_core(
     for event_data in events {
         if let Some(old_id) = &event_data.old_event_id {
             if let Ok(oid) = EventId::from_hex(old_id) {
-                let event_builder = EventBuilder::delete(vec![oid]);
+                let event_builder =
+                    EventBuilder::delete(EventDeletionRequest::new().ids(vec![oid]));
                 let _ = client.send_event_builder(event_builder).await;
             }
         }
@@ -301,26 +302,26 @@ pub async fn publish_batch_calendar_events_core(
             ));
         }
 
-        let mut event_builder = EventBuilder::new(kind, content, tags);
+        let mut event_builder = EventBuilder::new(kind, content).tags(tags);
 
         if event_data.use_different_timestamp.unwrap_or(false) {
             let real_created_at = Timestamp::now();
             event_builder =
                 event_builder.custom_created_at(Timestamp::from(event_data.start as u64));
-            event_builder = event_builder.add_tags(vec![Tag::custom(
+            event_builder = event_builder.tag(Tag::custom(
                 TagKind::Custom(Cow::Borrowed("created_at")),
-                vec![real_created_at.as_u64().to_string()],
-            )]);
+                vec![real_created_at.as_secs().to_string()],
+            ));
         }
 
         if let Some(cal_id) = &event_data.calendar_id {
             if !cal_id.is_empty() {
                 let author = keys.public_key().to_hex();
                 let coordinate = format!("31924:{author}:{cal_id}");
-                event_builder = event_builder.add_tags(vec![Tag::custom(
+                event_builder = event_builder.tag(Tag::custom(
                     TagKind::Custom(Cow::Borrowed("a")),
                     vec![coordinate],
-                )]);
+                ));
             }
         }
 
@@ -352,7 +353,7 @@ pub async fn delete_calendar_event_core(
         return Ok("".to_string());
     }
 
-    let event_builder = EventBuilder::delete(event_id_objs);
+    let event_builder = EventBuilder::delete(EventDeletionRequest::new().ids(event_id_objs));
 
     let deletion_id = client
         .send_event_builder(event_builder)
@@ -375,7 +376,7 @@ pub async fn fetch_calendars_core(
         .kind(Kind::from(31924));
 
     let events = client
-        .fetch_events(vec![filter], Some(Duration::from_secs(10)))
+        .fetch_events(filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -384,7 +385,7 @@ pub async fn fetch_calendars_core(
         .map(|e| EventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
-            created_at: e.created_at.as_u64() as i64,
+            created_at: e.created_at.as_secs() as i64,
             kind: e.kind.as_u16(),
             tags: e.tags.iter().map(|t| t.clone().to_vec()).collect(),
             content: e.content.to_string(),
@@ -415,7 +416,7 @@ pub async fn publish_calendar_core(
         ),
     ];
 
-    let event_builder = EventBuilder::new(Kind::from(31924), "", tags);
+    let event_builder = EventBuilder::new(Kind::from(31924), "").tags(tags);
 
     let event_id = client
         .send_event_builder(event_builder)
@@ -434,10 +435,12 @@ pub async fn delete_calendar_core(
     let client = get_client(&keys, relays).await?;
 
     let coordinate = Coordinate::new(Kind::from(31924), keys.public_key()).identifier(identifier);
-    let event_builder = EventBuilder::delete(vec![coordinate.clone()]).add_tags(vec![Tag::custom(
-        TagKind::Custom(Cow::Borrowed("k")),
-        vec![Kind::from(31924).as_u16().to_string()],
-    )]);
+    let event_builder =
+        EventBuilder::delete(EventDeletionRequest::new().coordinates(vec![coordinate.clone()]))
+            .tag(Tag::custom(
+                TagKind::Custom(Cow::Borrowed("k")),
+                vec![Kind::from(31924).as_u16().to_string()],
+            ));
 
     let deletion_id = client
         .send_event_builder(event_builder)

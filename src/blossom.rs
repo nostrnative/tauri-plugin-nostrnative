@@ -90,7 +90,7 @@ pub async fn blossom_upload_core(
         ),
     ];
 
-    let builder = EventBuilder::new(Kind::from(24242), "Upload Blob", tags);
+    let builder = EventBuilder::new(Kind::from(24242), "Upload Blob").tags(tags);
     let event = builder.sign(&keys).await.map_err(|e| e.to_string())?;
     let auth_b64 = base64::engine::general_purpose::STANDARD
         .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
@@ -176,7 +176,7 @@ pub async fn blossom_upload_content_core(
         ));
     }
 
-    let builder = EventBuilder::new(Kind::from(24242), "Upload Blob", tags);
+    let builder = EventBuilder::new(Kind::from(24242), "Upload Blob").tags(tags);
     let event = builder.sign(&keys).await.map_err(|e| e.to_string())?;
     let auth_b64 = base64::engine::general_purpose::STANDARD
         .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
