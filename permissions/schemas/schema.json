@@ -1,0 +1,714 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PermissionFile",
+  "description": "Permission file that can define a default permission, a set of permissions or a list of inlined permissions.",
+  "type": "object",
+  "properties": {
+    "default": {
+      "description": "The default permission set for the plugin",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/DefaultPermission"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "set": {
+      "description": "A list of permissions sets defined",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PermissionSet"
+      }
+    },
+    "permission": {
+      "description": "A list of inlined permissions",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Permission"
+      }
+    }
+  },
+  "definitions": {
+    "DefaultPermission": {
+      "description": "The default permission set of the plugin.\n\nWorks similarly to a permission with the \"default\" identifier.",
+      "type": "object",
+      "required": [
+        "permissions"
+      ],
+      "properties": {
+        "version": {
+          "description": "The version of the permission.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 1.0
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does. Tauri convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "permissions": {
+          "description": "All permissions this set contains.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PermissionSet": {
+      "description": "A set of direct permissions grouped together under a new name.",
+      "type": "object",
+      "required": [
+        "description",
+        "identifier",
+        "permissions"
+      ],
+      "properties": {
+        "identifier": {
+          "description": "A unique identifier for the permission.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does.",
+          "type": "string"
+        },
+        "permissions": {
+          "description": "All permissions this set contains.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PermissionKind"
+          }
+        }
+      }
+    },
+    "Permission": {
+      "description": "Descriptions of explicit privileges of commands.\n\nIt can enable commands to be accessible in the frontend of the application.\n\nIf the scope is defined it can be used to fine grain control the access of individual or multiple commands.",
+      "type": "object",
+      "required": [
+        "identifier"
+      ],
+      "properties": {
+        "version": {
+          "description": "The version of the permission.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 1.0
+        },
+        "identifier": {
+          "description": "A unique identifier for the permission.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does. Tauri internal convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commands": {
+          "description": "Allowed or denied commands when using this permission.",
+          "default": {
+            "allow": [],
+            "deny": []
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/Commands"
+            }
+          ]
+        },
+        "scope": {
+          "description": "Allowed or denied scoped when using this permission.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Scopes"
+            }
+          ]
+        },
+        "platforms": {
+          "description": "Target platforms this permission applies. By default all platforms are affected by this permission.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Target"
+          }
+        }
+      }
+    },
+    "Commands": {
+      "description": "Allowed and denied commands inside a permission.\n\nIf two commands clash inside of `allow` and `deny`, it should be denied by default.",
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Allowed command.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "deny": {
+          "description": "Denied command, which takes priority.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Scopes": {
+      "description": "An argument for fine grained behavior control of Tauri commands.\n\nIt can be of any serde serializable type and is used to allow or prevent certain actions inside a Tauri command. The configured scope is passed to the command and will be enforced by the command implementation.\n\n## Example\n\n```json { \"allow\": [{ \"path\": \"$HOME/**\" }], \"deny\": [{ \"path\": \"$HOME/secret.txt\" }] } ```",
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Data that defines what is allowed by the scope.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        "deny": {
+          "description": "Data that defines what is denied by the scope. This should be prioritized by validation logic.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      }
+    },
+    "Value": {
+      "description": "All supported ACL values.",
+      "anyOf": [
+        {
+          "description": "Represents a null JSON value.",
+          "type": "null"
+        },
+        {
+          "description": "Represents a [`bool`].",
+          "type": "boolean"
+        },
+        {
+          "description": "Represents a valid ACL [`Number`].",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Number"
+            }
+          ]
+        },
+        {
+          "description": "Represents a [`String`].",
+          "type": "string"
+        },
+        {
+          "description": "Represents a list of other [`Value`]s.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        {
+          "description": "Represents a map of [`String`] keys to [`Value`]s.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      ]
+    },
+    "Number": {
+      "description": "A valid ACL number.",
+      "anyOf": [
+        {
+          "description": "Represents an [`i64`].",
+          "type": "integer",
+          "format": "int64"
+        },
+        {
+          "description": "Represents a [`f64`].",
+          "type": "number",
+          "format": "double"
+        }
+      ]
+    },
+    "Target": {
+      "description": "Platform target.",
+      "oneOf": [
+        {
+          "description": "MacOS.",
+          "type": "string",
+          "enum": [
+            "macOS"
+          ]
+        },
+        {
+          "description": "Windows.",
+          "type": "string",
+          "enum": [
+            "windows"
+          ]
+        },
+        {
+          "description": "Linux.",
+          "type": "string",
+          "enum": [
+            "linux"
+          ]
+        },
+        {
+          "description": "Android.",
+          "type": "string",
+          "enum": [
+            "android"
+          ]
+        },
+        {
+          "description": "iOS.",
+          "type": "string",
+          "enum": [
+            "iOS"
+          ]
+        }
+      ]
+    },
+    "PermissionKind": {
+      "type": "string",
+      "oneOf": [
+        {
+          "description": "Enables the blossom_get_blob command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-blossom-get-blob",
+          "markdownDescription": "Enables the blossom_get_blob command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the blossom_get_blob command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-blossom-get-blob",
+          "markdownDescription": "Denies the blossom_get_blob command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the blossom_mirror command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-blossom-mirror",
+          "markdownDescription": "Enables the blossom_mirror command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the blossom_mirror command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-blossom-mirror",
+          "markdownDescription": "Denies the blossom_mirror command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the blossom_upload command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-blossom-upload",
+          "markdownDescription": "Enables the blossom_upload command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the blossom_upload command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-blossom-upload",
+          "markdownDescription": "Denies the blossom_upload command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the blossom_upload_content command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-blossom-upload-content",
+          "markdownDescription": "Enables the blossom_upload_content command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the blossom_upload_content command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-blossom-upload-content",
+          "markdownDescription": "Denies the blossom_upload_content command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the create_discovery_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-create-discovery-event",
+          "markdownDescription": "Enables the create_discovery_event command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the create_discovery_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-create-discovery-event",
+          "markdownDescription": "Denies the create_discovery_event command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the decrypt_discovery_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-decrypt-discovery-event",
+          "markdownDescription": "Enables the decrypt_discovery_event command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the decrypt_discovery_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-decrypt-discovery-event",
+          "markdownDescription": "Denies the decrypt_discovery_event command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the decrypt_pns_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-decrypt-pns-event",
+          "markdownDescription": "Enables the decrypt_pns_event command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the decrypt_pns_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-decrypt-pns-event",
+          "markdownDescription": "Denies the decrypt_pns_event command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the delete_calendar command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-delete-calendar",
+          "markdownDescription": "Enables the delete_calendar command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the delete_calendar command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-delete-calendar",
+          "markdownDescription": "Denies the delete_calendar command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the delete_calendar_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-delete-calendar-event",
+          "markdownDescription": "Enables the delete_calendar_event command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the delete_calendar_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-delete-calendar-event",
+          "markdownDescription": "Denies the delete_calendar_event command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the delete_chat_messages command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-delete-chat-messages",
+          "markdownDescription": "Enables the delete_chat_messages command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the delete_chat_messages command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-delete-chat-messages",
+          "markdownDescription": "Denies the delete_chat_messages command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the derive_pns_keys command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-derive-pns-keys",
+          "markdownDescription": "Enables the derive_pns_keys command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the derive_pns_keys command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-derive-pns-keys",
+          "markdownDescription": "Denies the derive_pns_keys command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_bookmarks command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-bookmarks",
+          "markdownDescription": "Enables the fetch_bookmarks command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_bookmarks command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-bookmarks",
+          "markdownDescription": "Denies the fetch_bookmarks command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_calendar_events command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-calendar-events",
+          "markdownDescription": "Enables the fetch_calendar_events command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_calendar_events command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-calendar-events",
+          "markdownDescription": "Denies the fetch_calendar_events command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_calendars command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-calendars",
+          "markdownDescription": "Enables the fetch_calendars command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_calendars command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-calendars",
+          "markdownDescription": "Denies the fetch_calendars command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_contact_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-contact-list",
+          "markdownDescription": "Enables the fetch_contact_list command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_contact_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-contact-list",
+          "markdownDescription": "Denies the fetch_contact_list command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_discovery_events command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-discovery-events",
+          "markdownDescription": "Enables the fetch_discovery_events command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_discovery_events command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-discovery-events",
+          "markdownDescription": "Denies the fetch_discovery_events command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_event_details command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-event-details",
+          "markdownDescription": "Enables the fetch_event_details command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_event_details command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-event-details",
+          "markdownDescription": "Denies the fetch_event_details command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_pns_events command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-pns-events",
+          "markdownDescription": "Enables the fetch_pns_events command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_pns_events command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-pns-events",
+          "markdownDescription": "Denies the fetch_pns_events command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_profiles command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-profiles",
+          "markdownDescription": "Enables the fetch_profiles command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_profiles command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-profiles",
+          "markdownDescription": "Denies the fetch_profiles command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_received_rsvps command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-received-rsvps",
+          "markdownDescription": "Enables the fetch_received_rsvps command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_received_rsvps command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-received-rsvps",
+          "markdownDescription": "Denies the fetch_received_rsvps command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_rsvps command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-rsvps",
+          "markdownDescription": "Enables the fetch_rsvps command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_rsvps command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-rsvps",
+          "markdownDescription": "Denies the fetch_rsvps command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_user_rsvps command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-user-rsvps",
+          "markdownDescription": "Enables the fetch_user_rsvps command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_user_rsvps command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-user-rsvps",
+          "markdownDescription": "Denies the fetch_user_rsvps command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the generate_new_nsec command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-generate-new-nsec",
+          "markdownDescription": "Enables the generate_new_nsec command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the generate_new_nsec command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-generate-new-nsec",
+          "markdownDescription": "Denies the generate_new_nsec command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the parse_pubkey command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-parse-pubkey",
+          "markdownDescription": "Enables the parse_pubkey command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the parse_pubkey command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-parse-pubkey",
+          "markdownDescription": "Denies the parse_pubkey command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the publish_batch_calendar_events command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-publish-batch-calendar-events",
+          "markdownDescription": "Enables the publish_batch_calendar_events command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the publish_batch_calendar_events command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-publish-batch-calendar-events",
+          "markdownDescription": "Denies the publish_batch_calendar_events command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the publish_calendar command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-publish-calendar",
+          "markdownDescription": "Enables the publish_calendar command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the publish_calendar command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-publish-calendar",
+          "markdownDescription": "Denies the publish_calendar command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the publish_calendar_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-publish-calendar-event",
+          "markdownDescription": "Enables the publish_calendar_event command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the publish_calendar_event command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-publish-calendar-event",
+          "markdownDescription": "Denies the publish_calendar_event command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the publish_chat_message command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-publish-chat-message",
+          "markdownDescription": "Enables the publish_chat_message command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the publish_chat_message command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-publish-chat-message",
+          "markdownDescription": "Denies the publish_chat_message command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the publish_rsvp command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-publish-rsvp",
+          "markdownDescription": "Enables the publish_rsvp command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the publish_rsvp command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-publish-rsvp",
+          "markdownDescription": "Denies the publish_rsvp command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the remove_bookmark command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-remove-bookmark",
+          "markdownDescription": "Enables the remove_bookmark command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the remove_bookmark command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-remove-bookmark",
+          "markdownDescription": "Denies the remove_bookmark command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the save_bookmark command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-save-bookmark",
+          "markdownDescription": "Enables the save_bookmark command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the save_bookmark command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-save-bookmark",
+          "markdownDescription": "Denies the save_bookmark command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the send_direct_message command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-send-direct-message",
+          "markdownDescription": "Enables the send_direct_message command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the send_direct_message command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-send-direct-message",
+          "markdownDescription": "Denies the send_direct_message command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the update_contact_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-update-contact-list",
+          "markdownDescription": "Enables the update_contact_list command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the update_contact_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-update-contact-list",
+          "markdownDescription": "Denies the update_contact_list command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the verify_nsec command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-verify-nsec",
+          "markdownDescription": "Enables the verify_nsec command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the verify_nsec command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-verify-nsec",
+          "markdownDescription": "Denies the verify_nsec command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for nostrnative plugin. Enables all commands by default.\n#### This default permission set includes:\n\n- `allow-generate-new-nsec`\n- `allow-parse-pubkey`\n- `allow-verify-nsec`\n- `allow-fetch-calendar-events`\n- `allow-publish-batch-calendar-events`\n- `allow-publish-calendar-event`\n- `allow-delete-calendar-event`\n- `allow-fetch-calendars`\n- `allow-publish-calendar`\n- `allow-delete-calendar`\n- `allow-fetch-profiles`\n- `allow-fetch-contact-list`\n- `allow-update-contact-list`\n- `allow-fetch-rsvps`\n- `allow-fetch-user-rsvps`\n- `allow-fetch-received-rsvps`\n- `allow-publish-rsvp`\n- `allow-send-direct-message`\n- `allow-fetch-bookmarks`\n- `allow-fetch-event-details`\n- `allow-save-bookmark`\n- `allow-remove-bookmark`\n- `allow-blossom-mirror`\n- `allow-blossom-upload`\n- `allow-blossom-upload-content`\n- `allow-blossom-get-blob`\n- `allow-derive-pns-keys`\n- `allow-create-discovery-event`\n- `allow-decrypt-discovery-event`\n- `allow-publish-chat-message`\n- `allow-decrypt-pns-event`\n- `allow-fetch-pns-events`\n- `allow-delete-chat-messages`\n- `allow-fetch-discovery-events`",
+          "type": "string",
+          "const": "default",
+          "markdownDescription": "Default permissions for nostrnative plugin. Enables all commands by default.\n#### This default permission set includes:\n\n- `allow-generate-new-nsec`\n- `allow-parse-pubkey`\n- `allow-verify-nsec`\n- `allow-fetch-calendar-events`\n- `allow-publish-batch-calendar-events`\n- `allow-publish-calendar-event`\n- `allow-delete-calendar-event`\n- `allow-fetch-calendars`\n- `allow-publish-calendar`\n- `allow-delete-calendar`\n- `allow-fetch-profiles`\n- `allow-fetch-contact-list`\n- `allow-update-contact-list`\n- `allow-fetch-rsvps`\n- `allow-fetch-user-rsvps`\n- `allow-fetch-received-rsvps`\n- `allow-publish-rsvp`\n- `allow-send-direct-message`\n- `allow-fetch-bookmarks`\n- `allow-fetch-event-details`\n- `allow-save-bookmark`\n- `allow-remove-bookmark`\n- `allow-blossom-mirror`\n- `allow-blossom-upload`\n- `allow-blossom-upload-content`\n- `allow-blossom-get-blob`\n- `allow-derive-pns-keys`\n- `allow-create-discovery-event`\n- `allow-decrypt-discovery-event`\n- `allow-publish-chat-message`\n- `allow-decrypt-pns-event`\n- `allow-fetch-pns-events`\n- `allow-delete-chat-messages`\n- `allow-fetch-discovery-events`"
+        }
+      ]
+    }
+  }
+}

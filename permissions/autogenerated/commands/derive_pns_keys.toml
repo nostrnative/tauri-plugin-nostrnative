@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-derive-pns-keys"
+description = "Enables the derive_pns_keys command without any pre-configured scope."
+commands.allow = ["derive_pns_keys"]
+
+[[permission]]
+identifier = "deny-derive-pns-keys"
+description = "Denies the derive_pns_keys command without any pre-configured scope."
+commands.deny = ["derive_pns_keys"]

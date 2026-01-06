@@ -13,9 +13,10 @@ pub async fn fetch_rsvps_core(
     let client = get_client(&keys, relays).await?;
 
     let filter = if event_coordinate.contains(':') {
-        Filter::new()
-            .kind(Kind::from(31925))
-            .custom_tag(SingleLetterTag::lowercase(Alphabet::A), vec![event_coordinate])
+        Filter::new().kind(Kind::from(31925)).custom_tag(
+            SingleLetterTag::lowercase(Alphabet::A),
+            vec![event_coordinate],
+        )
     } else {
         if let Ok(event_id) = EventId::from_hex(event_coordinate) {
             Filter::new().kind(Kind::from(31925)).event(event_id)

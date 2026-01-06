@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-publish-rsvp"
+description = "Enables the publish_rsvp command without any pre-configured scope."
+commands.allow = ["publish_rsvp"]
+
+[[permission]]
+identifier = "deny-publish-rsvp"
+description = "Denies the publish_rsvp command without any pre-configured scope."
+commands.deny = ["publish_rsvp"]

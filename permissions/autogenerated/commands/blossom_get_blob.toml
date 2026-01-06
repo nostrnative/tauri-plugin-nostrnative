@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-blossom-get-blob"
+description = "Enables the blossom_get_blob command without any pre-configured scope."
+commands.allow = ["blossom_get_blob"]
+
+[[permission]]
+identifier = "deny-blossom-get-blob"
+description = "Denies the blossom_get_blob command without any pre-configured scope."
+commands.deny = ["blossom_get_blob"]

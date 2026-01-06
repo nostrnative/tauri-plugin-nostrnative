@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-publish-batch-calendar-events"
+description = "Enables the publish_batch_calendar_events command without any pre-configured scope."
+commands.allow = ["publish_batch_calendar_events"]
+
+[[permission]]
+identifier = "deny-publish-batch-calendar-events"
+description = "Denies the publish_batch_calendar_events command without any pre-configured scope."
+commands.deny = ["publish_batch_calendar_events"]

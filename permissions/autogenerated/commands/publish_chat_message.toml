@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-publish-chat-message"
+description = "Enables the publish_chat_message command without any pre-configured scope."
+commands.allow = ["publish_chat_message"]
+
+[[permission]]
+identifier = "deny-publish-chat-message"
+description = "Denies the publish_chat_message command without any pre-configured scope."
+commands.deny = ["publish_chat_message"]

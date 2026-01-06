@@ -113,7 +113,10 @@ pub async fn update_contact_list_core(
             }
             seen_pubkeys.insert(hex.clone());
 
-            tags.push(Tag::custom(TagKind::from("p"), vec![hex, "".to_string(), contact.alias.unwrap_or_default()]));
+            tags.push(Tag::custom(
+                TagKind::from("p"),
+                vec![hex, "".to_string(), contact.alias.unwrap_or_default()],
+            ));
         }
     }
 

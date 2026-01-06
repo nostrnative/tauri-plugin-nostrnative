@@ -185,13 +185,19 @@ pub async fn fetch_event_details_core(
 
     if !event_ids.is_empty() {
         let filter = Filter::new().ids(event_ids);
-        if let Ok(events) = client.fetch_events(vec![filter], Some(Duration::from_secs(10))).await {
+        if let Ok(events) = client
+            .fetch_events(vec![filter], Some(Duration::from_secs(10)))
+            .await
+        {
             all_events.extend(events);
         }
     }
 
     for filter in coordinate_filters {
-        if let Ok(events) = client.fetch_events(vec![filter], Some(Duration::from_secs(5))).await {
+        if let Ok(events) = client
+            .fetch_events(vec![filter], Some(Duration::from_secs(5)))
+            .await
+        {
             all_events.extend(events);
         }
     }
@@ -239,7 +245,11 @@ pub async fn save_bookmark_core(
     let mut content = String::new();
 
     if let Some(existing_event) = events.first() {
-        public_tags = existing_event.tags.iter().map(|t| t.clone().to_vec()).collect();
+        public_tags = existing_event
+            .tags
+            .iter()
+            .map(|t| t.clone().to_vec())
+            .collect();
         content = existing_event.content.clone();
     } else {
         public_tags.push(vec!["d".to_string(), "bookmark".to_string()]);
@@ -312,7 +322,10 @@ pub async fn save_bookmark_core(
         }
     }
 
-    let tags: Vec<Tag> = public_tags.into_iter().filter_map(|t| Tag::parse(&t).ok()).collect();
+    let tags: Vec<Tag> = public_tags
+        .into_iter()
+        .filter_map(|t| Tag::parse(&t).ok())
+        .collect();
     let builder = EventBuilder::new(Kind::from(30001), content, tags);
     let id = client
         .send_event_builder(builder)
@@ -343,7 +356,11 @@ pub async fn remove_bookmark_core(
         .map_err(|e| e.to_string())?;
 
     if let Some(existing_event) = events.first() {
-        let mut public_tags: Vec<Vec<String>> = existing_event.tags.iter().map(|t| t.clone().to_vec()).collect();
+        let mut public_tags: Vec<Vec<String>> = existing_event
+            .tags
+            .iter()
+            .map(|t| t.clone().to_vec())
+            .collect();
         let mut content = existing_event.content.clone();
         let mut modified = false;
 
@@ -351,8 +368,7 @@ pub async fn remove_bookmark_core(
             BookmarkSource::Public => {
                 let old_pub_len = public_tags.len();
                 public_tags.retain(|t| {
-                    let matches_id =
-                        t.get(1).map(|v| v.as_str()) == Some(event_id.as_str());
+                    let matches_id = t.get(1).map(|v| v.as_str()) == Some(event_id.as_str());
                     let is_bookmark_tag = t.first().map(|v| v.as_str()) == Some("e")
                         || t.first().map(|v| v.as_str()) == Some("a");
 
@@ -406,7 +422,10 @@ pub async fn remove_bookmark_core(
         }
 
         if modified {
-            let tags: Vec<Tag> = public_tags.into_iter().filter_map(|t| Tag::parse(&t).ok()).collect();
+            let tags: Vec<Tag> = public_tags
+                .into_iter()
+                .filter_map(|t| Tag::parse(&t).ok())
+                .collect();
             let builder = EventBuilder::new(Kind::from(30001), content, tags);
             let id = client
                 .send_event_builder(builder)

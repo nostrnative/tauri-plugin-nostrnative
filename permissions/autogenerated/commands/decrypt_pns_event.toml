@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-decrypt-pns-event"
+description = "Enables the decrypt_pns_event command without any pre-configured scope."
+commands.allow = ["decrypt_pns_event"]
+
+[[permission]]
+identifier = "deny-decrypt-pns-event"
+description = "Denies the decrypt_pns_event command without any pre-configured scope."
+commands.deny = ["decrypt_pns_event"]

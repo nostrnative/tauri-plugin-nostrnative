@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-create-discovery-event"
+description = "Enables the create_discovery_event command without any pre-configured scope."
+commands.allow = ["create_discovery_event"]
+
+[[permission]]
+identifier = "deny-create-discovery-event"
+description = "Denies the create_discovery_event command without any pre-configured scope."
+commands.deny = ["create_discovery_event"]

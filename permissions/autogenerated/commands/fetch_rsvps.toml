@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-fetch-rsvps"
+description = "Enables the fetch_rsvps command without any pre-configured scope."
+commands.allow = ["fetch_rsvps"]
+
+[[permission]]
+identifier = "deny-fetch-rsvps"
+description = "Denies the fetch_rsvps command without any pre-configured scope."
+commands.deny = ["fetch_rsvps"]

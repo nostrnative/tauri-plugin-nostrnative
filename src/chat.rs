@@ -63,9 +63,7 @@ pub fn decrypt_discovery_event_core(nsec: &str, content: &str) -> Result<String,
     let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
 
     if content.contains("?iv=") {
-        if let Ok(decrypted) =
-            nip04::decrypt(keys.secret_key(), &keys.public_key(), content)
-        {
+        if let Ok(decrypted) = nip04::decrypt(keys.secret_key(), &keys.public_key(), content) {
             return Ok(decrypted);
         }
     }
@@ -138,10 +136,7 @@ pub async fn publish_chat_message_core(
     Ok(event_id.to_hex())
 }
 
-pub fn decrypt_pns_event_core(
-    pns_nsec: &str,
-    content: &str,
-) -> Result<serde_json::Value, String> {
+pub fn decrypt_pns_event_core(pns_nsec: &str, content: &str) -> Result<serde_json::Value, String> {
     let pns_keys = Keys::parse(pns_nsec).map_err(|e| e.to_string())?;
 
     let decrypted = nip44::decrypt(pns_keys.secret_key(), &pns_keys.public_key(), content)

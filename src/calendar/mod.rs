@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::time::Duration;
 
 use crate::models::{CalendarEventRequest, CalendarRequest, EventResponse};
-use crate::utils::{get_client, parse_public_key, get_event_bech32};
+use crate::utils::{get_client, get_event_bech32, parse_public_key};
 
 pub async fn fetch_calendar_events_core(
     pubkey: &str,
@@ -434,11 +434,10 @@ pub async fn delete_calendar_core(
     let client = get_client(&keys, relays).await?;
 
     let coordinate = Coordinate::new(Kind::from(31924), keys.public_key()).identifier(identifier);
-    let event_builder = EventBuilder::delete(vec![coordinate.clone()])
-        .add_tags(vec![Tag::custom(
-            TagKind::Custom(Cow::Borrowed("k")),
-            vec![Kind::from(31924).as_u16().to_string()],
-        )]);
+    let event_builder = EventBuilder::delete(vec![coordinate.clone()]).add_tags(vec![Tag::custom(
+        TagKind::Custom(Cow::Borrowed("k")),
+        vec![Kind::from(31924).as_u16().to_string()],
+    )]);
 
     let deletion_id = client
         .send_event_builder(event_builder)

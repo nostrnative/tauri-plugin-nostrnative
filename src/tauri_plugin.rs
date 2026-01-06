@@ -1,6 +1,6 @@
 use tauri::{
-    plugin::{Builder, TauriPlugin},
     Runtime,
+    plugin::{Builder, TauriPlugin},
 };
 
 #[cfg(feature = "keys")]
@@ -102,7 +102,10 @@ async fn delete_calendar_event(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn fetch_calendars(pubkey: String, relays: Vec<String>) -> Result<Vec<EventResponse>, String> {
+async fn fetch_calendars(
+    pubkey: String,
+    relays: Vec<String>,
+) -> Result<Vec<EventResponse>, String> {
     calendar::fetch_calendars_core(&pubkey, &relays).await
 }
 
@@ -128,7 +131,10 @@ async fn delete_calendar(
 
 #[tauri::command]
 #[cfg(feature = "profile")]
-async fn fetch_profiles(pubkeys: Vec<String>, relays: Vec<String>) -> Result<Vec<UserProfile>, String> {
+async fn fetch_profiles(
+    pubkeys: Vec<String>,
+    relays: Vec<String>,
+) -> Result<Vec<UserProfile>, String> {
     profile::fetch_profiles_core(pubkeys, &relays).await
 }
 
@@ -150,19 +156,28 @@ async fn update_contact_list(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn fetch_rsvps(event_coordinate: String, relays: Vec<String>) -> Result<Vec<EventResponse>, String> {
+async fn fetch_rsvps(
+    event_coordinate: String,
+    relays: Vec<String>,
+) -> Result<Vec<EventResponse>, String> {
     calendar::rsvp::fetch_rsvps_core(&event_coordinate, &relays).await
 }
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn fetch_user_rsvps(pubkey: String, relays: Vec<String>) -> Result<Vec<EventResponse>, String> {
+async fn fetch_user_rsvps(
+    pubkey: String,
+    relays: Vec<String>,
+) -> Result<Vec<EventResponse>, String> {
     calendar::rsvp::fetch_user_rsvps_core(&pubkey, &relays).await
 }
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn fetch_received_rsvps(pubkey: String, relays: Vec<String>) -> Result<Vec<EventResponse>, String> {
+async fn fetch_received_rsvps(
+    pubkey: String,
+    relays: Vec<String>,
+) -> Result<Vec<EventResponse>, String> {
     calendar::rsvp::fetch_received_rsvps_core(&pubkey, &relays).await
 }
 
@@ -238,7 +253,11 @@ async fn blossom_mirror(server_url: String, nsec: String, url: String) -> Result
 
 #[tauri::command]
 #[cfg(feature = "blossom")]
-async fn blossom_upload(server_url: String, nsec: String, file_path: String) -> Result<String, String> {
+async fn blossom_upload(
+    server_url: String,
+    nsec: String,
+    file_path: String,
+) -> Result<String, String> {
     blossom::blossom_upload_core(&server_url, &nsec, &file_path).await
 }
 
@@ -321,7 +340,10 @@ async fn delete_chat_messages(
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-async fn fetch_discovery_events(pubkey: String, relays: Vec<String>) -> Result<Vec<EventResponse>, String> {
+async fn fetch_discovery_events(
+    pubkey: String,
+    relays: Vec<String>,
+) -> Result<Vec<EventResponse>, String> {
     chat::fetch_discovery_events_core(&pubkey, &relays).await
 }
 
