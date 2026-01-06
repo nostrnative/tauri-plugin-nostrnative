@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "declaration": true,
+    "outDir": "./dist-js",
+    "lib": ["DOM", "ESNext"]
+  },
+  "include": ["guest-js"]
+}

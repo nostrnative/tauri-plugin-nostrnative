@@ -1,8 +1,3 @@
-use tauri::{
-    Runtime,
-    plugin::{Builder, TauriPlugin},
-};
-
 #[cfg(feature = "keys")]
 use crate::keys;
 
@@ -31,25 +26,25 @@ use crate::models::{
 
 #[tauri::command]
 #[cfg(feature = "keys")]
-async fn generate_new_nsec() -> String {
+pub async fn generate_new_nsec() -> String {
     keys::generate_new_nsec()
 }
 
 #[tauri::command]
 #[cfg(feature = "keys")]
-async fn parse_pubkey(pubkey: String) -> Result<String, String> {
+pub async fn parse_pubkey(pubkey: String) -> Result<String, String> {
     keys::parse_pubkey(&pubkey)
 }
 
 #[tauri::command]
 #[cfg(feature = "keys")]
-async fn verify_nsec(nsec: String) -> Result<String, String> {
+pub async fn verify_nsec(nsec: String) -> Result<String, String> {
     keys::verify_nsec(&nsec)
 }
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn fetch_calendar_events(
+pub async fn fetch_calendar_events(
     pubkey: String,
     nsec: Option<String>,
     relays: Vec<String>,
@@ -70,7 +65,7 @@ async fn fetch_calendar_events(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn publish_batch_calendar_events(
+pub async fn publish_batch_calendar_events(
     nsec: String,
     relays: Vec<String>,
     events: Vec<CalendarEventRequest>,
@@ -80,7 +75,7 @@ async fn publish_batch_calendar_events(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn publish_calendar_event(
+pub async fn publish_calendar_event(
     nsec: String,
     relays: Vec<String>,
     event_data: CalendarEventRequest,
@@ -92,7 +87,7 @@ async fn publish_calendar_event(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn delete_calendar_event(
+pub async fn delete_calendar_event(
     nsec: String,
     relays: Vec<String>,
     event_ids: Vec<String>,
@@ -102,7 +97,7 @@ async fn delete_calendar_event(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn fetch_calendars(
+pub async fn fetch_calendars(
     pubkey: String,
     relays: Vec<String>,
 ) -> Result<Vec<EventResponse>, String> {
@@ -111,7 +106,7 @@ async fn fetch_calendars(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn publish_calendar(
+pub async fn publish_calendar(
     nsec: String,
     relays: Vec<String>,
     calendar: CalendarRequest,
@@ -121,7 +116,7 @@ async fn publish_calendar(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn delete_calendar(
+pub async fn delete_calendar(
     nsec: String,
     relays: Vec<String>,
     identifier: String,
@@ -131,7 +126,7 @@ async fn delete_calendar(
 
 #[tauri::command]
 #[cfg(feature = "profile")]
-async fn fetch_profiles(
+pub async fn fetch_profiles(
     pubkeys: Vec<String>,
     relays: Vec<String>,
 ) -> Result<Vec<UserProfile>, String> {
@@ -140,13 +135,16 @@ async fn fetch_profiles(
 
 #[tauri::command]
 #[cfg(feature = "profile")]
-async fn fetch_contact_list(pubkey: String, relays: Vec<String>) -> Result<Vec<Contact>, String> {
+pub async fn fetch_contact_list(
+    pubkey: String,
+    relays: Vec<String>,
+) -> Result<Vec<Contact>, String> {
     profile::fetch_contact_list_core(&pubkey, &relays).await
 }
 
 #[tauri::command]
 #[cfg(feature = "profile")]
-async fn update_contact_list(
+pub async fn update_contact_list(
     nsec: String,
     relays: Vec<String>,
     contacts: Vec<Contact>,
@@ -156,7 +154,7 @@ async fn update_contact_list(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn fetch_rsvps(
+pub async fn fetch_rsvps(
     event_coordinate: String,
     relays: Vec<String>,
 ) -> Result<Vec<EventResponse>, String> {
@@ -165,7 +163,7 @@ async fn fetch_rsvps(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn fetch_user_rsvps(
+pub async fn fetch_user_rsvps(
     pubkey: String,
     relays: Vec<String>,
 ) -> Result<Vec<EventResponse>, String> {
@@ -174,7 +172,7 @@ async fn fetch_user_rsvps(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn fetch_received_rsvps(
+pub async fn fetch_received_rsvps(
     pubkey: String,
     relays: Vec<String>,
 ) -> Result<Vec<EventResponse>, String> {
@@ -183,7 +181,7 @@ async fn fetch_received_rsvps(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
-async fn publish_rsvp(
+pub async fn publish_rsvp(
     nsec: String,
     relays: Vec<String>,
     event_coordinate: String,
@@ -195,7 +193,7 @@ async fn publish_rsvp(
 
 #[tauri::command]
 #[cfg(feature = "messages")]
-async fn send_direct_message(
+pub async fn send_direct_message(
     nsec: String,
     receiver_pubkey: String,
     message: String,
@@ -206,7 +204,7 @@ async fn send_direct_message(
 
 #[tauri::command]
 #[cfg(feature = "bookmarks")]
-async fn fetch_bookmarks(
+pub async fn fetch_bookmarks(
     pubkey: String,
     nsec: Option<String>,
     relays: Vec<String>,
@@ -216,7 +214,7 @@ async fn fetch_bookmarks(
 
 #[tauri::command]
 #[cfg(feature = "bookmarks")]
-async fn fetch_event_details(
+pub async fn fetch_event_details(
     identifiers: Vec<String>,
     relays: Vec<String>,
 ) -> Result<Vec<EventResponse>, String> {
@@ -225,7 +223,7 @@ async fn fetch_event_details(
 
 #[tauri::command]
 #[cfg(feature = "bookmarks")]
-async fn save_bookmark(
+pub async fn save_bookmark(
     nsec: String,
     relays: Vec<String>,
     event_id: String,
@@ -236,7 +234,7 @@ async fn save_bookmark(
 
 #[tauri::command]
 #[cfg(feature = "bookmarks")]
-async fn remove_bookmark(
+pub async fn remove_bookmark(
     nsec: String,
     relays: Vec<String>,
     event_id: String,
@@ -247,13 +245,17 @@ async fn remove_bookmark(
 
 #[tauri::command]
 #[cfg(feature = "blossom")]
-async fn blossom_mirror(server_url: String, nsec: String, url: String) -> Result<String, String> {
+pub async fn blossom_mirror(
+    server_url: String,
+    nsec: String,
+    url: String,
+) -> Result<String, String> {
     blossom::blossom_mirror_core(&server_url, &nsec, &url).await
 }
 
 #[tauri::command]
 #[cfg(feature = "blossom")]
-async fn blossom_upload(
+pub async fn blossom_upload(
     server_url: String,
     nsec: String,
     file_path: String,
@@ -263,7 +265,7 @@ async fn blossom_upload(
 
 #[tauri::command]
 #[cfg(feature = "blossom")]
-async fn blossom_upload_content(
+pub async fn blossom_upload_content(
     server_url: String,
     nsec: String,
     content: String,
@@ -275,19 +277,19 @@ async fn blossom_upload_content(
 
 #[tauri::command]
 #[cfg(feature = "blossom")]
-async fn blossom_get_blob(server_url: String, hash: String) -> Result<Vec<u8>, String> {
+pub async fn blossom_get_blob(server_url: String, hash: String) -> Result<Vec<u8>, String> {
     blossom::blossom_get_blob_core(&server_url, &hash).await
 }
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-async fn derive_pns_keys(device_key_hex: String) -> Result<PnsDerivedKeys, String> {
+pub async fn derive_pns_keys(device_key_hex: String) -> Result<PnsDerivedKeys, String> {
     chat::derive_pns_keys_core(&device_key_hex)
 }
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-async fn create_discovery_event(
+pub async fn create_discovery_event(
     nsec: String,
     device_key_to_store: String,
     relays: Vec<String>,
@@ -297,13 +299,13 @@ async fn create_discovery_event(
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-async fn decrypt_discovery_event(nsec: String, content: String) -> Result<String, String> {
+pub async fn decrypt_discovery_event(nsec: String, content: String) -> Result<String, String> {
     chat::decrypt_discovery_event_core(&nsec, &content)
 }
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-async fn publish_chat_message(
+pub async fn publish_chat_message(
     pns_nsec: String,
     main_pubkey: String,
     msg: ChatMessageRequest,
@@ -314,13 +316,16 @@ async fn publish_chat_message(
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-async fn decrypt_pns_event(pns_nsec: String, content: String) -> Result<serde_json::Value, String> {
+pub async fn decrypt_pns_event(
+    pns_nsec: String,
+    content: String,
+) -> Result<serde_json::Value, String> {
     chat::decrypt_pns_event_core(&pns_nsec, &content)
 }
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-async fn fetch_pns_events(
+pub async fn fetch_pns_events(
     pns_pubkey: String,
     event_id: Option<String>,
     relays: Vec<String>,
@@ -330,7 +335,7 @@ async fn fetch_pns_events(
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-async fn delete_chat_messages(
+pub async fn delete_chat_messages(
     pns_nsec: String,
     relays: Vec<String>,
     event_ids: Vec<String>,
@@ -340,84 +345,9 @@ async fn delete_chat_messages(
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-async fn fetch_discovery_events(
+pub async fn fetch_discovery_events(
     pubkey: String,
     relays: Vec<String>,
 ) -> Result<Vec<EventResponse>, String> {
     chat::fetch_discovery_events_core(&pubkey, &relays).await
-}
-
-pub fn init<R: Runtime>() -> TauriPlugin<R> {
-    Builder::new("nostrnative")
-        .invoke_handler(tauri::generate_handler![
-            #[cfg(feature = "keys")]
-            generate_new_nsec,
-            #[cfg(feature = "keys")]
-            parse_pubkey,
-            #[cfg(feature = "keys")]
-            verify_nsec,
-            #[cfg(feature = "calendar")]
-            fetch_calendar_events,
-            #[cfg(feature = "calendar")]
-            publish_batch_calendar_events,
-            #[cfg(feature = "calendar")]
-            publish_calendar_event,
-            #[cfg(feature = "calendar")]
-            delete_calendar_event,
-            #[cfg(feature = "calendar")]
-            fetch_calendars,
-            #[cfg(feature = "calendar")]
-            publish_calendar,
-            #[cfg(feature = "calendar")]
-            delete_calendar,
-            #[cfg(feature = "profile")]
-            fetch_profiles,
-            #[cfg(feature = "profile")]
-            fetch_contact_list,
-            #[cfg(feature = "profile")]
-            update_contact_list,
-            #[cfg(feature = "calendar")]
-            fetch_rsvps,
-            #[cfg(feature = "calendar")]
-            fetch_user_rsvps,
-            #[cfg(feature = "calendar")]
-            fetch_received_rsvps,
-            #[cfg(feature = "calendar")]
-            publish_rsvp,
-            #[cfg(feature = "messages")]
-            send_direct_message,
-            #[cfg(feature = "bookmarks")]
-            fetch_bookmarks,
-            #[cfg(feature = "bookmarks")]
-            fetch_event_details,
-            #[cfg(feature = "bookmarks")]
-            save_bookmark,
-            #[cfg(feature = "bookmarks")]
-            remove_bookmark,
-            #[cfg(feature = "blossom")]
-            blossom_mirror,
-            #[cfg(feature = "blossom")]
-            blossom_upload,
-            #[cfg(feature = "blossom")]
-            blossom_upload_content,
-            #[cfg(feature = "blossom")]
-            blossom_get_blob,
-            #[cfg(feature = "chat")]
-            derive_pns_keys,
-            #[cfg(feature = "chat")]
-            create_discovery_event,
-            #[cfg(feature = "chat")]
-            decrypt_discovery_event,
-            #[cfg(feature = "chat")]
-            publish_chat_message,
-            #[cfg(feature = "chat")]
-            decrypt_pns_event,
-            #[cfg(feature = "chat")]
-            fetch_pns_events,
-            #[cfg(feature = "chat")]
-            delete_chat_messages,
-            #[cfg(feature = "chat")]
-            fetch_discovery_events,
-        ])
-        .build()
 }

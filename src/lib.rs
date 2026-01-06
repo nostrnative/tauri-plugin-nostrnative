@@ -27,9 +27,15 @@ pub mod blossom;
 pub mod chat;
 
 #[cfg(feature = "tauri-plugin")]
-pub mod tauri_plugin;
+mod commands;
 
 pub mod utils;
+
+#[cfg(feature = "tauri-plugin")]
+use tauri::{
+    Runtime,
+    plugin::{Builder, TauriPlugin},
+};
 
 /// A simple configuration for initializing the library.
 #[derive(Debug, Default, Clone)]
@@ -65,4 +71,80 @@ impl NostrNativeBuilder {
             config: self.config,
         }
     }
+}
+
+#[cfg(feature = "tauri-plugin")]
+pub fn init<R: Runtime>() -> TauriPlugin<R> {
+    Builder::new("nostrnative")
+        .invoke_handler(tauri::generate_handler![
+            #[cfg(feature = "keys")]
+            commands::generate_new_nsec,
+            #[cfg(feature = "keys")]
+            commands::parse_pubkey,
+            #[cfg(feature = "keys")]
+            commands::verify_nsec,
+            #[cfg(feature = "calendar")]
+            commands::fetch_calendar_events,
+            #[cfg(feature = "calendar")]
+            commands::publish_batch_calendar_events,
+            #[cfg(feature = "calendar")]
+            commands::publish_calendar_event,
+            #[cfg(feature = "calendar")]
+            commands::delete_calendar_event,
+            #[cfg(feature = "calendar")]
+            commands::fetch_calendars,
+            #[cfg(feature = "calendar")]
+            commands::publish_calendar,
+            #[cfg(feature = "calendar")]
+            commands::delete_calendar,
+            #[cfg(feature = "profile")]
+            commands::fetch_profiles,
+            #[cfg(feature = "profile")]
+            commands::fetch_contact_list,
+            #[cfg(feature = "profile")]
+            commands::update_contact_list,
+            #[cfg(feature = "calendar")]
+            commands::fetch_rsvps,
+            #[cfg(feature = "calendar")]
+            commands::fetch_user_rsvps,
+            #[cfg(feature = "calendar")]
+            commands::fetch_received_rsvps,
+            #[cfg(feature = "calendar")]
+            commands::publish_rsvp,
+            #[cfg(feature = "messages")]
+            commands::send_direct_message,
+            #[cfg(feature = "bookmarks")]
+            commands::fetch_bookmarks,
+            #[cfg(feature = "bookmarks")]
+            commands::fetch_event_details,
+            #[cfg(feature = "bookmarks")]
+            commands::save_bookmark,
+            #[cfg(feature = "bookmarks")]
+            commands::remove_bookmark,
+            #[cfg(feature = "blossom")]
+            commands::blossom_mirror,
+            #[cfg(feature = "blossom")]
+            commands::blossom_upload,
+            #[cfg(feature = "blossom")]
+            commands::blossom_upload_content,
+            #[cfg(feature = "blossom")]
+            commands::blossom_get_blob,
+            #[cfg(feature = "chat")]
+            commands::derive_pns_keys,
+            #[cfg(feature = "chat")]
+            commands::create_discovery_event,
+            #[cfg(feature = "chat")]
+            commands::decrypt_discovery_event,
+            #[cfg(feature = "chat")]
+            commands::publish_chat_message,
+            #[cfg(feature = "chat")]
+            commands::decrypt_pns_event,
+            #[cfg(feature = "chat")]
+            commands::fetch_pns_events,
+            #[cfg(feature = "chat")]
+            commands::delete_chat_messages,
+            #[cfg(feature = "chat")]
+            commands::fetch_discovery_events,
+        ])
+        .build()
 }
