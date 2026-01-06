@@ -26,18 +26,10 @@ nostrnative = { path = "../../nostrnative", features = ["calendar", "bookmarks",
 
 ### JavaScript (Frontend)
 
-First, build the plugin's JavaScript bindings:
+Install the plugin bindings in your Tauri app's frontend directory:
 
 ```bash
-cd nostrnative
-npm install
-npm run build
-```
-
-Then, in your Tauri app's frontend directory:
-
-```bash
-npm install ../nostrnative
+npm install tauri-plugin-nostr-native
 ```
 
 ## Setup in Tauri
@@ -60,7 +52,7 @@ pub fn run() {
 Import the typed bindings in your frontend code:
 
 ```typescript
-import * as nostr from 'nostr-native-plugin';
+import * as nostr from 'tauri-plugin-nostr-native';
 
 // Examples
 const nsec = await nostr.generateNewNsec();
