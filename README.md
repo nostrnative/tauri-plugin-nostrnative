@@ -1,4 +1,4 @@
-# nostrnative
+# tauri-plugin-nostrnative
 
 A modular, high-performance Nostr library and Tauri plugin for Rust and JavaScript. Designed to be clean, easy to integrate, and highly customizable through feature flags.
 
@@ -7,21 +7,21 @@ A modular, high-performance Nostr library and Tauri plugin for Rust and JavaScri
 - **Modular Design:** Only include the components you need (Calendar, Bookmarks, Blossom, etc.).
 - **Tauri Integration:** First-class support for Tauri v2 with a seamless plugin system and typed frontend bindings.
 - **Async-First:** Built on `tokio` and `nostr-sdk` for efficient network operations.
-- **Comprehensive NIP Support:** Includes implementations for NIP-01, NIP-04, NIP-51 (Bookmarks), NIP-52 (Calendar), and more.
+- **Comprehensive NIP Support:** Includes implementations for NIP-01, NIP-44 (Encryption), NIP-46 (Nostr Connect), NIP-51 (Bookmarks), NIP-52 (Calendar), and more.
 
 ## Installation
 
 ### Rust (Backend)
 
-Add `nostrnative` to your `src-tauri/Cargo.toml`:
+Add `tauri-plugin-nostrnative` to your `src-tauri/Cargo.toml`:
 
 ```toml
 [dependencies]
 # Use specific features to keep your binary small
-nostrnative = { path = "../../nostrnative", features = ["calendar", "bookmarks", "tauri-plugin"] }
+tauri-plugin-nostrnative = { path = "../../nostrnative", features = ["calendar", "bookmarks", "tauri-plugin"] }
 
 # Or enable everything
-# nostrnative = { path = "../../nostrnative", features = ["full", "tauri-plugin"] }
+# tauri-plugin-nostrnative = { path = "../../nostrnative", features = ["full", "tauri-plugin"] }
 ```
 
 ### JavaScript (Frontend)
@@ -29,7 +29,7 @@ nostrnative = { path = "../../nostrnative", features = ["calendar", "bookmarks",
 Install the plugin bindings in your Tauri app's frontend directory:
 
 ```bash
-npm install tauri-plugin-nostr-native
+npm install tauri-plugin-nostrnative
 ```
 
 ## Setup in Tauri
@@ -41,7 +41,7 @@ In your `src-tauri/src/lib.rs` (or `main.rs`), initialize the plugin:
 ```rust
 pub fn run() {
     tauri::Builder::default()
-        .plugin(nostrnative::init()) // Initialize the plugin
+        .plugin(tauri_plugin_nostrnative::init()) // Initialize the plugin
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -52,7 +52,7 @@ pub fn run() {
 Import the typed bindings in your frontend code:
 
 ```typescript
-import * as nostr from 'tauri-plugin-nostr-native';
+import * as nostr from 'tauri-plugin-nostrnative';
 
 // Examples
 const nsec = await nostr.generateNewNsec();
@@ -70,7 +70,7 @@ const events = await nostr.fetchCalendarEvents(pubkey, ["wss://relay.damus.io"],
 | `keys`         | Basic key management (generate, parse, verify).             |
 | `calendar`     | Calendar events (NIP-52) and RSVPs.                         |
 | `profile`      | User profiles (NIP-01) and contact lists (NIP-02).          |
-| `messages`     | Direct messages (NIP-04).                                   |
+| `messages`     | Direct messages (NIP-44).                                   |
 | `bookmarks`    | Public and private bookmarks (NIP-51).                      |
 | `blossom`      | Blob Storage Server Operations (mirror, upload, get).       |
 | `chat`         | Advanced chat functionality with PNS key derivation.        |
@@ -82,7 +82,7 @@ const events = await nostr.fetchCalendarEvents(pubkey, ["wss://relay.damus.io"],
 You can also use the core logic directly in any Rust project:
 
 ```rust
-use nostrnative::calendar::fetch_calendar_events_core;
+use tauri_plugin_nostrnative::calendar::fetch_calendar_events_core;
 
 #[tokio::main]
 async fn main() {
@@ -93,7 +93,8 @@ async fn main() {
         &relays,
         None, // start
         None, // end
-        None  // authors
+        None, // authors
+        None  // client_nsec
     ).await;
 
     println!("Fetched events: {:?}", events);
