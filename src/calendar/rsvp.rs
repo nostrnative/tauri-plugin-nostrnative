@@ -16,12 +16,10 @@ pub async fn fetch_rsvps_core(
         Filter::new()
             .kind(Kind::from(31925))
             .custom_tag(SingleLetterTag::lowercase(Alphabet::A), event_coordinate)
+    } else if let Ok(event_id) = EventId::from_hex(event_coordinate) {
+        Filter::new().kind(Kind::from(31925)).event(event_id)
     } else {
-        if let Ok(event_id) = EventId::from_hex(event_coordinate) {
-            Filter::new().kind(Kind::from(31925)).event(event_id)
-        } else {
-            return Err("Invalid event ID".to_string());
-        }
+        return Err("Invalid event ID".to_string());
     };
 
     let events = client

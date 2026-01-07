@@ -66,10 +66,10 @@ pub async fn blossom_upload_core(
         .send()
         .await;
 
-    if let Ok(resp) = head_check {
-        if resp.status().is_success() {
-            return Ok(format!("{}/{}", server_url.trim_end_matches('/'), sha256));
-        }
+    if let Ok(resp) = head_check
+        && resp.status().is_success()
+    {
+        return Ok(format!("{}/{}", server_url.trim_end_matches('/'), sha256));
     }
 
     let now = SystemTime::now()
@@ -142,10 +142,10 @@ pub async fn blossom_upload_content_core(
         .send()
         .await;
 
-    if let Ok(resp) = head_check {
-        if resp.status().is_success() {
-            return Ok(format!("{}/{}", server_url.trim_end_matches('/'), sha256));
-        }
+    if let Ok(resp) = head_check
+        && resp.status().is_success()
+    {
+        return Ok(format!("{}/{}", server_url.trim_end_matches('/'), sha256));
     }
 
     let now = SystemTime::now()

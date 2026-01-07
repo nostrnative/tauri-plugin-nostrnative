@@ -72,10 +72,10 @@ pub async fn decrypt_discovery_event_core(
     let my_public_key = get_public_key_from_signer(nsec)?;
 
     let signer = client.signer().await.map_err(|e| e.to_string())?;
-    if content.contains("?iv=") {
-        if let Ok(decrypted) = signer.nip04_decrypt(&my_public_key, content).await {
-            return Ok(decrypted);
-        }
+    if content.contains("?iv=")
+        && let Ok(decrypted) = signer.nip44_decrypt(&my_public_key, content).await
+    {
+        return Ok(decrypted);
     }
 
     match signer.nip44_decrypt(&my_public_key, content).await {

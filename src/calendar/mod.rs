@@ -29,10 +29,10 @@ pub async fn fetch_calendar_events_core(
     let mut authors_pks = vec![public_key];
     if let Some(auths) = &authors {
         for a in auths {
-            if let Ok(pk) = PublicKey::from_hex(a) {
-                if !authors_pks.contains(&pk) {
-                    authors_pks.push(pk);
-                }
+            if let Ok(pk) = PublicKey::from_hex(a)
+                && !authors_pks.contains(&pk)
+            {
+                authors_pks.push(pk);
             }
         }
     }
@@ -112,22 +112,21 @@ pub async fn fetch_calendar_events_core(
                 include = false;
             }
         }
-        if let Some(re) = range_end {
-            if start > re {
-                include = false;
-            }
+        if let Some(re) = range_end
+            && start > re
+        {
+            include = false;
         }
 
         if include {
             if is_private {
                 let signer = client.signer().await.map_err(|e| e.to_string())?;
-                if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
-                    if let Ok(json_content) = serde_json::from_str::<serde_json::Value>(&decrypted)
-                    {
-                        private_title = json_content["title"].as_str().map(|s| s.to_string());
-                        private_description =
-                            json_content["description"].as_str().map(|s| s.to_string());
-                    }
+                if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await
+                    && let Ok(json_content) = serde_json::from_str::<serde_json::Value>(&decrypted)
+                {
+                    private_title = json_content["title"].as_str().map(|s| s.to_string());
+                    private_description =
+                        json_content["description"].as_str().map(|s| s.to_string());
                 }
             }
 
@@ -150,13 +149,12 @@ pub async fn fetch_calendar_events_core(
             if let Some(t) = final_title {
                 response_tags.retain(|tag| tag.is_empty() || tag[0] != "title");
                 response_tags.push(vec!["title".to_string(), t]);
-            } else if is_private {
-                if !response_tags
+            } else if is_private
+                && !response_tags
                     .iter()
                     .any(|tag| !tag.is_empty() && tag[0] == "title")
-                {
-                    response_tags.push(vec!["title".to_string(), "Private Event".to_string()]);
-                }
+            {
+                response_tags.push(vec!["title".to_string(), "Private Event".to_string()]);
             }
 
             response.push(EventResponse {
@@ -189,12 +187,11 @@ pub async fn publish_batch_calendar_events_core(
     let mut event_ids = Vec::new();
 
     for event_data in events {
-        if let Some(old_id) = &event_data.old_event_id {
-            if let Ok(oid) = EventId::from_hex(old_id) {
-                let event_builder =
-                    EventBuilder::delete(EventDeletionRequest::new().ids(vec![oid]));
-                let _ = client.send_event_builder(event_builder).await;
-            }
+        if let Some(old_id) = &event_data.old_event_id
+            && let Ok(oid) = EventId::from_hex(old_id)
+        {
+            let event_builder = EventBuilder::delete(EventDeletionRequest::new().ids(vec![oid]));
+            let _ = client.send_event_builder(event_builder).await;
         }
 
         let kind = if event_data.is_all_day {
@@ -252,13 +249,13 @@ pub async fn publish_batch_calendar_events_core(
             ));
         }
 
-        if let Some(reminder) = event_data.reminder_minutes {
-            if reminder > 0 {
-                tags.push(Tag::custom(
-                    TagKind::Custom(Cow::Borrowed("reminder")),
-                    vec![reminder.to_string()],
-                ));
-            }
+        if let Some(reminder) = event_data.reminder_minutes
+            && reminder > 0
+        {
+            tags.push(Tag::custom(
+                TagKind::Custom(Cow::Borrowed("reminder")),
+                vec![reminder.to_string()],
+            ));
         }
 
         if let Some(c) = &event_data.color {
@@ -310,15 +307,15 @@ pub async fn publish_batch_calendar_events_core(
             ));
         }
 
-        if let Some(cal_id) = &event_data.calendar_id {
-            if !cal_id.is_empty() {
-                let author = my_public_key.to_hex();
-                let coordinate = format!("31924:{author}:{cal_id}");
-                event_builder = event_builder.tag(Tag::custom(
-                    TagKind::Custom(Cow::Borrowed("a")),
-                    vec![coordinate],
-                ));
-            }
+        if let Some(cal_id) = &event_data.calendar_id
+            && !cal_id.is_empty()
+        {
+            let author = my_public_key.to_hex();
+            let coordinate = format!("31924:{author}:{cal_id}");
+            event_builder = event_builder.tag(Tag::custom(
+                TagKind::Custom(Cow::Borrowed("a")),
+                vec![coordinate],
+            ));
         }
 
         match client.send_event_builder(event_builder).await {

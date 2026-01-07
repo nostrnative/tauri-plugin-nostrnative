@@ -51,6 +51,12 @@ pub struct SyncManager {
     relay_states: Arc<RwLock<HashMap<String, RelaySyncState>>>,
 }
 
+impl Default for SyncManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SyncManager {
     pub fn new() -> Self {
         Self {
@@ -151,6 +157,7 @@ impl SyncManager {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn perform_bidirectional_sync(
         &self,
         app: &AppHandle,
@@ -187,15 +194,15 @@ impl SyncManager {
         if let Ok(contact_events) = client
             .fetch_events(contact_list_filter, Duration::from_secs(10))
             .await
+            && let Some(event) = contact_events.first()
         {
-            if let Some(event) = contact_events.first() {
-                for tag in event.tags.iter() {
-                    let t = tag.clone().to_vec();
-                    if t.len() >= 2 && t[0] == "p" {
-                        if let Ok(pk) = PublicKey::from_hex(&t[1]) {
-                            contact_pks.insert(pk);
-                        }
-                    }
+            for tag in event.tags.iter() {
+                let t = tag.clone().to_vec();
+                if t.len() >= 2
+                    && t[0] == "p"
+                    && let Ok(pk) = PublicKey::from_hex(&t[1])
+                {
+                    contact_pks.insert(pk);
                 }
             }
         }
@@ -386,6 +393,7 @@ impl SyncManager {
         Ok(max_ts)
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn sync_missing_to_local(
         &self,
         local_relay: &str,

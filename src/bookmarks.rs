@@ -52,13 +52,12 @@ pub async fn fetch_bookmarks_core(
                     let signer = client.signer().await.map_err(|e| e.to_string())?;
                     let decrypted = signer.nip44_decrypt(&e.pubkey, &e.content).await.ok();
 
-                    if let Some(content) = decrypted {
-                        if let Ok(private_tags) = serde_json::from_str::<Vec<Vec<String>>>(&content)
-                        {
-                            for t in private_tags {
-                                if t.len() >= 2 && (t[0] == "e" || t[0] == "a") {
-                                    private_ids.insert(t[1].clone());
-                                }
+                    if let Some(content) = decrypted
+                        && let Ok(private_tags) = serde_json::from_str::<Vec<Vec<String>>>(&content)
+                    {
+                        for t in private_tags {
+                            if t.len() >= 2 && (t[0] == "e" || t[0] == "a") {
+                                private_ids.insert(t[1].clone());
                             }
                         }
                     }
@@ -142,16 +141,15 @@ pub async fn fetch_event_details_core(
 
         if clean_id.contains(':') {
             let parts: Vec<&str> = clean_id.split(':').collect();
-            if parts.len() >= 3 {
-                if let (Ok(kind), Ok(pubkey)) =
+            if parts.len() >= 3
+                && let (Ok(kind), Ok(pubkey)) =
                     (parts[0].parse::<u16>(), parse_public_key(parts[1]))
-                {
-                    let filter = Filter::new()
-                        .kind(Kind::from(kind))
-                        .author(pubkey)
-                        .identifier(parts[2]);
-                    coordinate_filters.push(filter);
-                }
+            {
+                let filter = Filter::new()
+                    .kind(Kind::from(kind))
+                    .author(pubkey)
+                    .identifier(parts[2]);
+                coordinate_filters.push(filter);
             }
         } else if let Ok(event_id) = EventId::from_hex(clean_id) {
             event_ids.push(event_id);
@@ -270,10 +268,10 @@ pub async fn save_bookmark_core(
             if !content.is_empty() {
                 let decrypted = signer.nip44_decrypt(&my_public_key, &content).await.ok();
 
-                if let Some(c) = decrypted {
-                    if let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&c) {
-                        private_tags = tags;
-                    }
+                if let Some(c) = decrypted
+                    && let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&c)
+                {
+                    private_tags = tags;
                 }
             }
 
@@ -366,22 +364,22 @@ pub async fn remove_bookmark_core(
                     let decrypted = signer.nip44_decrypt(&my_public_key, &content).await.ok();
                     signer.nip44_decrypt(&my_public_key, &content).await.ok();
 
-                    if let Some(c) = decrypted {
-                        if let Ok(mut private_tags) = serde_json::from_str::<Vec<Vec<String>>>(&c) {
-                            let old_priv_len = private_tags.len();
-                            private_tags.retain(|t| {
-                                !(t.len() >= 2 && t[1] == event_id && (t[0] == "e" || t[0] == "a"))
-                            });
+                    if let Some(c) = decrypted
+                        && let Ok(mut private_tags) = serde_json::from_str::<Vec<Vec<String>>>(&c)
+                    {
+                        let old_priv_len = private_tags.len();
+                        private_tags.retain(|t| {
+                            !(t.len() >= 2 && t[1] == event_id && (t[0] == "e" || t[0] == "a"))
+                        });
 
-                            if private_tags.len() < old_priv_len {
-                                let json = serde_json::to_string(&private_tags)
-                                    .map_err(|e| e.to_string())?;
-                                content = signer
-                                    .nip44_encrypt(&my_public_key, &json)
-                                    .await
-                                    .map_err(|e| e.to_string())?;
-                                modified = true;
-                            }
+                        if private_tags.len() < old_priv_len {
+                            let json =
+                                serde_json::to_string(&private_tags).map_err(|e| e.to_string())?;
+                            content = signer
+                                .nip44_encrypt(&my_public_key, &json)
+                                .await
+                                .map_err(|e| e.to_string())?;
+                            modified = true;
                         }
                     }
                 }
