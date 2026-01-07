@@ -5,7 +5,7 @@ use serde_json::json;
 use std::borrow::Cow;
 use std::time::Duration;
 
- use crate::models::{CalendarEventRequest, CalendarRequest, EventResponse};
+use crate::models::{CalendarEventRequest, CalendarRequest, EventResponse};
 use crate::utils::{get_client, get_event_bech32, get_public_key_from_signer, parse_public_key};
 
 pub async fn fetch_calendar_events_core(

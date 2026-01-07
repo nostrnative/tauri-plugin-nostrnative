@@ -1,5 +1,5 @@
 [default]
-description = "Default permissions for nostrnative plugin. Enables all commands by default."
+description = "Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by default."
 permissions = [
     "allow-generate-new-nsec",
     "allow-parse-pubkey",

@@ -2236,26 +2236,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nostrnative"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "hex",
- "hkdf",
- "nostr",
- "nostr-connect",
- "nostr-sdk",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "tauri",
- "tauri-plugin",
- "tokio",
- "urlencoding",
-]
-
-[[package]]
 name = "num-conv"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4042,6 +4022,26 @@ dependencies = [
  "tauri-utils",
  "toml 0.9.10+spec-1.1.0",
  "walkdir",
+]
+
+[[package]]
+name = "tauri-plugin-nostrnative"
+version = "0.1.1"
+dependencies = [
+ "base64 0.22.1",
+ "hex",
+ "hkdf",
+ "nostr",
+ "nostr-connect",
+ "nostr-sdk",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tauri",
+ "tauri-plugin",
+ "tokio",
+ "urlencoding",
 ]
 
 [[package]]

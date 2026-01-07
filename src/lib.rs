@@ -1,4 +1,4 @@
-//! nostrnative - A modular Nostr library.
+//! tauri-plugin-nostrnative - A modular Nostr library.
 //!
 //! This crate provides a feature-based system for interacting with the Nostr protocol.
 //! Features can be enabled in Cargo.toml to include only what is needed.

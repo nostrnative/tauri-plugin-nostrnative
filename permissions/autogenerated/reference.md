@@ -1,6 +1,6 @@
 ## Default Permission
 
-Default permissions for nostrnative plugin. Enables all commands by default.
+Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by default.
 
 #### This default permission set includes the following:
 

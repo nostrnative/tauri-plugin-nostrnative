@@ -1,6 +1,6 @@
 {
-  "name": "tauri-plugin-nostr-native",
-  "version": "0.1.0",
+  "name": "tauri-plugin-nostrnative",
+  "version": "0.1.2",
   "description": "Nostr native capabilities for Tauri.",
   "type": "module",
   "types": "./dist-js/index.d.ts",
@@ -21,7 +21,7 @@
     "README.md",
     "LICENSE"
   ],
-  "license": "MIT OR Apache-2.0",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/nostrnative/nostrnative.git"
