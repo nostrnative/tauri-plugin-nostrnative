@@ -1,9 +1,9 @@
+use crate::utils::get_client_with_signer;
 use nostr_sdk::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::AppHandle;
-use crate::utils::get_client_with_signer;
 use tokio::sync::RwLock;
 
 const SYNC_KINDS: &[u16] = &[31922, 31923, 31924, 31925, 5, 3, 0];
