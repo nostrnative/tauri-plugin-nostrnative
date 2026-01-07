@@ -43,12 +43,14 @@ pub async fn create_discovery_event_core(
     device_key_to_store: String,
     relays: &[String],
 ) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
-    let encrypted_content =
-        nip04::encrypt(keys.secret_key(), &keys.public_key(), device_key_to_store)
-            .map_err(|e| e.to_string())?;
+    let signer = client.signer().await.map_err(|e| e.to_string())?;
+    let encrypted_content = signer
+        .nip04_encrypt(&my_public_key, &device_key_to_store)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let event_builder =
         EventBuilder::new(Kind::from(KIND_DISCOVERY_U16), encrypted_content).tags([]);
@@ -60,16 +62,18 @@ pub async fn create_discovery_event_core(
     Ok(event_id.to_hex())
 }
 
-pub fn decrypt_discovery_event_core(nsec: &str, content: &str) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
+pub async fn decrypt_discovery_event_core(nsec: &str, content: &str) -> Result<String, String> {
+    let client = crate::utils::get_client_with_signer(nsec, &[]).await?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
+    let signer = client.signer().await.map_err(|e| e.to_string())?;
     if content.contains("?iv=") {
-        if let Ok(decrypted) = nip04::decrypt(keys.secret_key(), &keys.public_key(), content) {
+        if let Ok(decrypted) = signer.nip04_decrypt(&my_public_key, content).await {
             return Ok(decrypted);
         }
     }
 
-    match nip44::decrypt(keys.secret_key(), &keys.public_key(), content) {
+    match signer.nip44_decrypt(&my_public_key, content).await {
         Ok(decrypted) => Ok(decrypted),
         Err(e) => Err(format!("Decryption failed (NIP-04/NIP-44: {})", e)),
     }
@@ -81,8 +85,8 @@ pub async fn publish_chat_message_core(
     msg: ChatMessageRequest,
     relays: &[String],
 ) -> Result<String, String> {
-    let pns_keys = Keys::parse(pns_nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&pns_keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(pns_nsec, relays).await?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let mut inner_tags = vec![
         vec!["d".to_string(), msg.conversation_id],
@@ -119,13 +123,11 @@ pub async fn publish_chat_message_core(
     })
     .to_string();
 
-    let encrypted_inner = nip44::encrypt(
-        pns_keys.secret_key(),
-        &pns_keys.public_key(),
-        inner_event_json,
-        nip44::Version::V2,
-    )
-    .map_err(|e| e.to_string())?;
+    let signer = client.signer().await.map_err(|e| e.to_string())?;
+    let encrypted_inner = signer
+        .nip44_encrypt(&my_public_key, &inner_event_json)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let event_builder = EventBuilder::new(Kind::from(KIND_PNS_U16), encrypted_inner).tags([]);
 
@@ -137,10 +139,17 @@ pub async fn publish_chat_message_core(
     Ok(event_id.to_hex())
 }
 
-pub fn decrypt_pns_event_core(pns_nsec: &str, content: &str) -> Result<serde_json::Value, String> {
-    let pns_keys = Keys::parse(pns_nsec).map_err(|e| e.to_string())?;
+pub async fn decrypt_pns_event_core(
+    pns_nsec: &str,
+    content: &str,
+) -> Result<serde_json::Value, String> {
+    let client = crate::utils::get_client_with_signer(pns_nsec, &[]).await?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
-    let decrypted = nip44::decrypt(pns_keys.secret_key(), &pns_keys.public_key(), content)
+    let signer = client.signer().await.map_err(|e| e.to_string())?;
+    let decrypted = signer
+        .nip44_decrypt(&my_public_key, content)
+        .await
         .map_err(|e| e.to_string())?;
 
     let val: serde_json::Value = serde_json::from_str(&decrypted).map_err(|e| e.to_string())?;
@@ -191,8 +200,7 @@ pub async fn delete_chat_messages_core(
     relays: &[String],
     event_ids: Vec<String>,
 ) -> Result<String, String> {
-    let pns_keys = Keys::parse(pns_nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&pns_keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(pns_nsec, relays).await?;
 
     let ids: Result<Vec<EventId>, String> = event_ids
         .into_iter()

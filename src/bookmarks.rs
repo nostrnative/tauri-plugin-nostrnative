@@ -11,8 +11,12 @@ pub async fn fetch_bookmarks_core(
     relays: &[String],
 ) -> Result<Vec<EventResponse>, String> {
     let public_key = parse_public_key(pubkey)?;
-    let ephemeral_keys = Keys::generate();
-    let client = get_client(&ephemeral_keys, relays).await?;
+
+    let client = if let Some(ns) = nsec {
+        crate::utils::get_client_with_signer(ns, relays).await?
+    } else {
+        get_client(&Keys::generate(), relays).await?
+    };
 
     let filter = Filter::new().authors(vec![public_key]).kinds([
         Kind::Bookmarks,   // Bookmark List
@@ -30,8 +34,6 @@ pub async fn fetch_bookmarks_core(
     let mut private_ids = HashSet::new();
     let mut website_events = Vec::new();
 
-    let keys = nsec.and_then(|s| Keys::parse(s).ok());
-
     for e in list_events {
         match e.kind.as_u16() {
             39701 => {
@@ -45,25 +47,21 @@ pub async fn fetch_bookmarks_core(
                     }
                 }
 
-                if !e.content.is_empty() {
-                    if let Some(k) = &keys {
-                        let sk = k.secret_key();
-                        let decrypted =
-                            if let Ok(content) = nip44::decrypt(sk, &e.pubkey, &e.content) {
-                                Some(content)
-                            } else {
-                                #[allow(deprecated)]
-                                nip04::decrypt(sk, &e.pubkey, &e.content).ok()
-                            };
+                if !e.content.is_empty() && nsec.is_some() {
+                    let signer = client.signer().await.map_err(|e| e.to_string())?;
+                    let decrypted =
+                        if let Ok(content) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
+                            Some(content)
+                        } else {
+                            signer.nip04_decrypt(&e.pubkey, &e.content).await.ok()
+                        };
 
-                        if let Some(content) = decrypted {
-                            if let Ok(private_tags) =
-                                serde_json::from_str::<Vec<Vec<String>>>(&content)
-                            {
-                                for t in private_tags {
-                                    if t.len() >= 2 && (t[0] == "e" || t[0] == "a") {
-                                        private_ids.insert(t[1].clone());
-                                    }
+                    if let Some(content) = decrypted {
+                        if let Ok(private_tags) = serde_json::from_str::<Vec<Vec<String>>>(&content)
+                        {
+                            for t in private_tags {
+                                if t.len() >= 2 && (t[0] == "e" || t[0] == "a") {
+                                    private_ids.insert(t[1].clone());
                                 }
                             }
                         }
@@ -221,11 +219,11 @@ pub async fn save_bookmark_core(
     event_id: String,
     source: BookmarkSource,
 ) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let filter = Filter::new()
-        .authors(vec![keys.public_key()])
+        .authors(vec![my_public_key])
         .kind(Kind::from(30001))
         .identifier("bookmark")
         .limit(1);
@@ -268,17 +266,18 @@ pub async fn save_bookmark_core(
             }
         }
         BookmarkSource::Private => {
-            let sk = keys.secret_key();
             let mut private_tags = Vec::new();
             let mut used_nip44 = true;
 
+            let signer = client.signer().await.map_err(|e| e.to_string())?;
+
             if !content.is_empty() {
-                let decrypted = if let Ok(c) = nip44::decrypt(sk, &keys.public_key(), &content) {
+                let decrypted = if let Ok(c) = signer.nip44_decrypt(&my_public_key, &content).await
+                {
                     Some(c)
                 } else {
                     used_nip44 = false;
-                    #[allow(deprecated)]
-                    nip04::decrypt(sk, &keys.public_key(), &content).ok()
+                    signer.nip04_decrypt(&my_public_key, &content).await.ok()
                 };
 
                 if let Some(c) = decrypted {
@@ -304,11 +303,15 @@ pub async fn save_bookmark_core(
 
             let json = serde_json::to_string(&private_tags).map_err(|e| e.to_string())?;
             content = if used_nip44 {
-                nip44::encrypt(sk, &keys.public_key(), json, nip44::Version::V2)
+                signer
+                    .nip44_encrypt(&my_public_key, &json)
+                    .await
                     .map_err(|e| e.to_string())?
             } else {
-                #[allow(deprecated)]
-                nip04::encrypt(sk, &keys.public_key(), json).map_err(|e| e.to_string())?
+                signer
+                    .nip04_encrypt(&my_public_key, &json)
+                    .await
+                    .map_err(|e| e.to_string())?
             };
         }
         BookmarkSource::Website => {
@@ -335,11 +338,11 @@ pub async fn remove_bookmark_core(
     event_id: String,
     source: BookmarkSource,
 ) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let filter = Filter::new()
-        .authors(vec![keys.public_key()])
+        .authors(vec![my_public_key])
         .kind(Kind::from(30001))
         .identifier("bookmark")
         .limit(1);
@@ -375,16 +378,15 @@ pub async fn remove_bookmark_core(
             }
             BookmarkSource::Private => {
                 if !content.is_empty() {
-                    let sk = keys.secret_key();
                     let mut used_nip44 = true;
-                    let decrypted = if let Ok(c) = nip44::decrypt(sk, &keys.public_key(), &content)
-                    {
-                        Some(c)
-                    } else {
-                        used_nip44 = false;
-                        #[allow(deprecated)]
-                        nip04::decrypt(sk, &keys.public_key(), &content).ok()
-                    };
+                    let signer = client.signer().await.map_err(|e| e.to_string())?;
+                    let decrypted =
+                        if let Ok(c) = signer.nip44_decrypt(&my_public_key, &content).await {
+                            Some(c)
+                        } else {
+                            used_nip44 = false;
+                            signer.nip04_decrypt(&my_public_key, &content).await.ok()
+                        };
 
                     if let Some(c) = decrypted {
                         if let Ok(mut private_tags) = serde_json::from_str::<Vec<Vec<String>>>(&c) {
@@ -397,11 +399,14 @@ pub async fn remove_bookmark_core(
                                 let json = serde_json::to_string(&private_tags)
                                     .map_err(|e| e.to_string())?;
                                 content = if used_nip44 {
-                                    nip44::encrypt(sk, &keys.public_key(), json, nip44::Version::V2)
+                                    signer
+                                        .nip44_encrypt(&my_public_key, &json)
+                                        .await
                                         .map_err(|e| e.to_string())?
                                 } else {
-                                    #[allow(deprecated)]
-                                    nip04::encrypt(sk, &keys.public_key(), json)
+                                    signer
+                                        .nip04_encrypt(&my_public_key, &json)
+                                        .await
                                         .map_err(|e| e.to_string())?
                                 };
                                 modified = true;
@@ -410,6 +415,7 @@ pub async fn remove_bookmark_core(
                     }
                 }
             }
+
             BookmarkSource::Website => {
                 return Err("Removing website bookmarks is not yet supported".to_string());
             }

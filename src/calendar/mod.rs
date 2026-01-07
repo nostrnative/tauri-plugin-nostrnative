@@ -18,14 +18,11 @@ pub async fn fetch_calendar_events_core(
 ) -> Result<Vec<EventResponse>, String> {
     let public_key = parse_public_key(pubkey)?;
 
-    let keys = if let Some(ns) = nsec {
-        Some(Keys::parse(ns).map_err(|e| e.to_string())?)
+    let client = if let Some(ns) = nsec {
+        crate::utils::get_client_with_signer(ns, relays).await?
     } else {
-        None
+        get_client(&Keys::generate(), relays).await?
     };
-
-    let ephemeral_keys = Keys::generate();
-    let client = get_client(&ephemeral_keys, relays).await?;
 
     let mut authors_pks = vec![public_key];
     if let Some(auths) = &authors {
@@ -80,108 +77,100 @@ pub async fn fetch_calendar_events_core(
 
     let events: Vec<_> = owned_events.into_iter().chain(invited_events).collect();
 
-    let response = events
-        .into_iter()
-        .filter_map(|e| {
-            let mut start_val: Option<i64> = None;
-            let mut end_val: Option<i64> = None;
-            let mut is_private = false;
-            let mut private_title: Option<String> = None;
-            let mut private_description: Option<String> = None;
+    let mut response = Vec::new();
+    for e in events {
+        let mut start_val: Option<i64> = None;
+        let mut end_val: Option<i64> = None;
+        let mut is_private = false;
+        let mut private_title: Option<String> = None;
+        let mut private_description: Option<String> = None;
 
-            for tag in e.tags.iter() {
-                let t = tag.clone().to_vec();
-                if t.len() >= 2 {
-                    if t[0] == "start" {
-                        start_val = t[1].parse::<i64>().ok();
-                    } else if t[0] == "end" {
-                        end_val = t[1].parse::<i64>().ok();
-                    } else if t[0] == "private" {
-                        is_private = true;
-                    }
+        for tag in e.tags.iter() {
+            let t = tag.clone().to_vec();
+            if t.len() >= 2 {
+                if t[0] == "start" {
+                    start_val = t[1].parse::<i64>().ok();
+                } else if t[0] == "end" {
+                    end_val = t[1].parse::<i64>().ok();
+                } else if t[0] == "private" {
+                    is_private = true;
                 }
             }
+        }
 
-            let start = start_val.unwrap_or(e.created_at.as_secs() as i64);
+        let start = start_val.unwrap_or(e.created_at.as_secs() as i64);
 
-            let mut include = true;
-            if let Some(rs) = range_start {
-                if let Some(ee) = end_val {
-                    if ee < rs {
-                        include = false;
-                    }
-                } else if start < rs {
+        let mut include = true;
+        if let Some(rs) = range_start {
+            if let Some(ee) = end_val {
+                if ee < rs {
                     include = false;
                 }
+            } else if start < rs {
+                include = false;
             }
-            if let Some(re) = range_end {
-                if start > re {
-                    include = false;
-                }
+        }
+        if let Some(re) = range_end {
+            if start > re {
+                include = false;
             }
+        }
 
-            if include {
-                if is_private {
-                    if let Some(k) = &keys {
-                        if let Ok(decrypted) = nip04::decrypt(k.secret_key(), &e.pubkey, &e.content)
-                        {
-                            if let Ok(json_content) =
-                                serde_json::from_str::<serde_json::Value>(&decrypted)
-                            {
-                                private_title =
-                                    json_content["title"].as_str().map(|s| s.to_string());
-                                private_description =
-                                    json_content["description"].as_str().map(|s| s.to_string());
-                            }
-                        }
-                    }
-                }
-
-                let (final_title, final_content) = if is_private {
-                    if let (Some(t), Some(d)) = (private_title, private_description) {
-                        (Some(t), d)
-                    } else {
-                        (None, "Encrypted Content".to_string())
-                    }
-                } else {
-                    (None, e.content.to_string())
-                };
-
-                let mut response_tags = e
-                    .tags
-                    .iter()
-                    .map(|t| t.clone().to_vec())
-                    .collect::<Vec<_>>();
-
-                if let Some(t) = final_title {
-                    response_tags.retain(|tag| tag.is_empty() || tag[0] != "title");
-                    response_tags.push(vec!["title".to_string(), t]);
-                } else if is_private {
-                    if !response_tags
-                        .iter()
-                        .any(|tag| !tag.is_empty() && tag[0] == "title")
+        if include {
+            if is_private {
+                let signer = client.signer().await.map_err(|e| e.to_string())?;
+                if let Ok(decrypted) = signer.nip04_decrypt(&e.pubkey, &e.content).await {
+                    if let Ok(json_content) = serde_json::from_str::<serde_json::Value>(&decrypted)
                     {
-                        response_tags.push(vec!["title".to_string(), "Private Event".to_string()]);
+                        private_title = json_content["title"].as_str().map(|s| s.to_string());
+                        private_description =
+                            json_content["description"].as_str().map(|s| s.to_string());
                     }
                 }
-
-                Some(EventResponse {
-                    id: e.id.to_hex(),
-                    pubkey: e.pubkey.to_hex(),
-                    created_at: e.created_at.as_secs() as i64,
-                    kind: e.kind.as_u16(),
-                    tags: response_tags,
-                    content: final_content,
-                    is_private,
-                    bech32: Some(get_event_bech32(&e, Some(relays.to_vec()))),
-                    private_tags: None,
-                    source: None,
-                })
-            } else {
-                None
             }
-        })
-        .collect();
+
+            let (final_title, final_content) = if is_private {
+                if let (Some(t), Some(d)) = (private_title, private_description) {
+                    (Some(t), d)
+                } else {
+                    (None, "Encrypted Content".to_string())
+                }
+            } else {
+                (None, e.content.to_string())
+            };
+
+            let mut response_tags = e
+                .tags
+                .iter()
+                .map(|t| t.clone().to_vec())
+                .collect::<Vec<_>>();
+
+            if let Some(t) = final_title {
+                response_tags.retain(|tag| tag.is_empty() || tag[0] != "title");
+                response_tags.push(vec!["title".to_string(), t]);
+            } else if is_private {
+                if !response_tags
+                    .iter()
+                    .any(|tag| !tag.is_empty() && tag[0] == "title")
+                {
+                    response_tags.push(vec!["title".to_string(), "Private Event".to_string()]);
+                }
+            }
+
+            response.push(EventResponse {
+                id: e.id.to_hex(),
+                pubkey: e.pubkey.to_hex(),
+                created_at: e.created_at.as_secs() as i64,
+                kind: e.kind.as_u16(),
+                tags: response_tags,
+                content: final_content,
+                is_private,
+                bech32: Some(get_event_bech32(&e, Some(relays.to_vec()))),
+                private_tags: None,
+                source: None,
+            });
+        }
+    }
 
     Ok(response)
 }
@@ -191,8 +180,8 @@ pub async fn publish_batch_calendar_events_core(
     relays: &[String],
     events: Vec<CalendarEventRequest>,
 ) -> Result<Vec<String>, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let mut event_ids = Vec::new();
 
@@ -230,7 +219,11 @@ pub async fn publish_batch_calendar_events_core(
                 "description": event_data.description.clone().unwrap_or_default()
             });
 
-            match nip04::encrypt(keys.secret_key(), &keys.public_key(), payload.to_string()) {
+            let signer = client.signer().await.map_err(|e| e.to_string())?;
+            match signer
+                .nip04_encrypt(&my_public_key, &payload.to_string())
+                .await
+            {
                 Ok(c) => c,
                 Err(e) => return Err(format!("Failed to encrypt event: {e}")),
             }
@@ -316,7 +309,7 @@ pub async fn publish_batch_calendar_events_core(
 
         if let Some(cal_id) = &event_data.calendar_id {
             if !cal_id.is_empty() {
-                let author = keys.public_key().to_hex();
+                let author = my_public_key.to_hex();
                 let coordinate = format!("31924:{author}:{cal_id}");
                 event_builder = event_builder.tag(Tag::custom(
                     TagKind::Custom(Cow::Borrowed("a")),
@@ -339,8 +332,7 @@ pub async fn delete_calendar_event_core(
     relays: &[String],
     event_ids: Vec<String>,
 ) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
 
     let mut event_id_objs = Vec::new();
     for id in event_ids {
@@ -404,8 +396,7 @@ pub async fn publish_calendar_core(
     relays: &[String],
     calendar: CalendarRequest,
 ) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
 
     let tags = vec![
         Tag::identifier(&calendar.identifier),
@@ -431,10 +422,10 @@ pub async fn delete_calendar_core(
     relays: &[String],
     identifier: String,
 ) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
-    let coordinate = Coordinate::new(Kind::from(31924), keys.public_key()).identifier(identifier);
+    let coordinate = Coordinate::new(Kind::from(31924), my_public_key).identifier(identifier);
     let event_builder =
         EventBuilder::delete(EventDeletionRequest::new().coordinates(vec![coordinate.clone()]))
             .tag(Tag::custom(

@@ -11,7 +11,9 @@ links = "nostrnative"
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-nostr-sdk = { version = "0.44.0", features = ["nip04", "nip59"] }
+nostr-sdk = { version = "0.44.0", features = ["nip04", "nip44", "nip59"] }
+nostr = { version = "0.44", features = ["nip44", "nip46"] }
+nostr-connect = "0.44"
 tauri = { version = "2.0", optional = true }
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.12", features = ["json", "blocking"], optional = true }

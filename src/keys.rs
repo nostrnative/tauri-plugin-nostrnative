@@ -11,7 +11,18 @@ pub fn parse_pubkey(pubkey: &str) -> Result<String, String> {
     Ok(pk.to_hex())
 }
 
-pub fn verify_nsec(nsec: &str) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    Ok(keys.public_key().to_hex())
+pub async fn verify_nsec(nsec: &str) -> Result<String, String> {
+    if nsec.starts_with("bunker://") {
+        let uri = NostrConnectURI::parse(nsec).map_err(|e| e.to_string())?;
+        match uri {
+            NostrConnectURI::Bunker {
+                remote_signer_public_key,
+                ..
+            } => Ok(remote_signer_public_key.to_hex()),
+            _ => Err("Invalid bunker URI".to_string()),
+        }
+    } else {
+        let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
+        Ok(keys.public_key().to_hex())
+    }
 }

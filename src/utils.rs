@@ -1,4 +1,6 @@
+use nostr_connect::client::NostrConnect;
 use nostr_sdk::prelude::*;
+use std::time::Duration;
 
 pub fn parse_public_key(pk: &str) -> Result<PublicKey, String> {
     let mut clean_pk = pk.trim();
@@ -24,6 +26,25 @@ pub fn parse_public_key(pk: &str) -> Result<PublicKey, String> {
 
 pub async fn get_client(keys: &Keys, relays: &[String]) -> Result<Client, String> {
     let client = Client::new(keys.clone());
+    for relay in relays {
+        client.add_relay(relay).await.map_err(|e| e.to_string())?;
+    }
+    client.connect().await;
+    Ok(client)
+}
+
+pub async fn get_client_with_signer(signer_str: &str, relays: &[String]) -> Result<Client, String> {
+    let client = if signer_str.starts_with("bunker://") {
+        let uri = NostrConnectURI::parse(signer_str).map_err(|e| e.to_string())?;
+        let app_keys = Keys::generate();
+        let signer = NostrConnect::new(uri, app_keys, Duration::from_secs(60), None)
+            .map_err(|e| e.to_string())?;
+        Client::new(signer)
+    } else {
+        let keys = Keys::parse(signer_str).map_err(|e| e.to_string())?;
+        Client::new(keys)
+    };
+
     for relay in relays {
         client.add_relay(relay).await.map_err(|e| e.to_string())?;
     }

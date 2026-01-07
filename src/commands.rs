@@ -39,7 +39,7 @@ pub async fn parse_pubkey(pubkey: String) -> Result<String, String> {
 #[tauri::command]
 #[cfg(feature = "keys")]
 pub async fn verify_nsec(nsec: String) -> Result<String, String> {
-    keys::verify_nsec(&nsec)
+    keys::verify_nsec(&nsec).await
 }
 
 #[tauri::command]
@@ -300,7 +300,7 @@ pub async fn create_discovery_event(
 #[tauri::command]
 #[cfg(feature = "chat")]
 pub async fn decrypt_discovery_event(nsec: String, content: String) -> Result<String, String> {
-    chat::decrypt_discovery_event_core(&nsec, &content)
+    chat::decrypt_discovery_event_core(&nsec, &content).await
 }
 
 #[tauri::command]
@@ -320,7 +320,7 @@ pub async fn decrypt_pns_event(
     pns_nsec: String,
     content: String,
 ) -> Result<serde_json::Value, String> {
-    chat::decrypt_pns_event_core(&pns_nsec, &content)
+    chat::decrypt_pns_event_core(&pns_nsec, &content).await
 }
 
 #[tauri::command]

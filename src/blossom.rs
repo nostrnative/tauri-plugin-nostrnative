@@ -1,6 +1,6 @@
 use base64::Engine;
 use nostr_sdk::prelude::*;
-use reqwest::Client;
+use reqwest::Client as HttpClient;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub async fn blossom_mirror_core(
@@ -8,10 +8,10 @@ pub async fn blossom_mirror_core(
     nsec: &str,
     url: &str,
 ) -> Result<String, String> {
-    let _keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = Client::new();
+    let _client = crate::utils::get_client_with_signer(nsec, &[]).await?;
+    let http_client = HttpClient::new();
 
-    let response = client
+    let response = http_client
         .get(url)
         .timeout(Duration::from_secs(30))
         .send()
@@ -32,7 +32,7 @@ pub async fn blossom_mirror_core(
         urlencoding::encode(url)
     );
 
-    let blossom_resp = client
+    let blossom_resp = http_client
         .get(&blossom_url)
         .send()
         .await
@@ -53,13 +53,13 @@ pub async fn blossom_upload_core(
     nsec: &str,
     file_path: &str,
 ) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = Client::new();
+    let nostr_client = crate::utils::get_client_with_signer(nsec, &[]).await?;
+    let http_client = HttpClient::new();
 
     let file_content = std::fs::read(file_path).map_err(|e| e.to_string())?;
     let sha256 = hash_sha256(&file_content);
 
-    let head_check = client
+    let head_check = http_client
         .head(format!("{}/{}", server_url.trim_end_matches('/'), sha256))
         .send()
         .await;
@@ -91,11 +91,14 @@ pub async fn blossom_upload_core(
     ];
 
     let builder = EventBuilder::new(Kind::from(24242), "Upload Blob").tags(tags);
-    let event = builder.sign(&keys).await.map_err(|e| e.to_string())?;
+    let event = nostr_client
+        .sign_event_builder(builder)
+        .await
+        .map_err(|e| e.to_string())?;
     let auth_b64 = base64::engine::general_purpose::STANDARD
         .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
 
-    let response = client
+    let response = http_client
         .put(format!("{}/upload", server_url.trim_end_matches('/')))
         .header("Authorization", format!("Nostr {}", auth_b64))
         .body(file_content)
@@ -125,13 +128,13 @@ pub async fn blossom_upload_content_core(
     filename: Option<String>,
     media_type: Option<String>,
 ) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = Client::new();
+    let nostr_client = crate::utils::get_client_with_signer(nsec, &[]).await?;
+    let http_client = HttpClient::new();
 
     let file_content = content.into_bytes();
     let sha256 = hash_sha256(&file_content);
 
-    let head_check = client
+    let head_check = http_client
         .head(format!("{}/{}", server_url.trim_end_matches('/'), sha256))
         .send()
         .await;
@@ -177,11 +180,14 @@ pub async fn blossom_upload_content_core(
     }
 
     let builder = EventBuilder::new(Kind::from(24242), "Upload Blob").tags(tags);
-    let event = builder.sign(&keys).await.map_err(|e| e.to_string())?;
+    let event = nostr_client
+        .sign_event_builder(builder)
+        .await
+        .map_err(|e| e.to_string())?;
     let auth_b64 = base64::engine::general_purpose::STANDARD
         .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
 
-    let response = client
+    let response = http_client
         .put(format!("{}/upload", server_url.trim_end_matches('/')))
         .header("Authorization", format!("Nostr {}", auth_b64))
         .body(file_content)
@@ -212,8 +218,8 @@ fn hash_sha256(data: &[u8]) -> String {
 }
 
 pub async fn blossom_get_blob_core(server_url: &str, hash: &str) -> Result<Vec<u8>, String> {
-    let client = Client::new();
-    let response = client
+    let http_client = HttpClient::new();
+    let response = http_client
         .get(format!("{}/{}", server_url.trim_end_matches('/'), hash))
         .send()
         .await

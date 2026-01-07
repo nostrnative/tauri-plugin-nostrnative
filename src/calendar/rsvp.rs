@@ -123,8 +123,7 @@ pub async fn publish_rsvp_core(
     status: String,
     event_author: Option<String>,
 ) -> Result<String, String> {
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let client = get_client(&keys, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
 
     let mut tags = Vec::new();
 

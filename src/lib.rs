@@ -30,6 +30,7 @@ pub mod chat;
 mod commands;
 
 pub mod utils;
+pub use utils::get_client_with_signer;
 
 #[cfg(feature = "tauri-plugin")]
 use tauri::{
