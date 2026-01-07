@@ -1,6 +1,6 @@
 {
   "name": "tauri-plugin-nostrnative",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Nostr native capabilities for Tauri.",
   "type": "module",
   "types": "./dist-js/index.d.ts",

@@ -1,3 +1,4 @@
+pub mod calendar_sync;
 pub mod rsvp;
 
 use nostr_sdk::prelude::*;
