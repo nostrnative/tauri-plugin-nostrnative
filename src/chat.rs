@@ -49,7 +49,7 @@ pub async fn create_discovery_event_core(
 
     let signer = client.signer().await.map_err(|e| e.to_string())?;
     let encrypted_content = signer
-        .nip04_encrypt(&my_public_key, &device_key_to_store)
+        .nip44_encrypt(&my_public_key, &device_key_to_store)
         .await
         .map_err(|e| e.to_string())?;
 

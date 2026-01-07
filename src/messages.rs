@@ -14,7 +14,7 @@ pub async fn send_direct_message_core(
 
     let signer = client.signer().await.map_err(|e| e.to_string())?;
     let encrypted_content = signer
-        .nip04_encrypt(&r_pubkey, message)
+        .nip44_encrypt(&r_pubkey, message)
         .await
         .map_err(|e| e.to_string())?;
 

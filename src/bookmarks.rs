@@ -50,12 +50,7 @@ pub async fn fetch_bookmarks_core(
 
                 if !e.content.is_empty() && nsec.is_some() {
                     let signer = client.signer().await.map_err(|e| e.to_string())?;
-                    let decrypted =
-                        if let Ok(content) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
-                            Some(content)
-                        } else {
-                            signer.nip04_decrypt(&e.pubkey, &e.content).await.ok()
-                        };
+                    let decrypted = signer.nip44_decrypt(&e.pubkey, &e.content).await.ok();
 
                     if let Some(content) = decrypted {
                         if let Ok(private_tags) = serde_json::from_str::<Vec<Vec<String>>>(&content)
@@ -269,18 +264,11 @@ pub async fn save_bookmark_core(
         }
         BookmarkSource::Private => {
             let mut private_tags = Vec::new();
-            let mut used_nip44 = true;
 
             let signer = client.signer().await.map_err(|e| e.to_string())?;
 
             if !content.is_empty() {
-                let decrypted = if let Ok(c) = signer.nip44_decrypt(&my_public_key, &content).await
-                {
-                    Some(c)
-                } else {
-                    used_nip44 = false;
-                    signer.nip04_decrypt(&my_public_key, &content).await.ok()
-                };
+                let decrypted = signer.nip44_decrypt(&my_public_key, &content).await.ok();
 
                 if let Some(c) = decrypted {
                     if let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&c) {
@@ -304,17 +292,10 @@ pub async fn save_bookmark_core(
             }
 
             let json = serde_json::to_string(&private_tags).map_err(|e| e.to_string())?;
-            content = if used_nip44 {
-                signer
-                    .nip44_encrypt(&my_public_key, &json)
-                    .await
-                    .map_err(|e| e.to_string())?
-            } else {
-                signer
-                    .nip04_encrypt(&my_public_key, &json)
-                    .await
-                    .map_err(|e| e.to_string())?
-            };
+            content = signer
+                .nip44_encrypt(&my_public_key, &json)
+                .await
+                .map_err(|e| e.to_string())?;
         }
         BookmarkSource::Website => {
             return Err("Cannot save website bookmark via this command".to_string());
@@ -381,15 +362,9 @@ pub async fn remove_bookmark_core(
             }
             BookmarkSource::Private => {
                 if !content.is_empty() {
-                    let mut used_nip44 = true;
                     let signer = client.signer().await.map_err(|e| e.to_string())?;
-                    let decrypted =
-                        if let Ok(c) = signer.nip44_decrypt(&my_public_key, &content).await {
-                            Some(c)
-                        } else {
-                            used_nip44 = false;
-                            signer.nip04_decrypt(&my_public_key, &content).await.ok()
-                        };
+                    let decrypted = signer.nip44_decrypt(&my_public_key, &content).await.ok();
+                    signer.nip44_decrypt(&my_public_key, &content).await.ok();
 
                     if let Some(c) = decrypted {
                         if let Ok(mut private_tags) = serde_json::from_str::<Vec<Vec<String>>>(&c) {
@@ -401,17 +376,10 @@ pub async fn remove_bookmark_core(
                             if private_tags.len() < old_priv_len {
                                 let json = serde_json::to_string(&private_tags)
                                     .map_err(|e| e.to_string())?;
-                                content = if used_nip44 {
-                                    signer
-                                        .nip44_encrypt(&my_public_key, &json)
-                                        .await
-                                        .map_err(|e| e.to_string())?
-                                } else {
-                                    signer
-                                        .nip04_encrypt(&my_public_key, &json)
-                                        .await
-                                        .map_err(|e| e.to_string())?
-                                };
+                                content = signer
+                                    .nip44_encrypt(&my_public_key, &json)
+                                    .await
+                                    .map_err(|e| e.to_string())?;
                                 modified = true;
                             }
                         }

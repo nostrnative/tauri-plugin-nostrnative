@@ -5,7 +5,7 @@ use serde_json::json;
 use std::borrow::Cow;
 use std::time::Duration;
 
-use crate::models::{CalendarEventRequest, CalendarRequest, EventResponse};
+ use crate::models::{CalendarEventRequest, CalendarRequest, EventResponse};
 use crate::utils::{get_client, get_event_bech32, get_public_key_from_signer, parse_public_key};
 
 pub async fn fetch_calendar_events_core(
@@ -120,7 +120,7 @@ pub async fn fetch_calendar_events_core(
         if include {
             if is_private {
                 let signer = client.signer().await.map_err(|e| e.to_string())?;
-                if let Ok(decrypted) = signer.nip04_decrypt(&e.pubkey, &e.content).await {
+                if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
                     if let Ok(json_content) = serde_json::from_str::<serde_json::Value>(&decrypted)
                     {
                         private_title = json_content["title"].as_str().map(|s| s.to_string());
@@ -182,11 +182,8 @@ pub async fn publish_batch_calendar_events_core(
     events: Vec<CalendarEventRequest>,
     client_nsec: Option<&str>,
 ) -> Result<Vec<String>, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec)
-        .await
-        .unwrap();
-    let my_public_key = get_public_key_from_signer(nsec).unwrap();
-    println!("{:?}", my_public_key);
+    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let my_public_key = get_public_key_from_signer(nsec)?;
 
     let mut event_ids = Vec::new();
 
@@ -226,7 +223,7 @@ pub async fn publish_batch_calendar_events_core(
 
             let signer = client.signer().await.map_err(|e| e.to_string())?;
             match signer
-                .nip04_encrypt(&my_public_key, &payload.to_string())
+                .nip44_encrypt(&my_public_key, &payload.to_string())
                 .await
             {
                 Ok(c) => c,
