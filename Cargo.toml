@@ -4,7 +4,7 @@ version = "0.1.1"
 description = "Nostr native capabilities for Tauri"
 authors = ["nostrnative"]
 license = "MIT"
-repository = "https://github.com/nostrnative/nostrnative"
+repository = "https://github.com/nostrnative/tauri-plugin-nostrnative"
 edition = "2024"
 links = "tauri-plugin-nostrnative"
 
