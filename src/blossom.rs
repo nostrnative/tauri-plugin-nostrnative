@@ -7,8 +7,9 @@ pub async fn blossom_mirror_core(
     server_url: &str,
     nsec: &str,
     url: &str,
+    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let _client = crate::utils::get_client_with_signer(nsec, &[]).await?;
+    let _client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
     let http_client = HttpClient::new();
 
     let response = http_client
@@ -52,8 +53,9 @@ pub async fn blossom_upload_core(
     server_url: &str,
     nsec: &str,
     file_path: &str,
+    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let nostr_client = crate::utils::get_client_with_signer(nsec, &[]).await?;
+    let nostr_client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
     let http_client = HttpClient::new();
 
     let file_content = std::fs::read(file_path).map_err(|e| e.to_string())?;
@@ -127,8 +129,9 @@ pub async fn blossom_upload_content_core(
     content: String,
     filename: Option<String>,
     media_type: Option<String>,
+    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let nostr_client = crate::utils::get_client_with_signer(nsec, &[]).await?;
+    let nostr_client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
     let http_client = HttpClient::new();
 
     let file_content = content.into_bytes();

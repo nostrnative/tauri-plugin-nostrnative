@@ -24,6 +24,22 @@ pub fn parse_public_key(pk: &str) -> Result<PublicKey, String> {
     }
 }
 
+pub fn get_public_key_from_signer(signer_str: &str) -> Result<PublicKey, String> {
+    if signer_str.starts_with("bunker://") {
+        let uri = NostrConnectURI::parse(signer_str).map_err(|e| e.to_string())?;
+        match uri {
+            NostrConnectURI::Bunker {
+                remote_signer_public_key,
+                ..
+            } => Ok(remote_signer_public_key),
+            _ => Err("Invalid bunker URI".to_string()),
+        }
+    } else {
+        let keys = Keys::parse(signer_str).map_err(|e| e.to_string())?;
+        Ok(keys.public_key())
+    }
+}
+
 pub async fn get_client(keys: &Keys, relays: &[String]) -> Result<Client, String> {
     let client = Client::new(keys.clone());
     for relay in relays {
@@ -33,10 +49,18 @@ pub async fn get_client(keys: &Keys, relays: &[String]) -> Result<Client, String
     Ok(client)
 }
 
-pub async fn get_client_with_signer(signer_str: &str, relays: &[String]) -> Result<Client, String> {
+pub async fn get_client_with_signer(
+    signer_str: &str,
+    relays: &[String],
+    client_nsec: Option<&str>,
+) -> Result<Client, String> {
     let client = if signer_str.starts_with("bunker://") {
         let uri = NostrConnectURI::parse(signer_str).map_err(|e| e.to_string())?;
-        let app_keys = Keys::generate();
+        let app_keys = if let Some(nsec) = client_nsec {
+            Keys::parse(nsec).map_err(|e| e.to_string())?
+        } else {
+            Keys::generate()
+        };
         let signer = NostrConnect::new(uri, app_keys, Duration::from_secs(60), None)
             .map_err(|e| e.to_string())?;
         Client::new(signer)

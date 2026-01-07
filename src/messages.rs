@@ -7,8 +7,9 @@ pub async fn send_direct_message_core(
     receiver_pubkey: &str,
     message: &str,
     relays: &[String],
+    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
     let r_pubkey = parse_public_key(receiver_pubkey)?;
 
     let signer = client.signer().await.map_err(|e| e.to_string())?;

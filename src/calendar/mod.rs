@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::time::Duration;
 
 use crate::models::{CalendarEventRequest, CalendarRequest, EventResponse};
-use crate::utils::{get_client, get_event_bech32, parse_public_key};
+use crate::utils::{get_client, get_event_bech32, get_public_key_from_signer, parse_public_key};
 
 pub async fn fetch_calendar_events_core(
     pubkey: &str,
@@ -15,11 +15,12 @@ pub async fn fetch_calendar_events_core(
     range_start: Option<i64>,
     range_end: Option<i64>,
     authors: Option<Vec<String>>,
+    client_nsec: Option<&str>,
 ) -> Result<Vec<EventResponse>, String> {
     let public_key = parse_public_key(pubkey)?;
 
     let client = if let Some(ns) = nsec {
-        crate::utils::get_client_with_signer(ns, relays).await?
+        crate::utils::get_client_with_signer(ns, relays, client_nsec).await?
     } else {
         get_client(&Keys::generate(), relays).await?
     };
@@ -179,9 +180,13 @@ pub async fn publish_batch_calendar_events_core(
     nsec: &str,
     relays: &[String],
     events: Vec<CalendarEventRequest>,
+    client_nsec: Option<&str>,
 ) -> Result<Vec<String>, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
-    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
+    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec)
+        .await
+        .unwrap();
+    let my_public_key = get_public_key_from_signer(nsec).unwrap();
+    println!("{:?}", my_public_key);
 
     let mut event_ids = Vec::new();
 
@@ -331,8 +336,9 @@ pub async fn delete_calendar_event_core(
     nsec: &str,
     relays: &[String],
     event_ids: Vec<String>,
+    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
 
     let mut event_id_objs = Vec::new();
     for id in event_ids {
@@ -395,8 +401,9 @@ pub async fn publish_calendar_core(
     nsec: &str,
     relays: &[String],
     calendar: CalendarRequest,
+    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
 
     let tags = vec![
         Tag::identifier(&calendar.identifier),
@@ -421,9 +428,10 @@ pub async fn delete_calendar_core(
     nsec: &str,
     relays: &[String],
     identifier: String,
+    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
-    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
+    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let my_public_key = get_public_key_from_signer(nsec)?;
 
     let coordinate = Coordinate::new(Kind::from(31924), my_public_key).identifier(identifier);
     let event_builder =

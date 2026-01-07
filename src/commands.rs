@@ -51,6 +51,7 @@ pub async fn fetch_calendar_events(
     range_start: Option<i64>,
     range_end: Option<i64>,
     authors: Option<Vec<String>>,
+    client_nsec: Option<String>,
 ) -> Result<Vec<EventResponse>, String> {
     calendar::fetch_calendar_events_core(
         &pubkey,
@@ -59,6 +60,7 @@ pub async fn fetch_calendar_events(
         range_start,
         range_end,
         authors,
+        client_nsec.as_deref(),
     )
     .await
 }
@@ -69,8 +71,10 @@ pub async fn publish_batch_calendar_events(
     nsec: String,
     relays: Vec<String>,
     events: Vec<CalendarEventRequest>,
+    client_nsec: Option<String>,
 ) -> Result<Vec<String>, String> {
-    calendar::publish_batch_calendar_events_core(&nsec, &relays, events).await
+    calendar::publish_batch_calendar_events_core(&nsec, &relays, events, client_nsec.as_deref())
+        .await
 }
 
 #[tauri::command]
@@ -79,10 +83,16 @@ pub async fn publish_calendar_event(
     nsec: String,
     relays: Vec<String>,
     event_data: CalendarEventRequest,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    calendar::publish_batch_calendar_events_core(&nsec, &relays, vec![event_data])
-        .await
-        .map(|v| v.first().cloned().unwrap_or_default())
+    calendar::publish_batch_calendar_events_core(
+        &nsec,
+        &relays,
+        vec![event_data],
+        client_nsec.as_deref(),
+    )
+    .await
+    .map(|v| v.first().cloned().unwrap_or_default())
 }
 
 #[tauri::command]
@@ -91,8 +101,9 @@ pub async fn delete_calendar_event(
     nsec: String,
     relays: Vec<String>,
     event_ids: Vec<String>,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    calendar::delete_calendar_event_core(&nsec, &relays, event_ids).await
+    calendar::delete_calendar_event_core(&nsec, &relays, event_ids, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -110,8 +121,9 @@ pub async fn publish_calendar(
     nsec: String,
     relays: Vec<String>,
     calendar: CalendarRequest,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    calendar::publish_calendar_core(&nsec, &relays, calendar).await
+    calendar::publish_calendar_core(&nsec, &relays, calendar, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -120,8 +132,9 @@ pub async fn delete_calendar(
     nsec: String,
     relays: Vec<String>,
     identifier: String,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    calendar::delete_calendar_core(&nsec, &relays, identifier).await
+    calendar::delete_calendar_core(&nsec, &relays, identifier, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -148,8 +161,9 @@ pub async fn update_contact_list(
     nsec: String,
     relays: Vec<String>,
     contacts: Vec<Contact>,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    profile::update_contact_list_core(&nsec, &relays, contacts).await
+    profile::update_contact_list_core(&nsec, &relays, contacts, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -187,8 +201,17 @@ pub async fn publish_rsvp(
     event_coordinate: String,
     status: String,
     event_author: Option<String>,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    calendar::rsvp::publish_rsvp_core(&nsec, &relays, event_coordinate, status, event_author).await
+    calendar::rsvp::publish_rsvp_core(
+        &nsec,
+        &relays,
+        event_coordinate,
+        status,
+        event_author,
+        client_nsec.as_deref(),
+    )
+    .await
 }
 
 #[tauri::command]
@@ -198,8 +221,16 @@ pub async fn send_direct_message(
     receiver_pubkey: String,
     message: String,
     relays: Vec<String>,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    messages::send_direct_message_core(&nsec, &receiver_pubkey, &message, &relays).await
+    messages::send_direct_message_core(
+        &nsec,
+        &receiver_pubkey,
+        &message,
+        &relays,
+        client_nsec.as_deref(),
+    )
+    .await
 }
 
 #[tauri::command]
@@ -208,8 +239,9 @@ pub async fn fetch_bookmarks(
     pubkey: String,
     nsec: Option<String>,
     relays: Vec<String>,
+    client_nsec: Option<String>,
 ) -> Result<Vec<EventResponse>, String> {
-    bookmarks::fetch_bookmarks_core(&pubkey, nsec.as_deref(), &relays).await
+    bookmarks::fetch_bookmarks_core(&pubkey, nsec.as_deref(), &relays, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -228,8 +260,9 @@ pub async fn save_bookmark(
     relays: Vec<String>,
     event_id: String,
     source: BookmarkSource,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    bookmarks::save_bookmark_core(&nsec, &relays, event_id, source).await
+    bookmarks::save_bookmark_core(&nsec, &relays, event_id, source, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -239,8 +272,9 @@ pub async fn remove_bookmark(
     relays: Vec<String>,
     event_id: String,
     source: BookmarkSource,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    bookmarks::remove_bookmark_core(&nsec, &relays, event_id, source).await
+    bookmarks::remove_bookmark_core(&nsec, &relays, event_id, source, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -249,8 +283,9 @@ pub async fn blossom_mirror(
     server_url: String,
     nsec: String,
     url: String,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    blossom::blossom_mirror_core(&server_url, &nsec, &url).await
+    blossom::blossom_mirror_core(&server_url, &nsec, &url, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -259,8 +294,9 @@ pub async fn blossom_upload(
     server_url: String,
     nsec: String,
     file_path: String,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    blossom::blossom_upload_core(&server_url, &nsec, &file_path).await
+    blossom::blossom_upload_core(&server_url, &nsec, &file_path, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -271,8 +307,17 @@ pub async fn blossom_upload_content(
     content: String,
     filename: Option<String>,
     media_type: Option<String>,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    blossom::blossom_upload_content_core(&server_url, &nsec, content, filename, media_type).await
+    blossom::blossom_upload_content_core(
+        &server_url,
+        &nsec,
+        content,
+        filename,
+        media_type,
+        client_nsec.as_deref(),
+    )
+    .await
 }
 
 #[tauri::command]
@@ -293,14 +338,20 @@ pub async fn create_discovery_event(
     nsec: String,
     device_key_to_store: String,
     relays: Vec<String>,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    chat::create_discovery_event_core(&nsec, device_key_to_store, &relays).await
+    chat::create_discovery_event_core(&nsec, device_key_to_store, &relays, client_nsec.as_deref())
+        .await
 }
 
 #[tauri::command]
 #[cfg(feature = "chat")]
-pub async fn decrypt_discovery_event(nsec: String, content: String) -> Result<String, String> {
-    chat::decrypt_discovery_event_core(&nsec, &content).await
+pub async fn decrypt_discovery_event(
+    nsec: String,
+    content: String,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    chat::decrypt_discovery_event_core(&nsec, &content, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -310,8 +361,16 @@ pub async fn publish_chat_message(
     main_pubkey: String,
     msg: ChatMessageRequest,
     relays: Vec<String>,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    chat::publish_chat_message_core(&pns_nsec, &main_pubkey, msg, &relays).await
+    chat::publish_chat_message_core(
+        &pns_nsec,
+        &main_pubkey,
+        msg,
+        &relays,
+        client_nsec.as_deref(),
+    )
+    .await
 }
 
 #[tauri::command]
@@ -319,8 +378,9 @@ pub async fn publish_chat_message(
 pub async fn decrypt_pns_event(
     pns_nsec: String,
     content: String,
+    client_nsec: Option<String>,
 ) -> Result<serde_json::Value, String> {
-    chat::decrypt_pns_event_core(&pns_nsec, &content).await
+    chat::decrypt_pns_event_core(&pns_nsec, &content, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -339,8 +399,9 @@ pub async fn delete_chat_messages(
     pns_nsec: String,
     relays: Vec<String>,
     event_ids: Vec<String>,
+    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    chat::delete_chat_messages_core(&pns_nsec, &relays, event_ids).await
+    chat::delete_chat_messages_core(&pns_nsec, &relays, event_ids, client_nsec.as_deref()).await
 }
 
 #[tauri::command]

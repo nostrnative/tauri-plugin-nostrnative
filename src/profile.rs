@@ -97,8 +97,9 @@ pub async fn update_contact_list_core(
     nsec: &str,
     relays: &[String],
     contacts: Vec<Contact>,
+    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays).await?;
+    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
 
     let mut tags = Vec::new();
     let mut seen_pubkeys = std::collections::HashSet::new();
