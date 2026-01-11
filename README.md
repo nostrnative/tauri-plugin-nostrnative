@@ -72,6 +72,7 @@ const events = await nostr.fetchCalendarEvents(pubkey, ["wss://relay.damus.io"],
 | `profile`      | User profiles (NIP-01) and contact lists (NIP-02).          |
 | `messages`     | Direct messages (NIP-44).                                   |
 | `bookmarks`    | Public and private bookmarks (NIP-51).                      |
+| `notes`        | Secure notes and notebooks management.                      |
 | `blossom`      | Blob Storage Server Operations (mirror, upload, get).       |
 | `chat`         | Advanced chat functionality with PNS key derivation.        |
 | `tauri-plugin` | Exports all enabled features as Tauri commands.             |
