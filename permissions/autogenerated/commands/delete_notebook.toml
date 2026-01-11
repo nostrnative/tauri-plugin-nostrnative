@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-delete-notebook"
+description = "Enables the delete_notebook command without any pre-configured scope."
+commands.allow = ["delete_notebook"]
+
+[[permission]]
+identifier = "deny-delete-notebook"
+description = "Denies the delete_notebook command without any pre-configured scope."
+commands.deny = ["delete_notebook"]

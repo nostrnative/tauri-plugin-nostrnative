@@ -158,6 +158,83 @@ async function removeBookmark(nsec, relays, eventId, source, clientNsec) {
         clientNsec
     });
 }
+// Notes
+async function createNote(nsec, relays, note, clientNsec) {
+    return await invoke('plugin:nostrnative|create_note', {
+        nsec,
+        relays,
+        note,
+        clientNsec
+    });
+}
+async function updateNote(nsec, relays, identifier, note, clientNsec) {
+    return await invoke('plugin:nostrnative|update_note', {
+        nsec,
+        relays,
+        identifier,
+        note,
+        clientNsec
+    });
+}
+async function deleteNote(nsec, relays, noteId, clientNsec) {
+    return await invoke('plugin:nostrnative|delete_note', {
+        nsec,
+        relays,
+        noteId,
+        clientNsec
+    });
+}
+async function fetchNotes(pubkey, relays, options) {
+    return await invoke('plugin:nostrnative|fetch_notes', {
+        pubkey,
+        relays,
+        nsec: options?.nsec,
+        note_type: options?.noteType,
+        clientNsec: options?.clientNsec
+    });
+}
+async function createNotebook(nsec, relays, notebook, clientNsec) {
+    return await invoke('plugin:nostrnative|create_notebook', {
+        nsec,
+        relays,
+        notebook,
+        clientNsec
+    });
+}
+async function fetchNotebooks(pubkey, relays, options) {
+    return await invoke('plugin:nostrnative|fetch_notebooks', {
+        pubkey,
+        relays,
+        nsec: options?.nsec,
+        clientNsec: options?.clientNsec
+    });
+}
+async function addNoteToNotebook(nsec, relays, notebookId, noteId, clientNsec) {
+    return await invoke('plugin:nostrnative|add_note_to_notebook', {
+        nsec,
+        relays,
+        notebook_id: notebookId,
+        note_id: noteId,
+        clientNsec
+    });
+}
+async function removeNoteFromNotebook(nsec, relays, notebookId, noteId, clientNsec) {
+    return await invoke('plugin:nostrnative|remove_note_from_notebook', {
+        nsec,
+        relays,
+        notebook_id: notebookId,
+        note_id: noteId,
+        clientNsec
+    });
+}
+async function deleteNotebook(nsec, relays, notebookId, clientNsec) {
+    return await invoke('plugin:nostrnative|delete_notebook', {
+        nsec,
+        relays,
+        notebook_id: notebookId,
+        clientNsec
+    });
+}
 // Blossom
 async function blossomMirror(serverUrl, nsec, url, clientNsec) {
     return await invoke('plugin:nostrnative|blossom_mirror', {
@@ -250,4 +327,4 @@ async function fetchDiscoveryEvents(pubkey, relays) {
     });
 }
 
-export { blossomGetBlob, blossomMirror, blossomUpload, blossomUploadContent, createDiscoveryEvent, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, derivePnsKeys, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRsvps, fetchUserRsvps, generateNewNsec, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishRsvp, removeBookmark, saveBookmark, sendDirectMessage, updateContactList, verifyNsec };
+export { addNoteToNotebook, blossomGetBlob, blossomMirror, blossomUpload, blossomUploadContent, createDiscoveryEvent, createNote, createNotebook, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, deleteNote, deleteNotebook, derivePnsKeys, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchNotebooks, fetchNotes, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRsvps, fetchUserRsvps, generateNewNsec, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishRsvp, removeBookmark, removeNoteFromNotebook, saveBookmark, sendDirectMessage, updateContactList, updateNote, verifyNsec };

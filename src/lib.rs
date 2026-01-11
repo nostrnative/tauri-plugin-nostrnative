@@ -20,6 +20,9 @@ pub mod messages;
 #[cfg(feature = "bookmarks")]
 pub mod bookmarks;
 
+#[cfg(feature = "notes")]
+pub mod notes;
+
 #[cfg(feature = "blossom")]
 pub mod blossom;
 
@@ -122,6 +125,24 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::save_bookmark,
             #[cfg(feature = "bookmarks")]
             commands::remove_bookmark,
+            #[cfg(feature = "notes")]
+            commands::create_note,
+            #[cfg(feature = "notes")]
+            commands::update_note,
+            #[cfg(feature = "notes")]
+            commands::delete_note,
+            #[cfg(feature = "notes")]
+            commands::fetch_notes,
+            #[cfg(feature = "notes")]
+            commands::create_notebook,
+            #[cfg(feature = "notes")]
+            commands::fetch_notebooks,
+            #[cfg(feature = "notes")]
+            commands::add_note_to_notebook,
+            #[cfg(feature = "notes")]
+            commands::remove_note_from_notebook,
+            #[cfg(feature = "notes")]
+            commands::delete_notebook,
             #[cfg(feature = "blossom")]
             commands::blossom_mirror,
             #[cfg(feature = "blossom")]

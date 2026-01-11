@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-create-notebook"
+description = "Enables the create_notebook command without any pre-configured scope."
+commands.allow = ["create_notebook"]
+
+[[permission]]
+identifier = "deny-create-notebook"
+description = "Denies the create_notebook command without any pre-configured scope."
+commands.deny = ["create_notebook"]

@@ -160,6 +160,83 @@ async function removeBookmark(nsec, relays, eventId, source, clientNsec) {
         clientNsec
     });
 }
+// Notes
+async function createNote(nsec, relays, note, clientNsec) {
+    return await core.invoke('plugin:nostrnative|create_note', {
+        nsec,
+        relays,
+        note,
+        clientNsec
+    });
+}
+async function updateNote(nsec, relays, identifier, note, clientNsec) {
+    return await core.invoke('plugin:nostrnative|update_note', {
+        nsec,
+        relays,
+        identifier,
+        note,
+        clientNsec
+    });
+}
+async function deleteNote(nsec, relays, noteId, clientNsec) {
+    return await core.invoke('plugin:nostrnative|delete_note', {
+        nsec,
+        relays,
+        noteId,
+        clientNsec
+    });
+}
+async function fetchNotes(pubkey, relays, options) {
+    return await core.invoke('plugin:nostrnative|fetch_notes', {
+        pubkey,
+        relays,
+        nsec: options?.nsec,
+        note_type: options?.noteType,
+        clientNsec: options?.clientNsec
+    });
+}
+async function createNotebook(nsec, relays, notebook, clientNsec) {
+    return await core.invoke('plugin:nostrnative|create_notebook', {
+        nsec,
+        relays,
+        notebook,
+        clientNsec
+    });
+}
+async function fetchNotebooks(pubkey, relays, options) {
+    return await core.invoke('plugin:nostrnative|fetch_notebooks', {
+        pubkey,
+        relays,
+        nsec: options?.nsec,
+        clientNsec: options?.clientNsec
+    });
+}
+async function addNoteToNotebook(nsec, relays, notebookId, noteId, clientNsec) {
+    return await core.invoke('plugin:nostrnative|add_note_to_notebook', {
+        nsec,
+        relays,
+        notebook_id: notebookId,
+        note_id: noteId,
+        clientNsec
+    });
+}
+async function removeNoteFromNotebook(nsec, relays, notebookId, noteId, clientNsec) {
+    return await core.invoke('plugin:nostrnative|remove_note_from_notebook', {
+        nsec,
+        relays,
+        notebook_id: notebookId,
+        note_id: noteId,
+        clientNsec
+    });
+}
+async function deleteNotebook(nsec, relays, notebookId, clientNsec) {
+    return await core.invoke('plugin:nostrnative|delete_notebook', {
+        nsec,
+        relays,
+        notebook_id: notebookId,
+        clientNsec
+    });
+}
 // Blossom
 async function blossomMirror(serverUrl, nsec, url, clientNsec) {
     return await core.invoke('plugin:nostrnative|blossom_mirror', {
@@ -252,16 +329,21 @@ async function fetchDiscoveryEvents(pubkey, relays) {
     });
 }
 
+exports.addNoteToNotebook = addNoteToNotebook;
 exports.blossomGetBlob = blossomGetBlob;
 exports.blossomMirror = blossomMirror;
 exports.blossomUpload = blossomUpload;
 exports.blossomUploadContent = blossomUploadContent;
 exports.createDiscoveryEvent = createDiscoveryEvent;
+exports.createNote = createNote;
+exports.createNotebook = createNotebook;
 exports.decryptDiscoveryEvent = decryptDiscoveryEvent;
 exports.decryptPnsEvent = decryptPnsEvent;
 exports.deleteCalendar = deleteCalendar;
 exports.deleteCalendarEvent = deleteCalendarEvent;
 exports.deleteChatMessages = deleteChatMessages;
+exports.deleteNote = deleteNote;
+exports.deleteNotebook = deleteNotebook;
 exports.derivePnsKeys = derivePnsKeys;
 exports.fetchBookmarks = fetchBookmarks;
 exports.fetchCalendarEvents = fetchCalendarEvents;
@@ -269,6 +351,8 @@ exports.fetchCalendars = fetchCalendars;
 exports.fetchContactList = fetchContactList;
 exports.fetchDiscoveryEvents = fetchDiscoveryEvents;
 exports.fetchEventDetails = fetchEventDetails;
+exports.fetchNotebooks = fetchNotebooks;
+exports.fetchNotes = fetchNotes;
 exports.fetchPnsEvents = fetchPnsEvents;
 exports.fetchProfiles = fetchProfiles;
 exports.fetchReceivedRsvps = fetchReceivedRsvps;
@@ -282,7 +366,9 @@ exports.publishCalendarEvent = publishCalendarEvent;
 exports.publishChatMessage = publishChatMessage;
 exports.publishRsvp = publishRsvp;
 exports.removeBookmark = removeBookmark;
+exports.removeNoteFromNotebook = removeNoteFromNotebook;
 exports.saveBookmark = saveBookmark;
 exports.sendDirectMessage = sendDirectMessage;
 exports.updateContactList = updateContactList;
+exports.updateNote = updateNote;
 exports.verifyNsec = verifyNsec;

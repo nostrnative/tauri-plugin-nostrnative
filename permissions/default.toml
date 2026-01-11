@@ -34,5 +34,14 @@ permissions = [
     "allow-decrypt-pns-event",
     "allow-fetch-pns-events",
     "allow-delete-chat-messages",
-    "allow-fetch-discovery-events"
+    "allow-fetch-discovery-events",
+    "allow-create-note",
+    "allow-update-note",
+    "allow-delete-note",
+    "allow-fetch-notes",
+    "allow-create-notebook",
+    "allow-fetch-notebooks",
+    "allow-add-note-to-notebook",
+    "allow-remove-note-from-notebook",
+    "allow-delete-notebook"
 ]

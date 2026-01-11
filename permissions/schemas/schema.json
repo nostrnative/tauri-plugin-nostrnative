@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the add_note_to_notebook command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-add-note-to-notebook",
+          "markdownDescription": "Enables the add_note_to_notebook command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the add_note_to_notebook command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-add-note-to-notebook",
+          "markdownDescription": "Denies the add_note_to_notebook command without any pre-configured scope."
+        },
+        {
           "description": "Enables the blossom_get_blob command without any pre-configured scope.",
           "type": "string",
           "const": "allow-blossom-get-blob",
@@ -355,6 +367,30 @@
           "markdownDescription": "Denies the create_discovery_event command without any pre-configured scope."
         },
         {
+          "description": "Enables the create_note command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-create-note",
+          "markdownDescription": "Enables the create_note command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the create_note command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-create-note",
+          "markdownDescription": "Denies the create_note command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the create_notebook command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-create-notebook",
+          "markdownDescription": "Enables the create_notebook command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the create_notebook command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-create-notebook",
+          "markdownDescription": "Denies the create_notebook command without any pre-configured scope."
+        },
+        {
           "description": "Enables the decrypt_discovery_event command without any pre-configured scope.",
           "type": "string",
           "const": "allow-decrypt-discovery-event",
@@ -413,6 +449,30 @@
           "type": "string",
           "const": "deny-delete-chat-messages",
           "markdownDescription": "Denies the delete_chat_messages command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the delete_note command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-delete-note",
+          "markdownDescription": "Enables the delete_note command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the delete_note command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-delete-note",
+          "markdownDescription": "Denies the delete_note command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the delete_notebook command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-delete-notebook",
+          "markdownDescription": "Enables the delete_notebook command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the delete_notebook command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-delete-notebook",
+          "markdownDescription": "Denies the delete_notebook command without any pre-configured scope."
         },
         {
           "description": "Enables the derive_pns_keys command without any pre-configured scope.",
@@ -497,6 +557,30 @@
           "type": "string",
           "const": "deny-fetch-event-details",
           "markdownDescription": "Denies the fetch_event_details command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_notebooks command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-notebooks",
+          "markdownDescription": "Enables the fetch_notebooks command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_notebooks command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-notebooks",
+          "markdownDescription": "Denies the fetch_notebooks command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the fetch_notes command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-fetch-notes",
+          "markdownDescription": "Enables the fetch_notes command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the fetch_notes command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-fetch-notes",
+          "markdownDescription": "Denies the fetch_notes command without any pre-configured scope."
         },
         {
           "description": "Enables the fetch_pns_events command without any pre-configured scope.",
@@ -655,6 +739,18 @@
           "markdownDescription": "Denies the remove_bookmark command without any pre-configured scope."
         },
         {
+          "description": "Enables the remove_note_from_notebook command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-remove-note-from-notebook",
+          "markdownDescription": "Enables the remove_note_from_notebook command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the remove_note_from_notebook command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-remove-note-from-notebook",
+          "markdownDescription": "Denies the remove_note_from_notebook command without any pre-configured scope."
+        },
+        {
           "description": "Enables the save_bookmark command without any pre-configured scope.",
           "type": "string",
           "const": "allow-save-bookmark",
@@ -691,6 +787,18 @@
           "markdownDescription": "Denies the update_contact_list command without any pre-configured scope."
         },
         {
+          "description": "Enables the update_note command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-update-note",
+          "markdownDescription": "Enables the update_note command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the update_note command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-update-note",
+          "markdownDescription": "Denies the update_note command without any pre-configured scope."
+        },
+        {
           "description": "Enables the verify_nsec command without any pre-configured scope.",
           "type": "string",
           "const": "allow-verify-nsec",
@@ -703,10 +811,10 @@
           "markdownDescription": "Denies the verify_nsec command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by default.\n#### This default permission set includes:\n\n- `allow-generate-new-nsec`\n- `allow-parse-pubkey`\n- `allow-verify-nsec`\n- `allow-fetch-calendar-events`\n- `allow-publish-batch-calendar-events`\n- `allow-publish-calendar-event`\n- `allow-delete-calendar-event`\n- `allow-fetch-calendars`\n- `allow-publish-calendar`\n- `allow-delete-calendar`\n- `allow-fetch-profiles`\n- `allow-fetch-contact-list`\n- `allow-update-contact-list`\n- `allow-fetch-rsvps`\n- `allow-fetch-user-rsvps`\n- `allow-fetch-received-rsvps`\n- `allow-publish-rsvp`\n- `allow-send-direct-message`\n- `allow-fetch-bookmarks`\n- `allow-fetch-event-details`\n- `allow-save-bookmark`\n- `allow-remove-bookmark`\n- `allow-blossom-mirror`\n- `allow-blossom-upload`\n- `allow-blossom-upload-content`\n- `allow-blossom-get-blob`\n- `allow-derive-pns-keys`\n- `allow-create-discovery-event`\n- `allow-decrypt-discovery-event`\n- `allow-publish-chat-message`\n- `allow-decrypt-pns-event`\n- `allow-fetch-pns-events`\n- `allow-delete-chat-messages`\n- `allow-fetch-discovery-events`",
+          "description": "Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by default.\n#### This default permission set includes:\n\n- `allow-generate-new-nsec`\n- `allow-parse-pubkey`\n- `allow-verify-nsec`\n- `allow-fetch-calendar-events`\n- `allow-publish-batch-calendar-events`\n- `allow-publish-calendar-event`\n- `allow-delete-calendar-event`\n- `allow-fetch-calendars`\n- `allow-publish-calendar`\n- `allow-delete-calendar`\n- `allow-fetch-profiles`\n- `allow-fetch-contact-list`\n- `allow-update-contact-list`\n- `allow-fetch-rsvps`\n- `allow-fetch-user-rsvps`\n- `allow-fetch-received-rsvps`\n- `allow-publish-rsvp`\n- `allow-send-direct-message`\n- `allow-fetch-bookmarks`\n- `allow-fetch-event-details`\n- `allow-save-bookmark`\n- `allow-remove-bookmark`\n- `allow-blossom-mirror`\n- `allow-blossom-upload`\n- `allow-blossom-upload-content`\n- `allow-blossom-get-blob`\n- `allow-derive-pns-keys`\n- `allow-create-discovery-event`\n- `allow-decrypt-discovery-event`\n- `allow-publish-chat-message`\n- `allow-decrypt-pns-event`\n- `allow-fetch-pns-events`\n- `allow-delete-chat-messages`\n- `allow-fetch-discovery-events`\n- `allow-create-note`\n- `allow-update-note`\n- `allow-delete-note`\n- `allow-fetch-notes`\n- `allow-create-notebook`\n- `allow-fetch-notebooks`\n- `allow-add-note-to-notebook`\n- `allow-remove-note-from-notebook`\n- `allow-delete-notebook`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by default.\n#### This default permission set includes:\n\n- `allow-generate-new-nsec`\n- `allow-parse-pubkey`\n- `allow-verify-nsec`\n- `allow-fetch-calendar-events`\n- `allow-publish-batch-calendar-events`\n- `allow-publish-calendar-event`\n- `allow-delete-calendar-event`\n- `allow-fetch-calendars`\n- `allow-publish-calendar`\n- `allow-delete-calendar`\n- `allow-fetch-profiles`\n- `allow-fetch-contact-list`\n- `allow-update-contact-list`\n- `allow-fetch-rsvps`\n- `allow-fetch-user-rsvps`\n- `allow-fetch-received-rsvps`\n- `allow-publish-rsvp`\n- `allow-send-direct-message`\n- `allow-fetch-bookmarks`\n- `allow-fetch-event-details`\n- `allow-save-bookmark`\n- `allow-remove-bookmark`\n- `allow-blossom-mirror`\n- `allow-blossom-upload`\n- `allow-blossom-upload-content`\n- `allow-blossom-get-blob`\n- `allow-derive-pns-keys`\n- `allow-create-discovery-event`\n- `allow-decrypt-discovery-event`\n- `allow-publish-chat-message`\n- `allow-decrypt-pns-event`\n- `allow-fetch-pns-events`\n- `allow-delete-chat-messages`\n- `allow-fetch-discovery-events`"
+          "markdownDescription": "Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by default.\n#### This default permission set includes:\n\n- `allow-generate-new-nsec`\n- `allow-parse-pubkey`\n- `allow-verify-nsec`\n- `allow-fetch-calendar-events`\n- `allow-publish-batch-calendar-events`\n- `allow-publish-calendar-event`\n- `allow-delete-calendar-event`\n- `allow-fetch-calendars`\n- `allow-publish-calendar`\n- `allow-delete-calendar`\n- `allow-fetch-profiles`\n- `allow-fetch-contact-list`\n- `allow-update-contact-list`\n- `allow-fetch-rsvps`\n- `allow-fetch-user-rsvps`\n- `allow-fetch-received-rsvps`\n- `allow-publish-rsvp`\n- `allow-send-direct-message`\n- `allow-fetch-bookmarks`\n- `allow-fetch-event-details`\n- `allow-save-bookmark`\n- `allow-remove-bookmark`\n- `allow-blossom-mirror`\n- `allow-blossom-upload`\n- `allow-blossom-upload-content`\n- `allow-blossom-get-blob`\n- `allow-derive-pns-keys`\n- `allow-create-discovery-event`\n- `allow-decrypt-discovery-event`\n- `allow-publish-chat-message`\n- `allow-decrypt-pns-event`\n- `allow-fetch-pns-events`\n- `allow-delete-chat-messages`\n- `allow-fetch-discovery-events`\n- `allow-create-note`\n- `allow-update-note`\n- `allow-delete-note`\n- `allow-fetch-notes`\n- `allow-create-notebook`\n- `allow-fetch-notebooks`\n- `allow-add-note-to-notebook`\n- `allow-remove-note-from-notebook`\n- `allow-delete-notebook`"
         }
       ]
     }

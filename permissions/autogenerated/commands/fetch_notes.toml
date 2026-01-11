@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-fetch-notes"
+description = "Enables the fetch_notes command without any pre-configured scope."
+commands.allow = ["fetch_notes"]
+
+[[permission]]
+identifier = "deny-fetch-notes"
+description = "Denies the fetch_notes command without any pre-configured scope."
+commands.deny = ["fetch_notes"]

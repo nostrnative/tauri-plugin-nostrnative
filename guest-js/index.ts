@@ -44,6 +44,18 @@ export interface UserProfile {
 
 export type BookmarkSource = 'public' | 'private' | 'website'
 
+export interface NoteRequest {
+  content: string
+  note_type: string
+  identifier?: string
+  group_id?: string
+}
+
+export interface NotebookRequest {
+  title: string
+  description?: string
+}
+
 export interface EventResponse {
   id: string
   pubkey: string
@@ -334,6 +346,138 @@ export async function removeBookmark(
     relays,
     eventId,
     source,
+    clientNsec
+  })
+}
+
+// Notes
+export async function createNote(
+  nsec: string,
+  relays: string[],
+  note: NoteRequest,
+  clientNsec?: string
+): Promise<string> {
+  return await invoke('plugin:nostrnative|create_note', {
+    nsec,
+    relays,
+    note,
+    clientNsec
+  })
+}
+
+export async function updateNote(
+  nsec: string,
+  relays: string[],
+  identifier: string,
+  note: NoteRequest,
+  clientNsec?: string
+): Promise<string> {
+  return await invoke('plugin:nostrnative|update_note', {
+    nsec,
+    relays,
+    identifier,
+    note,
+    clientNsec
+  })
+}
+
+export async function deleteNote(
+  nsec: string,
+  relays: string[],
+  noteId: string,
+  clientNsec?: string
+): Promise<string> {
+  return await invoke('plugin:nostrnative|delete_note', {
+    nsec,
+    relays,
+    noteId,
+    clientNsec
+  })
+}
+
+export async function fetchNotes(
+  pubkey: string,
+  relays: string[],
+  options?: { nsec?: string; noteType?: string; clientNsec?: string }
+): Promise<EventResponse[]> {
+  return await invoke('plugin:nostrnative|fetch_notes', {
+    pubkey,
+    relays,
+    nsec: options?.nsec,
+    note_type: options?.noteType,
+    clientNsec: options?.clientNsec
+  })
+}
+
+export async function createNotebook(
+  nsec: string,
+  relays: string[],
+  notebook: NotebookRequest,
+  clientNsec?: string
+): Promise<string> {
+  return await invoke('plugin:nostrnative|create_notebook', {
+    nsec,
+    relays,
+    notebook,
+    clientNsec
+  })
+}
+
+export async function fetchNotebooks(
+  pubkey: string,
+  relays: string[],
+  options?: { nsec?: string; clientNsec?: string }
+): Promise<EventResponse[]> {
+  return await invoke('plugin:nostrnative|fetch_notebooks', {
+    pubkey,
+    relays,
+    nsec: options?.nsec,
+    clientNsec: options?.clientNsec
+  })
+}
+
+export async function addNoteToNotebook(
+  nsec: string,
+  relays: string[],
+  notebookId: string,
+  noteId: string,
+  clientNsec?: string
+): Promise<string> {
+  return await invoke('plugin:nostrnative|add_note_to_notebook', {
+    nsec,
+    relays,
+    notebook_id: notebookId,
+    note_id: noteId,
+    clientNsec
+  })
+}
+
+export async function removeNoteFromNotebook(
+  nsec: string,
+  relays: string[],
+  notebookId: string,
+  noteId: string,
+  clientNsec?: string
+): Promise<string> {
+  return await invoke('plugin:nostrnative|remove_note_from_notebook', {
+    nsec,
+    relays,
+    notebook_id: notebookId,
+    note_id: noteId,
+    clientNsec
+  })
+}
+
+export async function deleteNotebook(
+  nsec: string,
+  relays: string[],
+  notebookId: string,
+  clientNsec?: string
+): Promise<string> {
+  return await invoke('plugin:nostrnative|delete_notebook', {
+    nsec,
+    relays,
+    notebook_id: notebookId,
     clientNsec
   })
 }

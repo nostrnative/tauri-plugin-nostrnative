@@ -38,6 +38,15 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 - `allow-fetch-pns-events`
 - `allow-delete-chat-messages`
 - `allow-fetch-discovery-events`
+- `allow-create-note`
+- `allow-update-note`
+- `allow-delete-note`
+- `allow-fetch-notes`
+- `allow-create-notebook`
+- `allow-fetch-notebooks`
+- `allow-add-note-to-notebook`
+- `allow-remove-note-from-notebook`
+- `allow-delete-notebook`
 
 ## Permission Table
 
@@ -47,6 +56,32 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`nostrnative:allow-add-note-to-notebook`
+
+</td>
+<td>
+
+Enables the add_note_to_notebook command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-add-note-to-notebook`
+
+</td>
+<td>
+
+Denies the add_note_to_notebook command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>
@@ -181,6 +216,58 @@ Denies the create_discovery_event command without any pre-configured scope.
 <tr>
 <td>
 
+`nostrnative:allow-create-note`
+
+</td>
+<td>
+
+Enables the create_note command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-create-note`
+
+</td>
+<td>
+
+Denies the create_note command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-create-notebook`
+
+</td>
+<td>
+
+Enables the create_notebook command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-create-notebook`
+
+</td>
+<td>
+
+Denies the create_notebook command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-decrypt-discovery-event`
 
 </td>
@@ -304,6 +391,58 @@ Enables the delete_chat_messages command without any pre-configured scope.
 <td>
 
 Denies the delete_chat_messages command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-delete-note`
+
+</td>
+<td>
+
+Enables the delete_note command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-delete-note`
+
+</td>
+<td>
+
+Denies the delete_note command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-delete-notebook`
+
+</td>
+<td>
+
+Enables the delete_notebook command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-delete-notebook`
+
+</td>
+<td>
+
+Denies the delete_notebook command without any pre-configured scope.
 
 </td>
 </tr>
@@ -486,6 +625,58 @@ Enables the fetch_event_details command without any pre-configured scope.
 <td>
 
 Denies the fetch_event_details command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-fetch-notebooks`
+
+</td>
+<td>
+
+Enables the fetch_notebooks command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-fetch-notebooks`
+
+</td>
+<td>
+
+Denies the fetch_notebooks command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-fetch-notes`
+
+</td>
+<td>
+
+Enables the fetch_notes command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-fetch-notes`
+
+</td>
+<td>
+
+Denies the fetch_notes command without any pre-configured scope.
 
 </td>
 </tr>
@@ -831,6 +1022,32 @@ Denies the remove_bookmark command without any pre-configured scope.
 <tr>
 <td>
 
+`nostrnative:allow-remove-note-from-notebook`
+
+</td>
+<td>
+
+Enables the remove_note_from_notebook command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-remove-note-from-notebook`
+
+</td>
+<td>
+
+Denies the remove_note_from_notebook command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-save-bookmark`
 
 </td>
@@ -902,6 +1119,32 @@ Enables the update_contact_list command without any pre-configured scope.
 <td>
 
 Denies the update_contact_list command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-update-note`
+
+</td>
+<td>
+
+Enables the update_note command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-update-note`
+
+</td>
+<td>
+
+Denies the update_note command without any pre-configured scope.
 
 </td>
 </tr>

@@ -13,16 +13,25 @@ use crate::messages;
 #[cfg(feature = "bookmarks")]
 use crate::bookmarks;
 
+#[cfg(feature = "notes")]
+use crate::notes;
+
 #[cfg(feature = "blossom")]
 use crate::blossom;
 
 #[cfg(feature = "chat")]
 use crate::chat;
 
-use crate::models::{
-    BookmarkSource, CalendarEventRequest, CalendarRequest, ChatMessageRequest, Contact,
-    EventResponse, PnsDerivedKeys, UserProfile,
-};
+use crate::models::{BookmarkSource, EventResponse};
+
+#[cfg(feature = "calendar")]
+use crate::models::{CalendarEventRequest, CalendarRequest};
+
+#[cfg(feature = "chat")]
+use crate::models::{ChatMessageRequest, PnsDerivedKeys};
+
+#[cfg(feature = "profile")]
+use crate::models::{Contact, UserProfile};
 
 #[tauri::command]
 #[cfg(feature = "keys")]
@@ -275,6 +284,124 @@ pub async fn remove_bookmark(
     client_nsec: Option<String>,
 ) -> Result<String, String> {
     bookmarks::remove_bookmark_core(&nsec, &relays, event_id, source, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "notes")]
+pub async fn create_note(
+    nsec: String,
+    relays: Vec<String>,
+    note: notes::NoteRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    notes::create_note_core(&nsec, &relays, note, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "notes")]
+pub async fn update_note(
+    nsec: String,
+    relays: Vec<String>,
+    identifier: String,
+    note: notes::NoteRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    notes::update_note_core(&nsec, &relays, identifier, note, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "notes")]
+pub async fn delete_note(
+    nsec: String,
+    relays: Vec<String>,
+    note_id: String,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    notes::delete_note_core(&nsec, &relays, note_id, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "notes")]
+pub async fn fetch_notes(
+    pubkey: String,
+    relays: Vec<String>,
+    nsec: Option<String>,
+    note_type: Option<String>,
+    client_nsec: Option<String>,
+) -> Result<Vec<EventResponse>, String> {
+    notes::fetch_notes_core(
+        &pubkey,
+        nsec.as_deref(),
+        &relays,
+        note_type,
+        client_nsec.as_deref(),
+    )
+    .await
+}
+
+#[tauri::command]
+#[cfg(feature = "notes")]
+pub async fn create_notebook(
+    nsec: String,
+    relays: Vec<String>,
+    notebook: notes::NotebookRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    notes::create_notebook_core(&nsec, &relays, notebook, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "notes")]
+pub async fn fetch_notebooks(
+    pubkey: String,
+    relays: Vec<String>,
+    nsec: Option<String>,
+    client_nsec: Option<String>,
+) -> Result<Vec<EventResponse>, String> {
+    notes::fetch_notebooks_core(&pubkey, &relays, nsec.as_deref(), client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "notes")]
+pub async fn add_note_to_notebook(
+    nsec: String,
+    relays: Vec<String>,
+    notebook_id: String,
+    note_id: String,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    notes::add_note_to_notebook_core(&nsec, &relays, notebook_id, note_id, client_nsec.as_deref())
+        .await
+}
+
+#[tauri::command]
+#[cfg(feature = "notes")]
+pub async fn remove_note_from_notebook(
+    nsec: String,
+    relays: Vec<String>,
+    notebook_id: String,
+    note_id: String,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    notes::remove_note_from_notebook_core(
+        &nsec,
+        &relays,
+        notebook_id,
+        note_id,
+        client_nsec.as_deref(),
+    )
+    .await
+}
+
+#[tauri::command]
+#[cfg(feature = "notes")]
+pub async fn delete_notebook(
+    nsec: String,
+    relays: Vec<String>,
+    notebook_id: String,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    notes::delete_notebook_core(&nsec, &relays, notebook_id, client_nsec.as_deref()).await
 }
 
 #[tauri::command]

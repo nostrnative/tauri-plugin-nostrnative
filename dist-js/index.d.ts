@@ -37,6 +37,16 @@ export interface UserProfile {
     nip05?: string | null;
 }
 export type BookmarkSource = 'public' | 'private' | 'website';
+export interface NoteRequest {
+    content: string;
+    note_type: string;
+    identifier?: string;
+    group_id?: string;
+}
+export interface NotebookRequest {
+    title: string;
+    description?: string;
+}
 export interface EventResponse {
     id: string;
     pubkey: string;
@@ -91,6 +101,22 @@ export declare function fetchBookmarks(pubkey: string, relays: string[], nsec?: 
 export declare function fetchEventDetails(identifiers: string[], relays: string[]): Promise<EventResponse[]>;
 export declare function saveBookmark(nsec: string, relays: string[], eventId: string, source: BookmarkSource, clientNsec?: string): Promise<string>;
 export declare function removeBookmark(nsec: string, relays: string[], eventId: string, source: BookmarkSource, clientNsec?: string): Promise<string>;
+export declare function createNote(nsec: string, relays: string[], note: NoteRequest, clientNsec?: string): Promise<string>;
+export declare function updateNote(nsec: string, relays: string[], identifier: string, note: NoteRequest, clientNsec?: string): Promise<string>;
+export declare function deleteNote(nsec: string, relays: string[], noteId: string, clientNsec?: string): Promise<string>;
+export declare function fetchNotes(pubkey: string, relays: string[], options?: {
+    nsec?: string;
+    noteType?: string;
+    clientNsec?: string;
+}): Promise<EventResponse[]>;
+export declare function createNotebook(nsec: string, relays: string[], notebook: NotebookRequest, clientNsec?: string): Promise<string>;
+export declare function fetchNotebooks(pubkey: string, relays: string[], options?: {
+    nsec?: string;
+    clientNsec?: string;
+}): Promise<EventResponse[]>;
+export declare function addNoteToNotebook(nsec: string, relays: string[], notebookId: string, noteId: string, clientNsec?: string): Promise<string>;
+export declare function removeNoteFromNotebook(nsec: string, relays: string[], notebookId: string, noteId: string, clientNsec?: string): Promise<string>;
+export declare function deleteNotebook(nsec: string, relays: string[], notebookId: string, clientNsec?: string): Promise<string>;
 export declare function blossomMirror(serverUrl: string, nsec: string, url: string, clientNsec?: string): Promise<string>;
 export declare function blossomUpload(serverUrl: string, nsec: string, filePath: string, clientNsec?: string): Promise<string>;
 export declare function blossomUploadContent(serverUrl: string, nsec: string, content: string, filename?: string, mediaType?: string, clientNsec?: string): Promise<string>;

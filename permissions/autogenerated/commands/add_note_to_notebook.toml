@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-add-note-to-notebook"
+description = "Enables the add_note_to_notebook command without any pre-configured scope."
+commands.allow = ["add_note_to_notebook"]
+
+[[permission]]
+identifier = "deny-add-note-to-notebook"
+description = "Denies the add_note_to_notebook command without any pre-configured scope."
+commands.deny = ["add_note_to_notebook"]
