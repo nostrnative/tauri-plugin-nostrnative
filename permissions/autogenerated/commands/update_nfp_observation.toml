@@ -1,0 +1,13 @@
+# NFP permissions
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-update-nfp-observation"
+description = "Enables the update_nfp_observation command."
+commands.allow = ["update_nfp_observation"]
+
+[[permission]]
+identifier = "deny-update-nfp-observation"
+description = "Denies the update_nfp_observation command."
+commands.deny = ["update_nfp_observation"]

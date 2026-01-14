@@ -47,6 +47,16 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 - `allow-add-note-to-notebook`
 - `allow-remove-note-from-notebook`
 - `allow-delete-notebook`
+- `allow-fetch-nfp-observations`
+- `allow-publish-nfp-observation`
+- `allow-update-nfp-observation`
+- `allow-fetch-nfp-cycles`
+- `allow-publish-nfp-cycle`
+- `allow-update-nfp-cycle`
+- `allow-fetch-nfp-settings`
+- `allow-publish-nfp-settings`
+- `allow-update-nfp-settings`
+- `allow-delete-nfp-data`
 
 ## Permission Table
 
@@ -398,6 +408,32 @@ Denies the delete_chat_messages command without any pre-configured scope.
 <tr>
 <td>
 
+`nostrnative:allow-delete-nfp-data`
+
+</td>
+<td>
+
+Enables the delete_nfp_data command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-delete-nfp-data`
+
+</td>
+<td>
+
+Denies the delete_nfp_data command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-delete-note`
 
 </td>
@@ -625,6 +661,84 @@ Enables the fetch_event_details command without any pre-configured scope.
 <td>
 
 Denies the fetch_event_details command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-fetch-nfp-cycles`
+
+</td>
+<td>
+
+Enables the fetch_nfp_cycles command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-fetch-nfp-cycles`
+
+</td>
+<td>
+
+Denies the fetch_nfp_cycles command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-fetch-nfp-observations`
+
+</td>
+<td>
+
+Enables the fetch_nfp_observations command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-fetch-nfp-observations`
+
+</td>
+<td>
+
+Denies the fetch_nfp_observations command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-fetch-nfp-settings`
+
+</td>
+<td>
+
+Enables the fetch_nfp_settings command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-fetch-nfp-settings`
+
+</td>
+<td>
+
+Denies the fetch_nfp_settings command.
 
 </td>
 </tr>
@@ -970,6 +1084,84 @@ Denies the publish_chat_message command without any pre-configured scope.
 <tr>
 <td>
 
+`nostrnative:allow-publish-nfp-cycle`
+
+</td>
+<td>
+
+Enables the publish_nfp_cycle command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-publish-nfp-cycle`
+
+</td>
+<td>
+
+Denies the publish_nfp_cycle command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-publish-nfp-observation`
+
+</td>
+<td>
+
+Enables the publish_nfp_observation command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-publish-nfp-observation`
+
+</td>
+<td>
+
+Denies the publish_nfp_observation command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-publish-nfp-settings`
+
+</td>
+<td>
+
+Enables the publish_nfp_settings command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-publish-nfp-settings`
+
+</td>
+<td>
+
+Denies the publish_nfp_settings command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-publish-rsvp`
 
 </td>
@@ -1119,6 +1311,84 @@ Enables the update_contact_list command without any pre-configured scope.
 <td>
 
 Denies the update_contact_list command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-update-nfp-cycle`
+
+</td>
+<td>
+
+Enables the update_nfp_cycle command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-update-nfp-cycle`
+
+</td>
+<td>
+
+Denies the update_nfp_cycle command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-update-nfp-observation`
+
+</td>
+<td>
+
+Enables the update_nfp_observation command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-update-nfp-observation`
+
+</td>
+<td>
+
+Denies the update_nfp_observation command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-update-nfp-settings`
+
+</td>
+<td>
+
+Enables the update_nfp_settings command.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-update-nfp-settings`
+
+</td>
+<td>
+
+Denies the update_nfp_settings command.
 
 </td>
 </tr>

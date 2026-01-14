@@ -328,6 +328,65 @@ async function fetchDiscoveryEvents(pubkey, relays) {
         relays
     });
 }
+// NFP Functions
+async function fetchNfpObservations(pubkey, nsec, relays, rangeStart, rangeEnd, clientNsec) {
+    return await core.invoke('plugin:nostrnative|fetch_nfp_observations', {
+        pubkey,
+        nsec,
+        relays,
+        rangeStart,
+        rangeEnd,
+        clientNsec
+    });
+}
+async function publishNfpObservation(nsec, relays, observation, clientNsec) {
+    return await core.invoke('plugin:nostrnative|publish_nfp_observation', {
+        nsec,
+        relays,
+        observation,
+        clientNsec
+    });
+}
+async function fetchNfpCycles(pubkey, nsec, relays, clientNsec) {
+    return await core.invoke('plugin:nostrnative|fetch_nfp_cycles', {
+        pubkey,
+        nsec,
+        relays,
+        clientNsec
+    });
+}
+async function publishNfpCycle(nsec, relays, cycle, clientNsec) {
+    return await core.invoke('plugin:nostrnative|publish_nfp_cycle', {
+        nsec,
+        relays,
+        cycle,
+        clientNsec
+    });
+}
+async function fetchNfpSettings(pubkey, nsec, relays, clientNsec) {
+    return await core.invoke('plugin:nostrnative|fetch_nfp_settings', {
+        pubkey,
+        nsec,
+        relays,
+        clientNsec
+    });
+}
+async function publishNfpSettings(nsec, relays, settings, clientNsec) {
+    return await core.invoke('plugin:nostrnative|publish_nfp_settings', {
+        nsec,
+        relays,
+        settings,
+        clientNsec
+    });
+}
+async function deleteNfpData(nsec, relays, eventIds, clientNsec) {
+    return await core.invoke('plugin:nostrnative|delete_nfp_data', {
+        nsec,
+        relays,
+        eventIds,
+        clientNsec
+    });
+}
 
 exports.addNoteToNotebook = addNoteToNotebook;
 exports.blossomGetBlob = blossomGetBlob;
@@ -342,6 +401,7 @@ exports.decryptPnsEvent = decryptPnsEvent;
 exports.deleteCalendar = deleteCalendar;
 exports.deleteCalendarEvent = deleteCalendarEvent;
 exports.deleteChatMessages = deleteChatMessages;
+exports.deleteNfpData = deleteNfpData;
 exports.deleteNote = deleteNote;
 exports.deleteNotebook = deleteNotebook;
 exports.derivePnsKeys = derivePnsKeys;
@@ -351,6 +411,9 @@ exports.fetchCalendars = fetchCalendars;
 exports.fetchContactList = fetchContactList;
 exports.fetchDiscoveryEvents = fetchDiscoveryEvents;
 exports.fetchEventDetails = fetchEventDetails;
+exports.fetchNfpCycles = fetchNfpCycles;
+exports.fetchNfpObservations = fetchNfpObservations;
+exports.fetchNfpSettings = fetchNfpSettings;
 exports.fetchNotebooks = fetchNotebooks;
 exports.fetchNotes = fetchNotes;
 exports.fetchPnsEvents = fetchPnsEvents;
@@ -364,6 +427,9 @@ exports.publishBatchCalendarEvents = publishBatchCalendarEvents;
 exports.publishCalendar = publishCalendar;
 exports.publishCalendarEvent = publishCalendarEvent;
 exports.publishChatMessage = publishChatMessage;
+exports.publishNfpCycle = publishNfpCycle;
+exports.publishNfpObservation = publishNfpObservation;
+exports.publishNfpSettings = publishNfpSettings;
 exports.publishRsvp = publishRsvp;
 exports.removeBookmark = removeBookmark;
 exports.removeNoteFromNotebook = removeNoteFromNotebook;

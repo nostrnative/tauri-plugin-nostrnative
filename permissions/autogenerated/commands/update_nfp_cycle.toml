@@ -1,0 +1,13 @@
+# NFP permissions
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-update-nfp-cycle"
+description = "Enables the update_nfp_cycle command."
+commands.allow = ["update_nfp_cycle"]
+
+[[permission]]
+identifier = "deny-update-nfp-cycle"
+description = "Denies the update_nfp_cycle command."
+commands.deny = ["update_nfp_cycle"]

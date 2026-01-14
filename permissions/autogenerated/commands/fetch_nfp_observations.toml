@@ -1,0 +1,13 @@
+# NFP permissions
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-fetch-nfp-observations"
+description = "Enables the fetch_nfp_observations command."
+commands.allow = ["fetch_nfp_observations"]
+
+[[permission]]
+identifier = "deny-fetch-nfp-observations"
+description = "Denies the fetch_nfp_observations command."
+commands.deny = ["fetch_nfp_observations"]

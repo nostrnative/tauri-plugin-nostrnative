@@ -326,5 +326,64 @@ async function fetchDiscoveryEvents(pubkey, relays) {
         relays
     });
 }
+// NFP Functions
+async function fetchNfpObservations(pubkey, nsec, relays, rangeStart, rangeEnd, clientNsec) {
+    return await invoke('plugin:nostrnative|fetch_nfp_observations', {
+        pubkey,
+        nsec,
+        relays,
+        rangeStart,
+        rangeEnd,
+        clientNsec
+    });
+}
+async function publishNfpObservation(nsec, relays, observation, clientNsec) {
+    return await invoke('plugin:nostrnative|publish_nfp_observation', {
+        nsec,
+        relays,
+        observation,
+        clientNsec
+    });
+}
+async function fetchNfpCycles(pubkey, nsec, relays, clientNsec) {
+    return await invoke('plugin:nostrnative|fetch_nfp_cycles', {
+        pubkey,
+        nsec,
+        relays,
+        clientNsec
+    });
+}
+async function publishNfpCycle(nsec, relays, cycle, clientNsec) {
+    return await invoke('plugin:nostrnative|publish_nfp_cycle', {
+        nsec,
+        relays,
+        cycle,
+        clientNsec
+    });
+}
+async function fetchNfpSettings(pubkey, nsec, relays, clientNsec) {
+    return await invoke('plugin:nostrnative|fetch_nfp_settings', {
+        pubkey,
+        nsec,
+        relays,
+        clientNsec
+    });
+}
+async function publishNfpSettings(nsec, relays, settings, clientNsec) {
+    return await invoke('plugin:nostrnative|publish_nfp_settings', {
+        nsec,
+        relays,
+        settings,
+        clientNsec
+    });
+}
+async function deleteNfpData(nsec, relays, eventIds, clientNsec) {
+    return await invoke('plugin:nostrnative|delete_nfp_data', {
+        nsec,
+        relays,
+        eventIds,
+        clientNsec
+    });
+}
 
-export { addNoteToNotebook, blossomGetBlob, blossomMirror, blossomUpload, blossomUploadContent, createDiscoveryEvent, createNote, createNotebook, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, deleteNote, deleteNotebook, derivePnsKeys, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchNotebooks, fetchNotes, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRsvps, fetchUserRsvps, generateNewNsec, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishRsvp, removeBookmark, removeNoteFromNotebook, saveBookmark, sendDirectMessage, updateContactList, updateNote, verifyNsec };
+export { addNoteToNotebook, blossomGetBlob, blossomMirror, blossomUpload, blossomUploadContent, createDiscoveryEvent, createNote, createNotebook, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, deleteNfpData, deleteNote, deleteNotebook, derivePnsKeys, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchNfpCycles, fetchNfpObservations, fetchNfpSettings, fetchNotebooks, fetchNotes, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRsvps, fetchUserRsvps, generateNewNsec, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishNfpCycle, publishNfpObservation, publishNfpSettings, publishRsvp, removeBookmark, removeNoteFromNotebook, saveBookmark, sendDirectMessage, updateContactList, updateNote, verifyNsec };

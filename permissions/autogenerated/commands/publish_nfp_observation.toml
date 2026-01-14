@@ -1,0 +1,9 @@
+"$schema" = "../../schemas/schema.json"
+[[permission]]
+identifier = "allow-publish-nfp-observation"
+description = "Enables the publish_nfp_observation command."
+commands.allow = ["publish_nfp_observation"]
+[[permission]]
+identifier = "deny-publish-nfp-observation"
+description = "Denies the publish_nfp_observation command."
+commands.deny = ["publish_nfp_observation"]

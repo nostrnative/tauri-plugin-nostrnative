@@ -129,3 +129,69 @@ export declare function decryptPnsEvent(pnsNsec: string, content: string, client
 export declare function fetchPnsEvents(pnsPubkey: string, relays: string[], eventId?: string): Promise<EventResponse[]>;
 export declare function deleteChatMessages(pnsNsec: string, relays: string[], eventIds: string[], clientNsec?: string): Promise<string>;
 export declare function fetchDiscoveryEvents(pubkey: string, relays: string[]): Promise<EventResponse[]>;
+export interface NFPTemperature {
+    value: number;
+    time: string;
+    method: string;
+    disturbance?: string;
+}
+export interface NFPCervicalFluid {
+    sensation: string;
+    appearance?: string;
+    amount?: string;
+}
+export interface NFPCervixPosition {
+    height: string;
+    firmness: string;
+    opening: string;
+}
+export interface NFPBleeding {
+    flow: string;
+    color?: string;
+}
+export interface NFPObservationRequest {
+    date: string;
+    identifier: string;
+    temperature?: NFPTemperature;
+    cervical_fluid?: NFPCervicalFluid;
+    cervix_position?: NFPCervixPosition;
+    bleeding?: NFPBleeding;
+    notes?: string;
+    disturbances?: string[];
+}
+export interface NFPCycleRequest {
+    identifier: string;
+    start_date: string;
+    end_date?: string;
+    length?: number;
+    fertility_window_start?: string;
+    fertility_window_end?: string;
+    peak_day?: string;
+    ovulation_day?: string;
+    luteal_phase_length?: number;
+}
+export interface NFPSettingsRequest {
+    identifier: string;
+    temperature_unit: string;
+    temperature_method: string;
+    reminder_time?: string;
+    average_cycle_length: number;
+    luteal_phase_length?: number;
+    require_pin_on_open: boolean;
+    auto_lock_after_minutes?: number;
+    sync_enabled: boolean;
+    encrypted_backup: boolean;
+    theme: string;
+    chart_style: string;
+    show_predictions: boolean;
+    temperature_reminder: boolean;
+    ovulation_prediction: boolean;
+    cycle_end_prediction: boolean;
+}
+export declare function fetchNfpObservations(pubkey: string, nsec: string | null, relays: string[], rangeStart: number | null, rangeEnd: number | null, clientNsec: string | null): Promise<EventResponse[]>;
+export declare function publishNfpObservation(nsec: string, relays: string[], observation: NFPObservationRequest, clientNsec: string | null): Promise<string>;
+export declare function fetchNfpCycles(pubkey: string, nsec: string | null, relays: string[], clientNsec: string | null): Promise<EventResponse[]>;
+export declare function publishNfpCycle(nsec: string, relays: string[], cycle: NFPCycleRequest, clientNsec: string | null): Promise<string>;
+export declare function fetchNfpSettings(pubkey: string, nsec: string | null, relays: string[], clientNsec: string | null): Promise<EventResponse | null>;
+export declare function publishNfpSettings(nsec: string, relays: string[], settings: NFPSettingsRequest, clientNsec: string | null): Promise<string>;
+export declare function deleteNfpData(nsec: string, relays: string[], eventIds: string[], clientNsec: string | null): Promise<string>;

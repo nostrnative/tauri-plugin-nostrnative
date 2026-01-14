@@ -1,0 +1,9 @@
+"$schema" = "../../schemas/schema.json"
+[[permission]]
+identifier = "allow-delete-nfp-data"
+description = "Enables the delete_nfp_data command."
+commands.allow = ["delete_nfp_data"]
+[[permission]]
+identifier = "deny-delete-nfp-data"
+description = "Denies the delete_nfp_data command."
+commands.deny = ["delete_nfp_data"]

@@ -1,0 +1,9 @@
+"$schema" = "../../schemas/schema.json"
+[[permission]]
+identifier = "allow-fetch-nfp-settings"
+description = "Enables the fetch_nfp_settings command."
+commands.allow = ["fetch_nfp_settings"]
+[[permission]]
+identifier = "deny-fetch-nfp-settings"
+description = "Denies the fetch_nfp_settings command."
+commands.deny = ["fetch_nfp_settings"]

@@ -29,6 +29,9 @@ pub mod blossom;
 #[cfg(feature = "chat")]
 pub mod chat;
 
+#[cfg(feature = "nfp")]
+pub mod nfp;
+
 #[cfg(feature = "tauri-plugin")]
 mod commands;
 
@@ -167,6 +170,26 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::delete_chat_messages,
             #[cfg(feature = "chat")]
             commands::fetch_discovery_events,
+            #[cfg(feature = "nfp")]
+            commands::fetch_nfp_observations,
+            #[cfg(feature = "nfp")]
+            commands::publish_nfp_observation,
+            #[cfg(feature = "nfp")]
+            commands::update_nfp_observation,
+            #[cfg(feature = "nfp")]
+            commands::fetch_nfp_cycles,
+            #[cfg(feature = "nfp")]
+            commands::publish_nfp_cycle,
+            #[cfg(feature = "nfp")]
+            commands::update_nfp_cycle,
+            #[cfg(feature = "nfp")]
+            commands::fetch_nfp_settings,
+            #[cfg(feature = "nfp")]
+            commands::publish_nfp_settings,
+            #[cfg(feature = "nfp")]
+            commands::update_nfp_settings,
+            #[cfg(feature = "nfp")]
+            commands::delete_nfp_data,
         ])
         .build()
 }

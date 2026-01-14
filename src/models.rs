@@ -85,3 +85,76 @@ pub struct PnsDerivedKeys {
     pub public_key: String,
     pub secret_key: String,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NFPObservationRequest {
+    pub date: String,       // ISO date string (YYYY-MM-DD)
+    pub identifier: String, // d-tag
+    pub temperature: Option<NFPTemperature>,
+    pub cervical_fluid: Option<NFPCervicalFluid>,
+    pub cervix_position: Option<NFPCervixPosition>,
+    pub bleeding: Option<NFPBleeding>,
+    pub notes: Option<String>,
+    pub disturbances: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NFPTemperature {
+    pub value: f64,     // in Celsius
+    pub time: String,   // time taken (HH:MM)
+    pub method: String, // oral, vaginal, rectal
+    pub disturbance: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NFPCervicalFluid {
+    pub sensation: String,          // dry, moist, wet, slippery
+    pub appearance: Option<String>, // none, sticky, creamy, egg-white, unusual
+    pub amount: Option<String>,     // none, little, moderate, much
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NFPCervixPosition {
+    pub height: String,   // low, medium, high
+    pub firmness: String, // firm, medium, soft
+    pub opening: String,  // closed, slightly-open, open
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NFPBleeding {
+    pub flow: String,          // spotting, light, medium, heavy
+    pub color: Option<String>, // brown, red, pink
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NFPCycleRequest {
+    pub identifier: String,       // d-tag - cycle ID
+    pub start_date: String,       // first day of menstruation
+    pub end_date: Option<String>, // last day before next cycle starts
+    pub length: Option<i64>,      // in days
+    pub fertility_window_start: Option<String>,
+    pub fertility_window_end: Option<String>,
+    pub peak_day: Option<String>,
+    pub ovulation_day: Option<String>,
+    pub luteal_phase_length: Option<i64>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NFPSettingsRequest {
+    pub identifier: String,            // d-tag - always "user-settings"
+    pub temperature_unit: String,      // celsius, fahrenheit
+    pub temperature_method: String,    // oral, vaginal, rectal
+    pub reminder_time: Option<String>, // HH:MM
+    pub average_cycle_length: i64,
+    pub luteal_phase_length: Option<i64>,
+    pub require_pin_on_open: bool,
+    pub auto_lock_after_minutes: Option<i64>,
+    pub sync_enabled: bool,
+    pub encrypted_backup: bool,
+    pub theme: String,       // light, dark, system
+    pub chart_style: String, // classic, modern
+    pub show_predictions: bool,
+    pub temperature_reminder: bool,
+    pub ovulation_prediction: bool,
+    pub cycle_end_prediction: bool,
+}

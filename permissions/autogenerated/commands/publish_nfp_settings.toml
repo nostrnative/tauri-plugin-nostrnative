@@ -1,0 +1,9 @@
+"$schema" = "../../schemas/schema.json"
+[[permission]]
+identifier = "allow-publish-nfp-settings"
+description = "Enables the publish_nfp_settings command."
+commands.allow = ["publish_nfp_settings"]
+[[permission]]
+identifier = "deny-publish-nfp-settings"
+description = "Denies the publish_nfp_settings command."
+commands.deny = ["publish_nfp_settings"]

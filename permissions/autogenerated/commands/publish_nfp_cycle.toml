@@ -1,0 +1,9 @@
+"$schema" = "../../schemas/schema.json"
+[[permission]]
+identifier = "allow-publish-nfp-cycle"
+description = "Enables the publish_nfp_cycle command."
+commands.allow = ["publish_nfp_cycle"]
+[[permission]]
+identifier = "deny-publish-nfp-cycle"
+description = "Denies the publish_nfp_cycle command."
+commands.deny = ["publish_nfp_cycle"]

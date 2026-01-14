@@ -43,5 +43,15 @@ permissions = [
     "allow-fetch-notebooks",
     "allow-add-note-to-notebook",
     "allow-remove-note-from-notebook",
-    "allow-delete-notebook"
+    "allow-delete-notebook",
+    "allow-fetch-nfp-observations",
+    "allow-publish-nfp-observation",
+    "allow-update-nfp-observation",
+    "allow-fetch-nfp-cycles",
+    "allow-publish-nfp-cycle",
+    "allow-update-nfp-cycle",
+    "allow-fetch-nfp-settings",
+    "allow-publish-nfp-settings",
+    "allow-update-nfp-settings",
+    "allow-delete-nfp-data"
 ]

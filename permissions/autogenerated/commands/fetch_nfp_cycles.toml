@@ -1,0 +1,9 @@
+"$schema" = "../../schemas/schema.json"
+[[permission]]
+identifier = "allow-fetch-nfp-cycles"
+description = "Enables the fetch_nfp_cycles command."
+commands.allow = ["fetch_nfp_cycles"]
+[[permission]]
+identifier = "deny-fetch-nfp-cycles"
+description = "Denies the fetch_nfp_cycles command."
+commands.deny = ["fetch_nfp_cycles"]

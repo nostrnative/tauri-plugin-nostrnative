@@ -22,7 +22,10 @@ use crate::blossom;
 #[cfg(feature = "chat")]
 use crate::chat;
 
-use crate::models::{BookmarkSource, EventResponse};
+#[cfg(feature = "nfp")]
+use crate::nfp;
+
+use crate::models::EventResponse;
 
 #[cfg(feature = "calendar")]
 use crate::models::{CalendarEventRequest, CalendarRequest};
@@ -32,6 +35,9 @@ use crate::models::{ChatMessageRequest, PnsDerivedKeys};
 
 #[cfg(feature = "profile")]
 use crate::models::{Contact, UserProfile};
+
+#[cfg(feature = "nfp")]
+use crate::models::{NFPCycleRequest, NFPObservationRequest, NFPSettingsRequest};
 
 #[tauri::command]
 #[cfg(feature = "keys")]
@@ -538,4 +544,134 @@ pub async fn fetch_discovery_events(
     relays: Vec<String>,
 ) -> Result<Vec<EventResponse>, String> {
     chat::fetch_discovery_events_core(&pubkey, &relays).await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn fetch_nfp_observations(
+    pubkey: String,
+    nsec: Option<String>,
+    relays: Vec<String>,
+    range_start: Option<i64>,
+    range_end: Option<i64>,
+    client_nsec: Option<String>,
+) -> Result<Vec<EventResponse>, String> {
+    nfp::fetch_nfp_observations_core(
+        &pubkey,
+        nsec.as_deref(),
+        &relays,
+        range_start,
+        range_end,
+        client_nsec.as_deref(),
+    )
+    .await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn publish_nfp_observation(
+    nsec: String,
+    relays: Vec<String>,
+    observation: NFPObservationRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    nfp::publish_nfp_observation_core(&nsec, &relays, observation, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn update_nfp_observation(
+    nsec: String,
+    relays: Vec<String>,
+    event_id: String,
+    observation: NFPObservationRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    nfp::update_nfp_observation_core(
+        &nsec,
+        &relays,
+        &event_id,
+        observation,
+        client_nsec.as_deref(),
+    )
+    .await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn fetch_nfp_cycles(
+    pubkey: String,
+    nsec: Option<String>,
+    relays: Vec<String>,
+    client_nsec: Option<String>,
+) -> Result<Vec<EventResponse>, String> {
+    nfp::fetch_nfp_cycles_core(&pubkey, nsec.as_deref(), &relays, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn publish_nfp_cycle(
+    nsec: String,
+    relays: Vec<String>,
+    cycle: NFPCycleRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    nfp::publish_nfp_cycle_core(&nsec, &relays, cycle, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn fetch_nfp_settings(
+    pubkey: String,
+    nsec: Option<String>,
+    relays: Vec<String>,
+    client_nsec: Option<String>,
+) -> Result<Option<EventResponse>, String> {
+    nfp::fetch_nfp_settings_core(&pubkey, nsec.as_deref(), &relays, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn publish_nfp_settings(
+    nsec: String,
+    relays: Vec<String>,
+    settings: NFPSettingsRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    nfp::publish_nfp_settings_core(&nsec, &relays, settings, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn delete_nfp_data(
+    nsec: String,
+    relays: Vec<String>,
+    event_ids: Vec<String>,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    nfp::delete_nfp_data_core(&nsec, &relays, event_ids, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn update_nfp_cycle(
+    nsec: String,
+    relays: Vec<String>,
+    event_id: String,
+    cycle: NFPCycleRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    nfp::update_nfp_cycle_core(&nsec, &relays, &event_id, cycle, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "nfp")]
+pub async fn update_nfp_settings(
+    nsec: String,
+    relays: Vec<String>,
+    event_id: String,
+    settings: NFPSettingsRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    nfp::update_nfp_settings_core(&nsec, &relays, &event_id, settings, client_nsec.as_deref()).await
 }
