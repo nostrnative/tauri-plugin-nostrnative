@@ -36,7 +36,7 @@ export interface UserProfile {
     website?: string | null;
     nip05?: string | null;
 }
-export type BookmarkSource = 'public' | 'private' | 'website';
+export type BookmarkSource = "public" | "private" | "website";
 export interface NoteRequest {
     content: string;
     note_type: string;
@@ -121,6 +121,8 @@ export declare function blossomMirror(serverUrl: string, nsec: string, url: stri
 export declare function blossomUpload(serverUrl: string, nsec: string, filePath: string, clientNsec?: string): Promise<string>;
 export declare function blossomUploadContent(serverUrl: string, nsec: string, content: string, filename?: string, mediaType?: string, clientNsec?: string): Promise<string>;
 export declare function blossomGetBlob(serverUrl: string, hash: string): Promise<number[]>;
+export declare function blossomDelete(serverUrl: string, nsec: string, hash: string, clientNsec?: string): Promise<void>;
+export declare function blossomList(serverUrl: string, pubkey: string, nsec?: string, clientNsec?: string): Promise<any[]>;
 export declare function derivePnsKeys(deviceKeyHex: string): Promise<PnsDerivedKeys>;
 export declare function createDiscoveryEvent(nsec: string, deviceKeyToStore: string, relays: string[], clientNsec?: string): Promise<string>;
 export declare function decryptDiscoveryEvent(nsec: string, content: string, clientNsec?: string): Promise<string>;

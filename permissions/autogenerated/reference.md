@@ -30,6 +30,8 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 - `allow-blossom-upload`
 - `allow-blossom-upload-content`
 - `allow-blossom-get-blob`
+- `allow-blossom-delete`
+- `allow-blossom-list`
 - `allow-derive-pns-keys`
 - `allow-create-discovery-event`
 - `allow-decrypt-discovery-event`
@@ -66,6 +68,45 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`nostrnative:allow-blossom-delete`
+
+</td>
+<td>
+
+Allows deleting blobs
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-blossom-list`
+
+</td>
+<td>
+
+Allows listing blobs
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-blossom-upload`
+
+</td>
+<td>
+
+Allows uploading blobs
+
+</td>
+</tr>
 
 <tr>
 <td>

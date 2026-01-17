@@ -238,3 +238,113 @@ pub async fn blossom_get_blob_core(server_url: &str, hash: &str) -> Result<Vec<u
     let bytes = response.bytes().await.map_err(|e| e.to_string())?;
     Ok(bytes.to_vec())
 }
+
+pub async fn blossom_delete_core(
+    server_url: &str,
+    nsec: &str,
+    hash: &str,
+    client_nsec: Option<&str>,
+) -> Result<(), String> {
+    let nostr_client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
+    let http_client = HttpClient::new();
+
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    let tags = vec![
+        Tag::custom(
+            TagKind::Custom(std::borrow::Cow::Borrowed("t")),
+            vec!["delete".to_string()],
+        ),
+        Tag::custom(
+            TagKind::Custom(std::borrow::Cow::Borrowed("x")),
+            vec![hash.to_string()],
+        ),
+        Tag::custom(
+            TagKind::Custom(std::borrow::Cow::Borrowed("expiration")),
+            vec![(now + 60).to_string()],
+        ),
+    ];
+
+    let builder = EventBuilder::new(Kind::from(24242), "Delete Blob").tags(tags);
+    let event = nostr_client
+        .sign_event_builder(builder)
+        .await
+        .map_err(|e| e.to_string())?;
+    let auth_b64 = base64::engine::general_purpose::STANDARD
+        .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
+
+    let response = http_client
+        .delete(format!(
+            "{}/{}",
+            server_url.trim_end_matches('/'),
+            hash
+        ))
+        .header("Authorization", format!("Nostr {}", auth_b64))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !response.status().is_success() {
+        return Err(format!(
+            "Blossom server returned error: {}",
+            response.status()
+        ));
+    }
+
+    Ok(())
+}
+
+pub async fn blossom_list_core(
+    server_url: &str,
+    pubkey: &str,
+    nsec: Option<&str>,
+    client_nsec: Option<&str>,
+) -> Result<serde_json::Value, String> {
+    let http_client = HttpClient::new();
+    let url = format!("{}/list/{}", server_url.trim_end_matches('/'), pubkey);
+
+    let mut request = http_client.get(&url);
+
+    if let Some(n) = nsec {
+        let nostr_client = crate::utils::get_client_with_signer(n, &[], client_nsec).await?;
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        let tags = vec![
+            Tag::custom(
+                TagKind::Custom(std::borrow::Cow::Borrowed("t")),
+                vec!["list".to_string()],
+            ),
+            Tag::custom(
+                TagKind::Custom(std::borrow::Cow::Borrowed("expiration")),
+                vec![(now + 60).to_string()],
+            ),
+        ];
+
+        let builder = EventBuilder::new(Kind::from(24242), "List Blobs").tags(tags);
+        let event = nostr_client
+            .sign_event_builder(builder)
+            .await
+            .map_err(|e| e.to_string())?;
+        let auth_b64 = base64::engine::general_purpose::STANDARD
+            .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
+        request = request.header("Authorization", format!("Nostr {}", auth_b64));
+    }
+
+    let response = request.send().await.map_err(|e| e.to_string())?;
+
+    if !response.status().is_success() {
+        return Err(format!(
+            "Blossom server returned error: {}",
+            response.status()
+        ));
+    }
+
+    let result: serde_json::Value = response.json().await.map_err(|e| e.to_string())?;
+    Ok(result)
+}

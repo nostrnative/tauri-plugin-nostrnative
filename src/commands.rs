@@ -25,7 +25,8 @@ use crate::chat;
 #[cfg(feature = "nfp")]
 use crate::nfp;
 
-use crate::models::EventResponse;
+#[cfg(feature = "bookmarks")]
+use crate::models::{BookmarkSource, EventResponse};
 
 #[cfg(feature = "calendar")]
 use crate::models::{CalendarEventRequest, CalendarRequest};
@@ -457,6 +458,28 @@ pub async fn blossom_upload_content(
 #[cfg(feature = "blossom")]
 pub async fn blossom_get_blob(server_url: String, hash: String) -> Result<Vec<u8>, String> {
     blossom::blossom_get_blob_core(&server_url, &hash).await
+}
+
+#[tauri::command]
+#[cfg(feature = "blossom")]
+pub async fn blossom_delete(
+    server_url: String,
+    nsec: String,
+    hash: String,
+    client_nsec: Option<String>,
+) -> Result<(), String> {
+    blossom::blossom_delete_core(&server_url, &nsec, &hash, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "blossom")]
+pub async fn blossom_list(
+    server_url: String,
+    pubkey: String,
+    nsec: Option<String>,
+    client_nsec: Option<String>,
+) -> Result<serde_json::Value, String> {
+    blossom::blossom_list_core(&server_url, &pubkey, nsec.as_deref(), client_nsec.as_deref()).await
 }
 
 #[tauri::command]

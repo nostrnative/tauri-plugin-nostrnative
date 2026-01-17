@@ -27,6 +27,8 @@ permissions = [
     "allow-blossom-upload",
     "allow-blossom-upload-content",
     "allow-blossom-get-blob",
+    "allow-blossom-delete",
+    "allow-blossom-list",
     "allow-derive-pns-keys",
     "allow-create-discovery-event",
     "allow-decrypt-discovery-event",

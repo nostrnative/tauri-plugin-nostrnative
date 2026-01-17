@@ -545,6 +545,34 @@ export async function blossomGetBlob(
   });
 }
 
+export async function blossomDelete(
+  serverUrl: string,
+  nsec: string,
+  hash: string,
+  clientNsec?: string,
+): Promise<void> {
+  return await invoke("plugin:nostrnative|blossom_delete", {
+    serverUrl,
+    nsec,
+    hash,
+    clientNsec,
+  });
+}
+
+export async function blossomList(
+  serverUrl: string,
+  pubkey: string,
+  nsec?: string,
+  clientNsec?: string,
+): Promise<any[]> {
+  return await invoke("plugin:nostrnative|blossom_list", {
+    serverUrl,
+    pubkey,
+    nsec,
+    clientNsec,
+  });
+}
+
 // Chat
 export async function derivePnsKeys(
   deviceKeyHex: string,

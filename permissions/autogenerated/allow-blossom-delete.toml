@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-blossom-delete"
+description = "Allows deleting blobs"
+commands = [["blossom_delete"]]

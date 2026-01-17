@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-blossom-upload"
+description = "Allows uploading blobs"
+commands = [["blossom_upload"]]

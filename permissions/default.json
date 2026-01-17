@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "identifier": "default",
+  "description": "Default permissions for nostrnative",
+  "permissions": [
+    "nostrnative:allow-blossom-mirror",
+    "nostrnative:allow-blossom-upload",
+    "nostrnative:allow-blossom-upload-content",
+    "nostrnative:allow-blossom-get-blob",
+    "nostrnative:allow-blossom-delete",
+    "nostrnative:allow-blossom-list"
+  ]
+}

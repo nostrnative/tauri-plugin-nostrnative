@@ -154,6 +154,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::blossom_upload_content,
             #[cfg(feature = "blossom")]
             commands::blossom_get_blob,
+            #[cfg(feature = "blossom")]
+            commands::blossom_delete,
+            #[cfg(feature = "blossom")]
+            commands::blossom_list,
             #[cfg(feature = "chat")]
             commands::derive_pns_keys,
             #[cfg(feature = "chat")]

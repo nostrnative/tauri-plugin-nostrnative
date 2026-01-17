@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-blossom-list"
+description = "Allows listing blobs"
+commands = [["blossom_list"]]
