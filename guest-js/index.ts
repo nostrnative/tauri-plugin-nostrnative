@@ -738,6 +738,64 @@ export interface NFPSettingsRequest {
   cycle_end_prediction: boolean;
 }
 
+export interface FilesystemMetadata {
+  name: string;
+  version: string;
+  max_depth: number;
+  total_nodes: number;
+  total_size: number;
+  created_at: number;
+}
+
+export interface FileNodeMetadata {
+  created: number;
+  modified: number;
+  permissions: string;
+  size: number;
+  mime_type: string;
+  content_hash: string;
+}
+
+export interface DirectoryNodeMetadata {
+  created: number;
+  modified: number;
+  permissions: string;
+}
+
+export interface ContentReference {
+  source: string; // e.g., "nostr_event", "blossom"
+  kind?: number;
+  id: string; // event id or blossom hash
+  url?: string;
+}
+
+export type VirtualNode =
+  | {
+      type: "file";
+      name: string;
+      depth: number;
+      metadata: FileNodeMetadata;
+      content_ref?: ContentReference;
+    }
+  | {
+      type: "directory";
+      name: string;
+      depth: number;
+      metadata: DirectoryNodeMetadata;
+      children: VirtualNode[];
+    };
+
+export interface VirtualFilesystem {
+  root: VirtualNode;
+  metadata: FilesystemMetadata;
+}
+
+export interface FilesystemRequest {
+  identifier: string; // d-tag
+  name: string;
+  filesystem: VirtualFilesystem;
+}
+
 // NFP Functions
 export async function fetchNfpObservations(
   pubkey: string,
@@ -838,5 +896,30 @@ export async function deleteNfpData(
     relays,
     eventIds,
     clientNsec,
+  });
+}
+
+// Virtual FS
+export async function publishVirtualFs(
+  nsec: string,
+  relays: string[],
+  req: FilesystemRequest,
+  clientNsec?: string,
+): Promise<string> {
+  return await invoke("plugin:nostrnative|publish_virtual_fs", {
+    nsec,
+    relays,
+    req,
+    clientNsec,
+  });
+}
+
+export async function fetchVirtualFs(
+  pubkey: string,
+  relays: string[],
+): Promise<EventResponse[]> {
+  return await invoke("plugin:nostrnative|fetch_virtual_fs", {
+    pubkey,
+    relays,
   });
 }

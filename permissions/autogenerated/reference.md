@@ -59,6 +59,8 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 - `allow-publish-nfp-settings`
 - `allow-update-nfp-settings`
 - `allow-delete-nfp-data`
+- `allow-publish-virtual-fs`
+- `allow-fetch-virtual-fs`
 
 ## Permission Table
 
@@ -969,6 +971,32 @@ Denies the fetch_user_rsvps command without any pre-configured scope.
 <tr>
 <td>
 
+`nostrnative:allow-fetch-virtual-fs`
+
+</td>
+<td>
+
+Enables the fetch_virtual_fs command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-fetch-virtual-fs`
+
+</td>
+<td>
+
+Denies the fetch_virtual_fs command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-generate-new-nsec`
 
 </td>
@@ -1222,6 +1250,32 @@ Enables the publish_rsvp command without any pre-configured scope.
 <td>
 
 Denies the publish_rsvp command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-publish-virtual-fs`
+
+</td>
+<td>
+
+Enables the publish_virtual_fs command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-publish-virtual-fs`
+
+</td>
+<td>
+
+Denies the publish_virtual_fs command without any pre-configured scope.
 
 </td>
 </tr>

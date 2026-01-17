@@ -32,6 +32,9 @@ pub mod chat;
 #[cfg(feature = "nfp")]
 pub mod nfp;
 
+#[cfg(feature = "virtual-fs")]
+pub mod virtual_fs;
+
 #[cfg(feature = "tauri-plugin")]
 mod commands;
 
@@ -194,6 +197,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::update_nfp_settings,
             #[cfg(feature = "nfp")]
             commands::delete_nfp_data,
+            #[cfg(feature = "virtual-fs")]
+            commands::publish_virtual_fs,
+            #[cfg(feature = "virtual-fs")]
+            commands::fetch_virtual_fs,
         ])
         .build()
 }

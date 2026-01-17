@@ -25,6 +25,9 @@ use crate::chat;
 #[cfg(feature = "nfp")]
 use crate::nfp;
 
+#[cfg(feature = "virtual-fs")]
+use crate::virtual_fs;
+
 #[cfg(feature = "bookmarks")]
 use crate::models::{BookmarkSource, EventResponse};
 
@@ -39,6 +42,9 @@ use crate::models::{Contact, UserProfile};
 
 #[cfg(feature = "nfp")]
 use crate::models::{NFPCycleRequest, NFPObservationRequest, NFPSettingsRequest};
+
+#[cfg(feature = "virtual-fs")]
+use crate::models::{EventResponse, FilesystemRequest};
 
 #[tauri::command]
 #[cfg(feature = "keys")]
@@ -697,4 +703,24 @@ pub async fn update_nfp_settings(
     client_nsec: Option<String>,
 ) -> Result<String, String> {
     nfp::update_nfp_settings_core(&nsec, &relays, &event_id, settings, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "virtual-fs")]
+pub async fn publish_virtual_fs(
+    nsec: String,
+    relays: Vec<String>,
+    req: FilesystemRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    virtual_fs::publish_filesystem(&nsec, &relays, req, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "virtual-fs")]
+pub async fn fetch_virtual_fs(
+    pubkey: String,
+    relays: Vec<String>,
+) -> Result<Vec<EventResponse>, String> {
+    virtual_fs::fetch_filesystems(&pubkey, &relays).await
 }

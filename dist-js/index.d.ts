@@ -190,6 +190,55 @@ export interface NFPSettingsRequest {
     ovulation_prediction: boolean;
     cycle_end_prediction: boolean;
 }
+export interface FilesystemMetadata {
+    name: string;
+    version: string;
+    max_depth: number;
+    total_nodes: number;
+    total_size: number;
+    created_at: number;
+}
+export interface FileNodeMetadata {
+    created: number;
+    modified: number;
+    permissions: string;
+    size: number;
+    mime_type: string;
+    content_hash: string;
+}
+export interface DirectoryNodeMetadata {
+    created: number;
+    modified: number;
+    permissions: string;
+}
+export interface ContentReference {
+    source: string;
+    kind?: number;
+    id: string;
+    url?: string;
+}
+export type VirtualNode = {
+    type: "file";
+    name: string;
+    depth: number;
+    metadata: FileNodeMetadata;
+    content_ref?: ContentReference;
+} | {
+    type: "directory";
+    name: string;
+    depth: number;
+    metadata: DirectoryNodeMetadata;
+    children: VirtualNode[];
+};
+export interface VirtualFilesystem {
+    root: VirtualNode;
+    metadata: FilesystemMetadata;
+}
+export interface FilesystemRequest {
+    identifier: string;
+    name: string;
+    filesystem: VirtualFilesystem;
+}
 export declare function fetchNfpObservations(pubkey: string, nsec: string | null, relays: string[], rangeStart: number | null, rangeEnd: number | null, clientNsec: string | null): Promise<EventResponse[]>;
 export declare function publishNfpObservation(nsec: string, relays: string[], observation: NFPObservationRequest, clientNsec: string | null): Promise<string>;
 export declare function fetchNfpCycles(pubkey: string, nsec: string | null, relays: string[], clientNsec: string | null): Promise<EventResponse[]>;
@@ -197,3 +246,5 @@ export declare function publishNfpCycle(nsec: string, relays: string[], cycle: N
 export declare function fetchNfpSettings(pubkey: string, nsec: string | null, relays: string[], clientNsec: string | null): Promise<EventResponse | null>;
 export declare function publishNfpSettings(nsec: string, relays: string[], settings: NFPSettingsRequest, clientNsec: string | null): Promise<string>;
 export declare function deleteNfpData(nsec: string, relays: string[], eventIds: string[], clientNsec: string | null): Promise<string>;
+export declare function publishVirtualFs(nsec: string, relays: string[], req: FilesystemRequest, clientNsec?: string): Promise<string>;
+export declare function fetchVirtualFs(pubkey: string, relays: string[]): Promise<EventResponse[]>;

@@ -158,3 +158,68 @@ pub struct NFPSettingsRequest {
     pub ovulation_prediction: bool,
     pub cycle_end_prediction: bool,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct VirtualFilesystem {
+    pub root: VirtualNode,
+    pub metadata: FilesystemMetadata,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FilesystemMetadata {
+    pub name: String,
+    pub version: String,
+    pub max_depth: u8,
+    pub total_nodes: usize,
+    pub total_size: u64,
+    pub created_at: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum VirtualNode {
+    File {
+        name: String,
+        depth: u8,
+        metadata: FileNodeMetadata,
+        content_ref: Option<ContentReference>,
+    },
+    Directory {
+        name: String,
+        depth: u8,
+        metadata: DirectoryNodeMetadata,
+        children: Vec<VirtualNode>,
+    },
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FileNodeMetadata {
+    pub created: i64,
+    pub modified: i64,
+    pub permissions: String,
+    pub size: u64,
+    pub mime_type: String,
+    pub content_hash: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DirectoryNodeMetadata {
+    pub created: i64,
+    pub modified: i64,
+    pub permissions: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ContentReference {
+    pub source: String, // e.g., "nostr_event", "blossom"
+    pub kind: Option<u16>,
+    pub id: String, // event id or blossom hash
+    pub url: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct FilesystemRequest {
+    pub identifier: String, // d-tag
+    pub name: String,
+    pub filesystem: VirtualFilesystem,
+}

@@ -403,6 +403,21 @@ async function deleteNfpData(nsec, relays, eventIds, clientNsec) {
         clientNsec,
     });
 }
+// Virtual FS
+async function publishVirtualFs(nsec, relays, req, clientNsec) {
+    return await core.invoke("plugin:nostrnative|publish_virtual_fs", {
+        nsec,
+        relays,
+        req,
+        clientNsec,
+    });
+}
+async function fetchVirtualFs(pubkey, relays) {
+    return await core.invoke("plugin:nostrnative|fetch_virtual_fs", {
+        pubkey,
+        relays,
+    });
+}
 
 exports.addNoteToNotebook = addNoteToNotebook;
 exports.blossomDelete = blossomDelete;
@@ -439,6 +454,7 @@ exports.fetchProfiles = fetchProfiles;
 exports.fetchReceivedRsvps = fetchReceivedRsvps;
 exports.fetchRsvps = fetchRsvps;
 exports.fetchUserRsvps = fetchUserRsvps;
+exports.fetchVirtualFs = fetchVirtualFs;
 exports.generateNewNsec = generateNewNsec;
 exports.parsePubkey = parsePubkey;
 exports.publishBatchCalendarEvents = publishBatchCalendarEvents;
@@ -449,6 +465,7 @@ exports.publishNfpCycle = publishNfpCycle;
 exports.publishNfpObservation = publishNfpObservation;
 exports.publishNfpSettings = publishNfpSettings;
 exports.publishRsvp = publishRsvp;
+exports.publishVirtualFs = publishVirtualFs;
 exports.removeBookmark = removeBookmark;
 exports.removeNoteFromNotebook = removeNoteFromNotebook;
 exports.saveBookmark = saveBookmark;
