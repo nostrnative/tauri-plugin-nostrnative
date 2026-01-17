@@ -86,6 +86,8 @@ pub async fn fetch_calendar_events_core(
         let mut is_private = false;
         let mut private_title: Option<String> = None;
         let mut private_description: Option<String> = None;
+        let mut start_tzid: Option<String> = None;
+        let mut end_tzid: Option<String> = None;
 
         for tag in e.tags.iter() {
             let t = tag.clone().to_vec();
@@ -96,6 +98,10 @@ pub async fn fetch_calendar_events_core(
                     end_val = t[1].parse::<i64>().ok();
                 } else if t[0] == "private" {
                     is_private = true;
+                } else if t[0] == "start_tzid" {
+                    start_tzid = Some(t[1].clone());
+                } else if t[0] == "end_tzid" {
+                    end_tzid = Some(t[1].clone());
                 }
             }
         }
@@ -155,6 +161,16 @@ pub async fn fetch_calendar_events_core(
                     .any(|tag| !tag.is_empty() && tag[0] == "title")
             {
                 response_tags.push(vec!["title".to_string(), "Private Event".to_string()]);
+            }
+
+            // Ensure timezone tags are included in the response if they exist
+            if let Some(start_tz) = &start_tzid {
+                response_tags.retain(|tag| tag.is_empty() || tag[0] != "start_tzid");
+                response_tags.push(vec!["start_tzid".to_string(), start_tz.clone()]);
+            }
+            if let Some(end_tz) = &end_tzid {
+                response_tags.retain(|tag| tag.is_empty() || tag[0] != "end_tzid");
+                response_tags.push(vec!["end_tzid".to_string(), end_tz.clone()]);
             }
 
             response.push(EventResponse {
@@ -293,6 +309,44 @@ pub async fn publish_batch_calendar_events_core(
                 TagKind::Custom(Cow::Borrowed("until")),
                 vec![until.to_string()],
             ));
+        }
+
+        // Add timezone tags according to NIP-52
+        if let Some(start_tzid) = &event_data.start_tzid {
+            if !start_tzid.is_empty() && !event_data.is_all_day {
+                tags.push(Tag::custom(
+                    TagKind::Custom(Cow::Borrowed("start_tzid")),
+                    vec![start_tzid.clone()],
+                ));
+
+                // Per NIP-52: If end_tzid is omitted and start_tzid is provided,
+                // end_tzid defaults to start_tzid
+                if let Some(end_tzid) = &event_data.end_tzid {
+                    if !end_tzid.is_empty() {
+                        tags.push(Tag::custom(
+                            TagKind::Custom(Cow::Borrowed("end_tzid")),
+                            vec![end_tzid.clone()],
+                        ));
+                    } else {
+                        tags.push(Tag::custom(
+                            TagKind::Custom(Cow::Borrowed("end_tzid")),
+                            vec![start_tzid.clone()],
+                        ));
+                    }
+                } else {
+                    tags.push(Tag::custom(
+                        TagKind::Custom(Cow::Borrowed("end_tzid")),
+                        vec![start_tzid.clone()],
+                    ));
+                }
+            }
+        } else if let Some(end_tzid) = &event_data.end_tzid {
+            if !end_tzid.is_empty() && !event_data.is_all_day {
+                tags.push(Tag::custom(
+                    TagKind::Custom(Cow::Borrowed("end_tzid")),
+                    vec![end_tzid.clone()],
+                ));
+            }
         }
 
         let mut event_builder = EventBuilder::new(kind, content).tags(tags);

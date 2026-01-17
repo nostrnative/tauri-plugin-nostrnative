@@ -44,7 +44,7 @@ use crate::models::{Contact, UserProfile};
 use crate::models::{NFPCycleRequest, NFPObservationRequest, NFPSettingsRequest};
 
 #[cfg(feature = "virtual-fs")]
-use crate::models::{EventResponse, FilesystemRequest};
+use crate::models::FilesystemRequest;
 
 #[tauri::command]
 #[cfg(feature = "keys")]
