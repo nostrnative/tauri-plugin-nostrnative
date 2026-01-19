@@ -248,3 +248,4 @@ export declare function publishNfpSettings(nsec: string, relays: string[], setti
 export declare function deleteNfpData(nsec: string, relays: string[], eventIds: string[], clientNsec: string | null): Promise<string>;
 export declare function publishVirtualFs(nsec: string, relays: string[], req: FilesystemRequest, clientNsec?: string): Promise<string>;
 export declare function fetchVirtualFs(pubkey: string, relays: string[]): Promise<EventResponse[]>;
+export declare function deleteVirtualFs(nsec: string, relays: string[], identifier: string, clientNsec?: string): Promise<string>;

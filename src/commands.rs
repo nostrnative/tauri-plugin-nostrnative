@@ -724,3 +724,14 @@ pub async fn fetch_virtual_fs(
 ) -> Result<Vec<EventResponse>, String> {
     virtual_fs::fetch_filesystems(&pubkey, &relays).await
 }
+
+#[tauri::command]
+#[cfg(feature = "virtual-fs")]
+pub async fn delete_virtual_fs(
+    nsec: String,
+    relays: Vec<String>,
+    identifier: String,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    virtual_fs::delete_virtual_fs(&nsec, &relays, identifier, client_nsec.as_deref()).await
+}

@@ -418,6 +418,14 @@ async function fetchVirtualFs(pubkey, relays) {
         relays,
     });
 }
+async function deleteVirtualFs(nsec, relays, identifier, clientNsec) {
+    return await core.invoke("plugin:nostrnative|delete_virtual_fs", {
+        nsec,
+        relays,
+        identifier,
+        clientNsec,
+    });
+}
 
 exports.addNoteToNotebook = addNoteToNotebook;
 exports.blossomDelete = blossomDelete;
@@ -437,6 +445,7 @@ exports.deleteChatMessages = deleteChatMessages;
 exports.deleteNfpData = deleteNfpData;
 exports.deleteNote = deleteNote;
 exports.deleteNotebook = deleteNotebook;
+exports.deleteVirtualFs = deleteVirtualFs;
 exports.derivePnsKeys = derivePnsKeys;
 exports.fetchBookmarks = fetchBookmarks;
 exports.fetchCalendarEvents = fetchCalendarEvents;

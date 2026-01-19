@@ -201,6 +201,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::publish_virtual_fs,
             #[cfg(feature = "virtual-fs")]
             commands::fetch_virtual_fs,
+            #[cfg(feature = "virtual-fs")]
+            commands::delete_virtual_fs,
         ])
         .build()
 }

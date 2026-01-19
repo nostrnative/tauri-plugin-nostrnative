@@ -57,5 +57,6 @@ permissions = [
     "allow-update-nfp-settings",
     "allow-delete-nfp-data",
     "allow-publish-virtual-fs",
-    "allow-fetch-virtual-fs"
+    "allow-fetch-virtual-fs",
+    "allow-delete-virtual-fs"
 ]

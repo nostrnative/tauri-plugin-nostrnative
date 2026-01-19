@@ -61,6 +61,7 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 - `allow-delete-nfp-data`
 - `allow-publish-virtual-fs`
 - `allow-fetch-virtual-fs`
+- `allow-delete-virtual-fs`
 
 ## Permission Table
 
@@ -522,6 +523,32 @@ Enables the delete_notebook command without any pre-configured scope.
 <td>
 
 Denies the delete_notebook command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-delete-virtual-fs`
+
+</td>
+<td>
+
+Enables the delete_virtual_fs command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-delete-virtual-fs`
+
+</td>
+<td>
+
+Denies the delete_virtual_fs command without any pre-configured scope.
 
 </td>
 </tr>

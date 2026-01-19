@@ -1,11 +1,11 @@
-use crate::models::{VirtualFilesystem, VirtualNode, FilesystemRequest, EventResponse};
+use crate::models::{EventResponse, FilesystemRequest, VirtualFilesystem, VirtualNode};
 use crate::utils::get_client_with_signer;
-use nostr_sdk::prelude::*;
 use base64::{Engine as _, engine::general_purpose};
-use serde_cbor;
 use chrono;
+use nostr_sdk::prelude::*;
+use serde_cbor;
 
-pub const KIND_VIRTUAL_FS: Kind = Kind::Custom(31925);
+pub const KIND_VIRTUAL_FS: Kind = Kind::Custom(31945);
 
 pub async fn publish_filesystem(
     nsec: &str,
@@ -23,11 +23,23 @@ pub async fn publish_filesystem(
     let tags = vec![
         Tag::identifier(req.identifier),
         Tag::custom(TagKind::Custom("name".into()), vec![req.name]),
-        Tag::custom(TagKind::Custom("version".into()), vec![req.filesystem.metadata.version]),
-        Tag::custom(TagKind::Custom("max_depth".into()), vec![req.filesystem.metadata.max_depth.to_string()]),
+        Tag::custom(
+            TagKind::Custom("version".into()),
+            vec![req.filesystem.metadata.version],
+        ),
+        Tag::custom(
+            TagKind::Custom("max_depth".into()),
+            vec![req.filesystem.metadata.max_depth.to_string()],
+        ),
         Tag::custom(TagKind::Custom("encoding".into()), vec!["cbor".to_string()]),
-        Tag::custom(TagKind::Custom("size".into()), vec![req.filesystem.metadata.total_size.to_string()]),
-        Tag::custom(TagKind::Custom("node_count".into()), vec![req.filesystem.metadata.total_nodes.to_string()]),
+        Tag::custom(
+            TagKind::Custom("size".into()),
+            vec![req.filesystem.metadata.total_size.to_string()],
+        ),
+        Tag::custom(
+            TagKind::Custom("node_count".into()),
+            vec![req.filesystem.metadata.total_nodes.to_string()],
+        ),
     ];
 
     let builder = EventBuilder::new(KIND_VIRTUAL_FS, content_base64).tags(tags);
@@ -55,16 +67,14 @@ pub async fn fetch_filesystems(
     client.connect().await;
 
     let pubkey = if pubkey_str.is_empty() {
-         return Err("Public key is required for fetching".to_string());
+        return Err("Public key is required for fetching".to_string());
     } else {
         PublicKey::from_hex(pubkey_str)
             .or_else(|_| PublicKey::from_bech32(pubkey_str))
             .map_err(|e| format!("Invalid public key: {}", e))?
     };
 
-    let filter = Filter::new()
-        .author(pubkey)
-        .kind(KIND_VIRTUAL_FS);
+    let filter = Filter::new().author(pubkey).kind(KIND_VIRTUAL_FS);
 
     let events = client
         .fetch_events(filter, std::time::Duration::from_secs(10))
@@ -90,13 +100,44 @@ pub async fn fetch_filesystems(
     Ok(responses)
 }
 
+pub async fn delete_virtual_fs(
+    nsec: &str,
+    relays: &[String],
+    identifier: String,
+    client_nsec: Option<&str>,
+) -> Result<String, String> {
+    let client = get_client_with_signer(nsec, relays, client_nsec).await?;
+    let my_public_key = client
+        .signer()
+        .await
+        .map_err(|e| e.to_string())?
+        .get_public_key()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let coordinate = Coordinate::new(KIND_VIRTUAL_FS, my_public_key).identifier(identifier);
+    let event_builder = EventBuilder::delete(
+        EventDeletionRequest::new().coordinates(vec![coordinate]),
+    )
+    .tag(Tag::custom(
+        TagKind::Custom(std::borrow::Cow::Borrowed("k")),
+        vec![KIND_VIRTUAL_FS.as_u16().to_string()],
+    ));
+
+    let output = client
+        .send_event_builder(event_builder)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(output.to_string())
+}
+
 pub fn decode_filesystem(content_base64: &str) -> Result<VirtualFilesystem, String> {
     let content_bytes = general_purpose::STANDARD
         .decode(content_base64)
         .map_err(|e| format!("Failed to decode base64: {}", e))?;
 
-    serde_cbor::from_slice(&content_bytes)
-        .map_err(|e| format!("Failed to decode CBOR: {}", e))
+    serde_cbor::from_slice(&content_bytes).map_err(|e| format!("Failed to decode CBOR: {}", e))
 }
 
 impl VirtualNode {
@@ -108,7 +149,9 @@ impl VirtualNode {
                 }
                 Ok(())
             }
-            VirtualNode::Directory { depth, children, .. } => {
+            VirtualNode::Directory {
+                depth, children, ..
+            } => {
                 if *depth > max_depth {
                     return Err(format!("Max depth {} exceeded at directory", max_depth));
                 }
@@ -146,20 +189,44 @@ impl VirtualNode {
 
     pub fn add_child(&mut self, node: VirtualNode) -> Result<(), String> {
         match self {
-            VirtualNode::Directory { children, depth, .. } => {
+            VirtualNode::Directory {
+                children, depth, ..
+            } => {
                 let child_depth = match &node {
                     VirtualNode::File { depth, .. } => *depth,
                     VirtualNode::Directory { depth, .. } => *depth,
                 };
 
                 if child_depth != *depth + 1 {
-                    return Err(format!("Invalid child depth: expected {}, got {}", *depth + 1, child_depth));
+                    return Err(format!(
+                        "Invalid child depth: expected {}, got {}",
+                        *depth + 1,
+                        child_depth
+                    ));
                 }
 
                 children.push(node);
                 Ok(())
             }
             VirtualNode::File { .. } => Err("Cannot add child to a file".to_string()),
+        }
+    }
+
+    pub fn count_nodes(&self) -> usize {
+        match self {
+            VirtualNode::File { .. } => 1,
+            VirtualNode::Directory { children, .. } => {
+                1 + children.iter().map(|c| c.count_nodes()).sum::<usize>()
+            }
+        }
+    }
+
+    pub fn total_size(&self) -> u64 {
+        match self {
+            VirtualNode::File { metadata, .. } => metadata.size,
+            VirtualNode::Directory { children, .. } => {
+                children.iter().map(|c| c.total_size()).sum::<u64>()
+            }
         }
     }
 }
@@ -172,7 +239,10 @@ impl VirtualFilesystem {
         }
 
         if parts.len() > self.metadata.max_depth as usize {
-            return Err(format!("Path exceeds maximum depth of {}", self.metadata.max_depth));
+            return Err(format!(
+                "Path exceeds maximum depth of {}",
+                self.metadata.max_depth
+            ));
         }
 
         let mut current_node = &mut self.root;
@@ -213,7 +283,7 @@ impl VirtualFilesystem {
                         children.push(new_dir);
                         let last_idx = children.len() - 1;
                         current_node = &mut children[last_idx];
-                    },
+                    }
                     _ => unreachable!(),
                 }
                 self.metadata.total_nodes += 1;
@@ -226,10 +296,14 @@ impl VirtualFilesystem {
     pub fn add_file(&mut self, path: &str, file: VirtualNode) -> Result<(), String> {
         let parts: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
 
+        let file_size = file.total_size();
+        let file_nodes = file.count_nodes();
+
         if parts.is_empty() {
             // Add to root
             self.root.add_child(file)?;
-            self.metadata.total_nodes += 1;
+            self.metadata.total_nodes += file_nodes;
+            self.metadata.total_size += file_size;
             return Ok(());
         }
 
@@ -239,18 +313,73 @@ impl VirtualFilesystem {
         for part in parts {
             current_node = match current_node {
                 VirtualNode::Directory { children, .. } => {
-                    let idx = children.iter().position(|c| match c {
-                        VirtualNode::Directory { name, .. } => name == part,
-                        _ => false,
-                    }).ok_or("Failed to navigate to created directory")?;
+                    let idx = children
+                        .iter()
+                        .position(|c| match c {
+                            VirtualNode::Directory { name, .. } => name == part,
+                            _ => false,
+                        })
+                        .ok_or("Failed to navigate to created directory")?;
                     &mut children[idx]
-                },
+                }
                 _ => unreachable!(),
             };
         }
 
         current_node.add_child(file)?;
-        self.metadata.total_nodes += 1;
+        self.metadata.total_nodes += file_nodes;
+        self.metadata.total_size += file_size;
         Ok(())
+    }
+
+    pub fn remove_node(&mut self, path: &str) -> Result<(), String> {
+        let parts: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+        if parts.is_empty() {
+            return Err("Cannot remove root directory".to_string());
+        }
+
+        let mut current_node = &mut self.root;
+        let mut parts_iter = parts.iter().peekable();
+
+        while let Some(part) = parts_iter.next() {
+            if parts_iter.peek().is_none() {
+                // This is the node to remove
+                match current_node {
+                    VirtualNode::Directory { children, .. } => {
+                        let pos = children.iter().position(|c| match c {
+                            VirtualNode::File { name, .. }
+                            | VirtualNode::Directory { name, .. } => name == *part,
+                        });
+
+                        if let Some(idx) = pos {
+                            let removed = children.remove(idx);
+                            self.metadata.total_nodes -= removed.count_nodes();
+                            self.metadata.total_size -= removed.total_size();
+                            return Ok(());
+                        } else {
+                            return Err(format!("Node not found: {}", part));
+                        }
+                    }
+                    _ => return Err("Encountered a file while traversing path".to_string()),
+                }
+            } else {
+                // Navigate deeper
+                current_node = match current_node {
+                    VirtualNode::Directory { children, .. } => {
+                        let idx = children
+                            .iter()
+                            .position(|c| match c {
+                                VirtualNode::Directory { name, .. } => name == *part,
+                                _ => false,
+                            })
+                            .ok_or(format!("Directory not found: {}", part))?;
+                        &mut children[idx]
+                    }
+                    _ => return Err("Encountered a file while traversing path".to_string()),
+                };
+            }
+        }
+
+        Err("Path not found".to_string())
     }
 }

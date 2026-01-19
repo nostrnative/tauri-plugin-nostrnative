@@ -923,3 +923,17 @@ export async function fetchVirtualFs(
     relays,
   });
 }
+
+export async function deleteVirtualFs(
+  nsec: string,
+  relays: string[],
+  identifier: string,
+  clientNsec?: string,
+): Promise<string> {
+  return await invoke("plugin:nostrnative|delete_virtual_fs", {
+    nsec,
+    relays,
+    identifier,
+    clientNsec,
+  });
+}
