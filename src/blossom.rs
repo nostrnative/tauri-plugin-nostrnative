@@ -10,21 +10,24 @@ pub async fn blossom_mirror_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let _client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
-    let http_client = HttpClient::new();
+    let http_client = get_http_client()?;
 
-    let response = http_client
-        .get(url)
-        .timeout(Duration::from_secs(30))
-        .send()
-        .await
-        .map_err(|e| format!("Failed to download original URL: {}", e))?;
+    let path = url.split('?').next().unwrap_or(url).trim_end_matches('/');
+    let filename = path
+        .split('/')
+        .last()
+        .ok_or_else(|| format!("Invalid URL path: {}", url))?;
+    let sha256 = filename
+        .split('.')
+        .next()
+        .ok_or_else(|| format!("Invalid filename: {}", filename))?;
 
-    let data = response
-        .bytes()
-        .await
-        .map_err(|e| format!("Failed to read data from URL: {}", e))?;
-
-    let sha256 = hash_sha256(&data);
+    if sha256.len() != 64 || !sha256.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(format!(
+            "Could not extract a valid 64-character SHA-256 hex hash from URL: {}",
+            url
+        ));
+    }
 
     let blossom_url = format!(
         "{}/{}?xs={}",
@@ -56,7 +59,7 @@ pub async fn blossom_upload_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let nostr_client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
-    let http_client = HttpClient::new();
+    let http_client = get_http_client()?;
 
     let file_content = std::fs::read(file_path).map_err(|e| e.to_string())?;
     let sha256 = hash_sha256(&file_content);
@@ -132,7 +135,7 @@ pub async fn blossom_upload_content_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let nostr_client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
-    let http_client = HttpClient::new();
+    let http_client = get_http_client()?;
 
     let file_content = content.into_bytes();
     let sha256 = hash_sha256(&file_content);
@@ -221,9 +224,10 @@ fn hash_sha256(data: &[u8]) -> String {
 }
 
 pub async fn blossom_get_blob_core(server_url: &str, hash: &str) -> Result<Vec<u8>, String> {
-    let http_client = HttpClient::new();
+    let http_client = get_http_client()?;
     let response = http_client
         .get(format!("{}/{}", server_url.trim_end_matches('/'), hash))
+        .header("Accept-Encoding", "identity")
         .send()
         .await
         .map_err(|e| e.to_string())?;
@@ -246,7 +250,7 @@ pub async fn blossom_delete_core(
     client_nsec: Option<&str>,
 ) -> Result<(), String> {
     let nostr_client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
-    let http_client = HttpClient::new();
+    let http_client = get_http_client()?;
 
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -277,11 +281,7 @@ pub async fn blossom_delete_core(
         .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
 
     let response = http_client
-        .delete(format!(
-            "{}/{}",
-            server_url.trim_end_matches('/'),
-            hash
-        ))
+        .delete(format!("{}/{}", server_url.trim_end_matches('/'), hash))
         .header("Authorization", format!("Nostr {}", auth_b64))
         .send()
         .await
@@ -303,7 +303,7 @@ pub async fn blossom_list_core(
     nsec: Option<&str>,
     client_nsec: Option<&str>,
 ) -> Result<serde_json::Value, String> {
-    let http_client = HttpClient::new();
+    let http_client = get_http_client()?;
     let url = format!("{}/list/{}", server_url.trim_end_matches('/'), pubkey);
 
     let mut request = http_client.get(&url);
@@ -347,4 +347,14 @@ pub async fn blossom_list_core(
 
     let result: serde_json::Value = response.json().await.map_err(|e| e.to_string())?;
     Ok(result)
+}
+
+fn get_http_client() -> Result<HttpClient, String> {
+    HttpClient::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .timeout(Duration::from_secs(300))
+        .tcp_keepalive(Some(Duration::from_secs(60)))
+        .pool_idle_timeout(Some(Duration::from_secs(90)))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))
 }

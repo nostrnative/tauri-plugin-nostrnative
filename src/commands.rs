@@ -485,7 +485,13 @@ pub async fn blossom_list(
     nsec: Option<String>,
     client_nsec: Option<String>,
 ) -> Result<serde_json::Value, String> {
-    blossom::blossom_list_core(&server_url, &pubkey, nsec.as_deref(), client_nsec.as_deref()).await
+    blossom::blossom_list_core(
+        &server_url,
+        &pubkey,
+        nsec.as_deref(),
+        client_nsec.as_deref(),
+    )
+    .await
 }
 
 #[tauri::command]
