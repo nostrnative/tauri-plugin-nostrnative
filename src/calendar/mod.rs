@@ -26,6 +26,9 @@ pub async fn fetch_calendar_events_core(
         get_client(&Keys::generate(), relays).await?
     };
 
+    let mut filter = Filter::new()
+        .kinds([Kind::from(31922), Kind::from(31923)]);
+
     let mut authors_pks = vec![public_key];
     if let Some(auths) = &authors {
         for a in auths {
@@ -36,10 +39,7 @@ pub async fn fetch_calendar_events_core(
             }
         }
     }
-
-    let mut filter = Filter::new()
-        .authors(authors_pks)
-        .kinds([Kind::from(31922), Kind::from(31923)]);
+    filter = filter.authors(authors_pks);
 
     if let Some(start) = range_start {
         filter = filter.since(Timestamp::from(start as u64));
@@ -53,31 +53,26 @@ pub async fn fetch_calendar_events_core(
         .await
         .map_err(|e| e.to_string())?;
 
-    let mut invited_filter = Filter::new()
+    let mut attendee_filter = Filter::new()
         .kinds([Kind::from(31922), Kind::from(31923)])
         .pubkey(public_key);
 
     if let Some(start) = range_start {
-        invited_filter = invited_filter.since(Timestamp::from(start as u64));
+        attendee_filter = attendee_filter.since(Timestamp::from(start as u64));
     }
     if let Some(end) = range_end {
-        invited_filter = invited_filter.until(Timestamp::from(end as u64));
+        attendee_filter = attendee_filter.until(Timestamp::from(end as u64));
     }
 
-    if let Some(auths) = authors {
-        let pks: Result<Vec<PublicKey>, String> = auths
-            .into_iter()
-            .map(|a| PublicKey::from_hex(&a).map_err(|e| e.to_string()))
-            .collect();
-        invited_filter = invited_filter.authors(pks?);
-    }
-
-    let invited_events = client
-        .fetch_events(invited_filter, Duration::from_secs(10))
+    let attendee_events = client
+        .fetch_events(attendee_filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
 
-    let events: Vec<_> = owned_events.into_iter().chain(invited_events).collect();
+    let events: Vec<_> = owned_events
+        .into_iter()
+        .chain(attendee_events)
+        .collect();
 
     let mut response = Vec::new();
     for e in events {
