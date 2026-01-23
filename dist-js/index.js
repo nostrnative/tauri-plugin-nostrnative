@@ -30,6 +30,19 @@ async function publishBatchCalendarEvents(nsec, relays, events, clientNsec) {
         clientNsec,
     });
 }
+// Relay
+async function startNostrRelay(port, dbPath) {
+    return await invoke("plugin:nostrnative|start_nostr_relay", { port, dbPath });
+}
+async function stopNostrRelay() {
+    return await invoke("plugin:nostrnative|stop_nostr_relay");
+}
+async function getNostrRelayStatus() {
+    return await invoke("plugin:nostrnative|get_nostr_relay_status");
+}
+async function getNostrEventCounts() {
+    return await invoke("plugin:nostrnative|get_nostr_event_counts");
+}
 async function publishCalendarEvent(nsec, relays, eventData, clientNsec) {
     return await invoke("plugin:nostrnative|publish_calendar_event", {
         nsec,
@@ -425,4 +438,4 @@ async function deleteVirtualFs(nsec, relays, identifier, clientNsec) {
     });
 }
 
-export { addNoteToNotebook, blossomDelete, blossomGetBlob, blossomList, blossomMirror, blossomUpload, blossomUploadContent, createDiscoveryEvent, createNote, createNotebook, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, deleteNfpData, deleteNote, deleteNotebook, deleteVirtualFs, derivePnsKeys, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchNfpCycles, fetchNfpObservations, fetchNfpSettings, fetchNotebooks, fetchNotes, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRsvps, fetchUserRsvps, fetchVirtualFs, generateNewNsec, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishNfpCycle, publishNfpObservation, publishNfpSettings, publishRsvp, publishVirtualFs, removeBookmark, removeNoteFromNotebook, saveBookmark, sendDirectMessage, updateContactList, updateNote, verifyNsec };
+export { addNoteToNotebook, blossomDelete, blossomGetBlob, blossomList, blossomMirror, blossomUpload, blossomUploadContent, createDiscoveryEvent, createNote, createNotebook, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, deleteNfpData, deleteNote, deleteNotebook, deleteVirtualFs, derivePnsKeys, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchNfpCycles, fetchNfpObservations, fetchNfpSettings, fetchNotebooks, fetchNotes, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRsvps, fetchUserRsvps, fetchVirtualFs, generateNewNsec, getNostrEventCounts, getNostrRelayStatus, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishNfpCycle, publishNfpObservation, publishNfpSettings, publishRsvp, publishVirtualFs, removeBookmark, removeNoteFromNotebook, saveBookmark, sendDirectMessage, startNostrRelay, stopNostrRelay, updateContactList, updateNote, verifyNsec };

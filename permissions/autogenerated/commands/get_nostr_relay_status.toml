@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-get-nostr-relay-status"
+description = "Enables the get_nostr_relay_status command"
+commands.allow = ["get_nostr_relay_status"]

@@ -32,6 +32,19 @@ async function publishBatchCalendarEvents(nsec, relays, events, clientNsec) {
         clientNsec,
     });
 }
+// Relay
+async function startNostrRelay(port, dbPath) {
+    return await core.invoke("plugin:nostrnative|start_nostr_relay", { port, dbPath });
+}
+async function stopNostrRelay() {
+    return await core.invoke("plugin:nostrnative|stop_nostr_relay");
+}
+async function getNostrRelayStatus() {
+    return await core.invoke("plugin:nostrnative|get_nostr_relay_status");
+}
+async function getNostrEventCounts() {
+    return await core.invoke("plugin:nostrnative|get_nostr_event_counts");
+}
 async function publishCalendarEvent(nsec, relays, eventData, clientNsec) {
     return await core.invoke("plugin:nostrnative|publish_calendar_event", {
         nsec,
@@ -465,6 +478,8 @@ exports.fetchRsvps = fetchRsvps;
 exports.fetchUserRsvps = fetchUserRsvps;
 exports.fetchVirtualFs = fetchVirtualFs;
 exports.generateNewNsec = generateNewNsec;
+exports.getNostrEventCounts = getNostrEventCounts;
+exports.getNostrRelayStatus = getNostrRelayStatus;
 exports.parsePubkey = parsePubkey;
 exports.publishBatchCalendarEvents = publishBatchCalendarEvents;
 exports.publishCalendar = publishCalendar;
@@ -479,6 +494,8 @@ exports.removeBookmark = removeBookmark;
 exports.removeNoteFromNotebook = removeNoteFromNotebook;
 exports.saveBookmark = saveBookmark;
 exports.sendDirectMessage = sendDirectMessage;
+exports.startNostrRelay = startNostrRelay;
+exports.stopNostrRelay = stopNostrRelay;
 exports.updateContactList = updateContactList;
 exports.updateNote = updateNote;
 exports.verifyNsec = verifyNsec;

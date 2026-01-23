@@ -135,6 +135,27 @@ export async function publishBatchCalendarEvents(
   });
 }
 
+// Relay
+export async function startNostrRelay(
+  port: number,
+  dbPath: string,
+): Promise<void> {
+  return await invoke("plugin:nostrnative|start_nostr_relay", { port, dbPath });
+}
+
+export async function stopNostrRelay(): Promise<void> {
+  return await invoke("plugin:nostrnative|stop_nostr_relay");
+}
+
+export async function getNostrRelayStatus(): Promise<boolean> {
+  return await invoke("plugin:nostrnative|get_nostr_relay_status");
+}
+
+export async function getNostrEventCounts(): Promise<Record<number, number>> {
+  return await invoke("plugin:nostrnative|get_nostr_event_counts");
+}
+
+
 export async function publishCalendarEvent(
   nsec: string,
   relays: string[],

@@ -58,5 +58,9 @@ permissions = [
     "allow-delete-nfp-data",
     "allow-publish-virtual-fs",
     "allow-fetch-virtual-fs",
-    "allow-delete-virtual-fs"
+    "allow-delete-virtual-fs",
+    "allow-start-nostr-relay",
+    "allow-stop-nostr-relay",
+    "allow-get-nostr-relay-status",
+    "allow-get-nostr-event-counts"
 ]

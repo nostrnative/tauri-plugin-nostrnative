@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-get-nostr-event-counts"
+description = "Enables the get_nostr_event_counts command"
+commands.allow = ["get_nostr_event_counts"]

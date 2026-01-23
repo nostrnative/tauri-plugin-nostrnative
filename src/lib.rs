@@ -35,6 +35,9 @@ pub mod nfp;
 #[cfg(feature = "virtual-fs")]
 pub mod virtual_fs;
 
+#[cfg(feature = "relay")]
+pub mod relay;
+
 #[cfg(feature = "tauri-plugin")]
 mod commands;
 
@@ -87,11 +90,8 @@ impl NostrNativeBuilder {
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("nostrnative")
         .invoke_handler(tauri::generate_handler![
-            #[cfg(feature = "keys")]
             commands::generate_new_nsec,
-            #[cfg(feature = "keys")]
             commands::parse_pubkey,
-            #[cfg(feature = "keys")]
             commands::verify_nsec,
             #[cfg(feature = "calendar")]
             commands::fetch_calendar_events,
@@ -107,12 +107,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::publish_calendar,
             #[cfg(feature = "calendar")]
             commands::delete_calendar,
-            #[cfg(feature = "profile")]
-            commands::fetch_profiles,
-            #[cfg(feature = "profile")]
-            commands::fetch_contact_list,
-            #[cfg(feature = "profile")]
-            commands::update_contact_list,
             #[cfg(feature = "calendar")]
             commands::fetch_rsvps,
             #[cfg(feature = "calendar")]
@@ -121,6 +115,12 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::fetch_received_rsvps,
             #[cfg(feature = "calendar")]
             commands::publish_rsvp,
+            #[cfg(feature = "profile")]
+            commands::fetch_profiles,
+            #[cfg(feature = "profile")]
+            commands::fetch_contact_list,
+            #[cfg(feature = "profile")]
+            commands::update_contact_list,
             #[cfg(feature = "messages")]
             commands::send_direct_message,
             #[cfg(feature = "bookmarks")]
@@ -203,6 +203,14 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::fetch_virtual_fs,
             #[cfg(feature = "virtual-fs")]
             commands::delete_virtual_fs,
+            #[cfg(feature = "relay")]
+            commands::start_nostr_relay,
+            #[cfg(feature = "relay")]
+            commands::stop_nostr_relay,
+            #[cfg(feature = "relay")]
+            commands::get_nostr_relay_status,
+            #[cfg(feature = "relay")]
+            commands::get_nostr_event_counts,
         ])
         .build()
 }

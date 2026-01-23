@@ -8,6 +8,7 @@
     "nostrnative:allow-blossom-upload-content",
     "nostrnative:allow-blossom-get-blob",
     "nostrnative:allow-blossom-delete",
-    "nostrnative:allow-blossom-list"
+    "nostrnative:allow-blossom-list",
+    "nostrnative:allow-get-nostr-event-counts"
   ]
 }

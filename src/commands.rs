@@ -741,3 +741,30 @@ pub async fn delete_virtual_fs(
 ) -> Result<String, String> {
     virtual_fs::delete_virtual_fs(&nsec, &relays, identifier, client_nsec.as_deref()).await
 }
+
+#[cfg(feature = "relay")]
+use crate::relay;
+
+#[tauri::command]
+#[cfg(feature = "relay")]
+pub async fn start_nostr_relay(port: u16, db_path: String) -> Result<(), String> {
+    relay::start_relay_core(port, &db_path).await
+}
+
+#[tauri::command]
+#[cfg(feature = "relay")]
+pub async fn stop_nostr_relay() -> Result<(), String> {
+    relay::stop_relay_core().await
+}
+
+#[tauri::command]
+#[cfg(feature = "relay")]
+pub async fn get_nostr_relay_status() -> Result<bool, String> {
+    relay::get_relay_status_core().await
+}
+
+#[tauri::command]
+#[cfg(feature = "relay")]
+pub async fn get_nostr_event_counts() -> Result<std::collections::HashMap<u64, usize>, String> {
+    relay::get_event_counts_core().await
+}

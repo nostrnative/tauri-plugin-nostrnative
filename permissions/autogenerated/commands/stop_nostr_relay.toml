@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-stop-nostr-relay"
+description = "Enables the stop_nostr_relay command"
+commands.allow = ["stop_nostr_relay"]

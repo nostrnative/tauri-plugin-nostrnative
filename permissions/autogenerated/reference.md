@@ -62,6 +62,10 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 - `allow-publish-virtual-fs`
 - `allow-fetch-virtual-fs`
 - `allow-delete-virtual-fs`
+- `allow-start-nostr-relay`
+- `allow-stop-nostr-relay`
+- `allow-get-nostr-relay-status`
+- `allow-get-nostr-event-counts`
 
 ## Permission Table
 
@@ -1050,6 +1054,32 @@ Denies the generate_new_nsec command without any pre-configured scope.
 <tr>
 <td>
 
+`nostrnative:allow-get-nostr-event-counts`
+
+</td>
+<td>
+
+Enables the get_nostr_event_counts command
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-get-nostr-relay-status`
+
+</td>
+<td>
+
+Enables the get_nostr_relay_status command
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-parse-pubkey`
 
 </td>
@@ -1407,6 +1437,32 @@ Enables the send_direct_message command without any pre-configured scope.
 <td>
 
 Denies the send_direct_message command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-start-nostr-relay`
+
+</td>
+<td>
+
+Enables the start_nostr_relay command
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-stop-nostr-relay`
+
+</td>
+<td>
+
+Enables the stop_nostr_relay command
 
 </td>
 </tr>
