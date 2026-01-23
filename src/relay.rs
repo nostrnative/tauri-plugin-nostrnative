@@ -1,13 +1,14 @@
-use nostr_relay_builder::{RelayBuilder, LocalRelay};
 use nostr_lmdb::NostrLMDB;
+use nostr_relay_builder::{LocalRelay, RelayBuilder};
 use nostr_sdk::prelude::*;
-use std::sync::Arc;
-use tokio::sync::Mutex;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 static RELAY: Lazy<Arc<Mutex<Option<LocalRelay>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
-static DATABASE: Lazy<Arc<Mutex<Option<Arc<NostrLMDB>>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
+static DATABASE: Lazy<Arc<Mutex<Option<Arc<NostrLMDB>>>>> =
+    Lazy::new(|| Arc::new(Mutex::new(None)));
 
 pub async fn start_relay_core(port: u16, db_path: &str) -> Result<(), String> {
     let mut relay_lock = RELAY.lock().await;
@@ -17,13 +18,11 @@ pub async fn start_relay_core(port: u16, db_path: &str) -> Result<(), String> {
 
     let database = Arc::new(NostrLMDB::open(db_path).map_err(|e| e.to_string())?);
     let db_clone = database.clone();
-    let builder = RelayBuilder::default()
-        .port(port)
-        .database(database);
+    let builder = RelayBuilder::default().port(port).database(database);
 
     let relay = LocalRelay::new(builder);
     let relay_clone = relay.clone();
-    
+
     tokio::spawn(async move {
         if let Err(e) = relay_clone.run().await {
             eprintln!("Relay error: {}", e);
@@ -58,7 +57,7 @@ pub async fn get_event_counts_core() -> Result<HashMap<u64, usize>, String> {
     if let Some(db) = &*db_lock {
         let filter = Filter::new();
         let events = db.query(filter).await.map_err(|e| e.to_string())?;
-        
+
         let mut counts = HashMap::new();
         for event in events {
             let kind: u64 = event.kind.as_u16() as u64;

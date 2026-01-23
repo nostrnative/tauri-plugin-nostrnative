@@ -26,8 +26,7 @@ pub async fn fetch_calendar_events_core(
         get_client(&Keys::generate(), relays).await?
     };
 
-    let mut filter = Filter::new()
-        .kinds([Kind::from(31922), Kind::from(31923)]);
+    let mut filter = Filter::new().kinds([Kind::from(31922), Kind::from(31923)]);
 
     let mut authors_pks = vec![public_key];
     if let Some(auths) = &authors {
@@ -69,10 +68,7 @@ pub async fn fetch_calendar_events_core(
         .await
         .map_err(|e| e.to_string())?;
 
-    let events: Vec<_> = owned_events
-        .into_iter()
-        .chain(attendee_events)
-        .collect();
+    let events: Vec<_> = owned_events.into_iter().chain(attendee_events).collect();
 
     let mut response = Vec::new();
     for e in events {
