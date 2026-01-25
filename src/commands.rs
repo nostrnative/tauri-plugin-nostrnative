@@ -421,41 +421,37 @@ pub async fn delete_notebook(
 #[cfg(feature = "blossom")]
 pub async fn blossom_mirror(
     server_url: String,
-    nsec: String,
+    auth_header: String,
     url: String,
-    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    blossom::blossom_mirror_core(&server_url, &nsec, &url, client_nsec.as_deref()).await
+    blossom::blossom_mirror_core(&server_url, &auth_header, &url).await
 }
 
 #[tauri::command]
 #[cfg(feature = "blossom")]
 pub async fn blossom_upload(
     server_url: String,
-    nsec: String,
+    auth_header: String,
     file_path: String,
-    client_nsec: Option<String>,
 ) -> Result<String, String> {
-    blossom::blossom_upload_core(&server_url, &nsec, &file_path, client_nsec.as_deref()).await
+    blossom::blossom_upload_core(&server_url, &auth_header, &file_path).await
 }
 
 #[tauri::command]
 #[cfg(feature = "blossom")]
 pub async fn blossom_upload_content(
     server_url: String,
-    nsec: String,
+    auth_header: String,
     content: String,
     filename: Option<String>,
     media_type: Option<String>,
-    client_nsec: Option<String>,
 ) -> Result<String, String> {
     blossom::blossom_upload_content_core(
         &server_url,
-        &nsec,
+        &auth_header,
         content,
         filename,
         media_type,
-        client_nsec.as_deref(),
     )
     .await
 }
@@ -470,11 +466,10 @@ pub async fn blossom_get_blob(server_url: String, hash: String) -> Result<Vec<u8
 #[cfg(feature = "blossom")]
 pub async fn blossom_delete(
     server_url: String,
-    nsec: String,
+    auth_header: String,
     hash: String,
-    client_nsec: Option<String>,
 ) -> Result<(), String> {
-    blossom::blossom_delete_core(&server_url, &nsec, &hash, client_nsec.as_deref()).await
+    blossom::blossom_delete_core(&server_url, &auth_header, &hash).await
 }
 
 #[tauri::command]
@@ -482,14 +477,12 @@ pub async fn blossom_delete(
 pub async fn blossom_list(
     server_url: String,
     pubkey: String,
-    nsec: Option<String>,
-    client_nsec: Option<String>,
+    auth_header: Option<String>,
 ) -> Result<serde_json::Value, String> {
     blossom::blossom_list_core(
         &server_url,
         &pubkey,
-        nsec.as_deref(),
-        client_nsec.as_deref(),
+        auth_header.as_deref(),
     )
     .await
 }

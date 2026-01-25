@@ -512,47 +512,41 @@ export async function deleteNotebook(
 // Blossom
 export async function blossomMirror(
   serverUrl: string,
-  nsec: string,
+  authHeader: string,
   url: string,
-  clientNsec?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|blossom_mirror", {
     serverUrl,
-    nsec,
+    authHeader,
     url,
-    clientNsec,
   });
 }
 
 export async function blossomUpload(
   serverUrl: string,
-  nsec: string,
+  authHeader: string,
   filePath: string,
-  clientNsec?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|blossom_upload", {
     serverUrl,
-    nsec,
+    authHeader,
     filePath,
-    clientNsec,
   });
 }
 
 export async function blossomUploadContent(
   serverUrl: string,
-  nsec: string,
+  authHeader: string,
   content: string,
   filename?: string,
   mediaType?: string,
-  clientNsec?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|blossom_upload_content", {
     serverUrl,
-    nsec,
+    authHeader,
     content,
     filename,
     mediaType,
-    clientNsec,
   });
 }
 
@@ -568,29 +562,25 @@ export async function blossomGetBlob(
 
 export async function blossomDelete(
   serverUrl: string,
-  nsec: string,
+  authHeader: string,
   hash: string,
-  clientNsec?: string,
 ): Promise<void> {
   return await invoke("plugin:nostrnative|blossom_delete", {
     serverUrl,
-    nsec,
+    authHeader,
     hash,
-    clientNsec,
   });
 }
 
 export async function blossomList(
   serverUrl: string,
   pubkey: string,
-  nsec?: string,
-  clientNsec?: string,
+  authHeader?: string,
 ): Promise<any[]> {
   return await invoke("plugin:nostrnative|blossom_list", {
     serverUrl,
     pubkey,
-    nsec,
-    clientNsec,
+    authHeader,
   });
 }
 

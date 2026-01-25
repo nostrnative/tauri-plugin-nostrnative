@@ -1,15 +1,12 @@
-use base64::Engine;
 use nostr_sdk::prelude::*;
 use reqwest::Client as HttpClient;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 pub async fn blossom_mirror_core(
     server_url: &str,
-    nsec: &str,
+    _auth_header: &str,
     url: &str,
-    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let _client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
     let http_client = get_http_client()?;
 
     let path = url.split('?').next().unwrap_or(url).trim_end_matches('/');
@@ -54,11 +51,9 @@ pub async fn blossom_mirror_core(
 
 pub async fn blossom_upload_core(
     server_url: &str,
-    nsec: &str,
+    auth_header: &str,
     file_path: &str,
-    client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let nostr_client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
     let http_client = get_http_client()?;
 
     let file_content = std::fs::read(file_path).map_err(|e| e.to_string())?;
@@ -75,37 +70,9 @@ pub async fn blossom_upload_core(
         return Ok(format!("{}/{}", server_url.trim_end_matches('/'), sha256));
     }
 
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-
-    let tags = vec![
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("t")),
-            vec!["upload".to_string()],
-        ),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("x")),
-            vec![sha256.clone()],
-        ),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("expiration")),
-            vec![(now + 60).to_string()],
-        ),
-    ];
-
-    let builder = EventBuilder::new(Kind::from(24242), "Upload Blob").tags(tags);
-    let event = nostr_client
-        .sign_event_builder(builder)
-        .await
-        .map_err(|e| e.to_string())?;
-    let auth_b64 = base64::engine::general_purpose::STANDARD
-        .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
-
     let response = http_client
         .put(format!("{}/upload", server_url.trim_end_matches('/')))
-        .header("Authorization", format!("Nostr {}", auth_b64))
+        .header("Authorization", auth_header)
         .body(file_content)
         .send()
         .await
@@ -128,13 +95,11 @@ pub async fn blossom_upload_core(
 
 pub async fn blossom_upload_content_core(
     server_url: &str,
-    nsec: &str,
+    auth_header: &str,
     content: String,
-    filename: Option<String>,
-    media_type: Option<String>,
-    client_nsec: Option<&str>,
+    _filename: Option<String>,
+    _media_type: Option<String>,
 ) -> Result<String, String> {
-    let nostr_client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
     let http_client = get_http_client()?;
 
     let file_content = content.into_bytes();
@@ -151,51 +116,9 @@ pub async fn blossom_upload_content_core(
         return Ok(format!("{}/{}", server_url.trim_end_matches('/'), sha256));
     }
 
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-
-    let mut tags = vec![
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("t")),
-            vec!["upload".to_string()],
-        ),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("x")),
-            vec![sha256.clone()],
-        ),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("expiration")),
-            vec![(now + 60).to_string()],
-        ),
-    ];
-
-    if let Some(name) = filename {
-        tags.push(Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("name")),
-            vec![name],
-        ));
-    }
-
-    if let Some(m) = media_type {
-        tags.push(Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("m")),
-            vec![m],
-        ));
-    }
-
-    let builder = EventBuilder::new(Kind::from(24242), "Upload Blob").tags(tags);
-    let event = nostr_client
-        .sign_event_builder(builder)
-        .await
-        .map_err(|e| e.to_string())?;
-    let auth_b64 = base64::engine::general_purpose::STANDARD
-        .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
-
     let response = http_client
         .put(format!("{}/upload", server_url.trim_end_matches('/')))
-        .header("Authorization", format!("Nostr {}", auth_b64))
+        .header("Authorization", auth_header)
         .body(file_content)
         .send()
         .await
@@ -245,44 +168,14 @@ pub async fn blossom_get_blob_core(server_url: &str, hash: &str) -> Result<Vec<u
 
 pub async fn blossom_delete_core(
     server_url: &str,
-    nsec: &str,
+    auth_header: &str,
     hash: &str,
-    client_nsec: Option<&str>,
 ) -> Result<(), String> {
-    let nostr_client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
     let http_client = get_http_client()?;
-
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-
-    let tags = vec![
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("t")),
-            vec!["delete".to_string()],
-        ),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("x")),
-            vec![hash.to_string()],
-        ),
-        Tag::custom(
-            TagKind::Custom(std::borrow::Cow::Borrowed("expiration")),
-            vec![(now + 60).to_string()],
-        ),
-    ];
-
-    let builder = EventBuilder::new(Kind::from(24242), "Delete Blob").tags(tags);
-    let event = nostr_client
-        .sign_event_builder(builder)
-        .await
-        .map_err(|e| e.to_string())?;
-    let auth_b64 = base64::engine::general_purpose::STANDARD
-        .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
 
     let response = http_client
         .delete(format!("{}/{}", server_url.trim_end_matches('/'), hash))
-        .header("Authorization", format!("Nostr {}", auth_b64))
+        .header("Authorization", auth_header)
         .send()
         .await
         .map_err(|e| e.to_string())?;
@@ -300,40 +193,15 @@ pub async fn blossom_delete_core(
 pub async fn blossom_list_core(
     server_url: &str,
     pubkey: &str,
-    nsec: Option<&str>,
-    client_nsec: Option<&str>,
+    auth_header: Option<&str>,
 ) -> Result<serde_json::Value, String> {
     let http_client = get_http_client()?;
     let url = format!("{}/list/{}", server_url.trim_end_matches('/'), pubkey);
 
     let mut request = http_client.get(&url);
 
-    if let Some(n) = nsec {
-        let nostr_client = crate::utils::get_client_with_signer(n, &[], client_nsec).await?;
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-
-        let tags = vec![
-            Tag::custom(
-                TagKind::Custom(std::borrow::Cow::Borrowed("t")),
-                vec!["list".to_string()],
-            ),
-            Tag::custom(
-                TagKind::Custom(std::borrow::Cow::Borrowed("expiration")),
-                vec![(now + 60).to_string()],
-            ),
-        ];
-
-        let builder = EventBuilder::new(Kind::from(24242), "List Blobs").tags(tags);
-        let event = nostr_client
-            .sign_event_builder(builder)
-            .await
-            .map_err(|e| e.to_string())?;
-        let auth_b64 = base64::engine::general_purpose::STANDARD
-            .encode(serde_json::to_string(&event).map_err(|e| e.to_string())?);
-        request = request.header("Authorization", format!("Nostr {}", auth_b64));
+    if let Some(auth) = auth_header {
+        request = request.header("Authorization", auth);
     }
 
     let response = request.send().await.map_err(|e| e.to_string())?;
