@@ -740,8 +740,13 @@ use crate::relay;
 
 #[tauri::command]
 #[cfg(feature = "relay")]
-pub async fn start_nostr_relay(port: u16, db_path: String) -> Result<(), String> {
-    relay::start_relay_core(port, &db_path).await
+pub async fn start_nostr_relay(
+    port: u16,
+    db_path: String,
+    public_key: Option<String>,
+    settings: Option<relay::RelaySettings>,
+) -> Result<(), String> {
+    relay::start_relay_core(port, &db_path, public_key.as_deref(), settings).await
 }
 
 #[tauri::command]

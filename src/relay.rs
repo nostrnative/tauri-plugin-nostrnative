@@ -1,8 +1,8 @@
 use nostr_lmdb::NostrLMDB;
-use nostr_relay_builder::{LocalRelay, RelayBuilder};
-use nostr_sdk::prelude::*;
+use nostr_relay_builder::prelude::*;
 use once_cell::sync::Lazy;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -10,7 +10,82 @@ static RELAY: Lazy<Arc<Mutex<Option<LocalRelay>>>> = Lazy::new(|| Arc::new(Mutex
 static DATABASE: Lazy<Arc<Mutex<Option<Arc<NostrLMDB>>>>> =
     Lazy::new(|| Arc::new(Mutex::new(None)));
 
-pub async fn start_relay_core(port: u16, db_path: &str) -> Result<(), String> {
+#[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RelaySettings {
+    pub relay_allowed_kinds: Option<Vec<u16>>,
+    pub relay_allowed_pubkeys: Option<Vec<String>>,
+    pub relay_allowed_tagged_pubkeys: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone)]
+struct RelayPolicies {
+    kinds: Option<HashSet<Kind>>,
+    pubkeys: Option<HashSet<PublicKey>>,
+    tagged_pubkeys: Option<HashSet<PublicKey>>,
+}
+
+impl WritePolicy for RelayPolicies {
+    fn admit_event<'a>(
+        &'a self,
+        event: &'a Event,
+        _addr: &'a SocketAddr,
+    ) -> BoxedFuture<'a, PolicyResult> {
+        Box::pin(async move {
+            // Check kinds
+            if self
+                .kinds
+                .as_ref()
+                .is_some_and(|k| !k.contains(&event.kind))
+            {
+                return PolicyResult::Reject(format!(
+                    "{}: kind not accepted",
+                    MachineReadablePrefix::Blocked
+                ));
+            }
+
+            // Check authors (pubkeys)
+            if self
+                .pubkeys
+                .as_ref()
+                .is_some_and(|p| !p.contains(&event.pubkey))
+            {
+                return PolicyResult::Reject(format!(
+                    "{}: pubkey not allowed",
+                    MachineReadablePrefix::Blocked
+                ));
+            }
+
+            // Check tagged pubkeys ("p" tags)
+            if let Some(tagged_pubkeys) = &self.tagged_pubkeys {
+                let has_allowed_tag = event.tags.iter().any(|tag| {
+                    if tag.kind() == TagKind::p()
+                        && let Some(pk_hex) = tag.content()
+                        && let Ok(pk) = PublicKey::from_hex(pk_hex)
+                    {
+                        return tagged_pubkeys.contains(&pk);
+                    }
+                    false
+                });
+
+                if !has_allowed_tag {
+                    return PolicyResult::Reject(format!(
+                        "{}: no allowed tagged pubkey found",
+                        MachineReadablePrefix::Blocked
+                    ));
+                }
+            }
+
+            PolicyResult::Accept
+        })
+    }
+}
+
+pub async fn start_relay_core(
+    port: u16,
+    db_path: &str,
+    public_key: Option<&str>,
+    settings: Option<RelaySettings>,
+) -> Result<(), String> {
     let mut relay_lock = RELAY.lock().await;
     if relay_lock.is_some() {
         return Err("Relay is already running".to_string());
@@ -18,7 +93,33 @@ pub async fn start_relay_core(port: u16, db_path: &str) -> Result<(), String> {
 
     let database = Arc::new(NostrLMDB::open(db_path).map_err(|e| e.to_string())?);
     let db_clone = database.clone();
-    let builder = RelayBuilder::default().port(port).database(database);
+
+    let mut builder = RelayBuilder::default().port(port).database(database);
+
+    if let Some(pubkey) = public_key {
+        builder = builder.mode(RelayBuilderMode::PublicKey(
+            PublicKey::from_nostr_uri(pubkey).unwrap(),
+        ));
+    }
+
+    if let Some(s) = settings {
+        let policies = RelayPolicies {
+            kinds: s
+                .relay_allowed_kinds
+                .map(|k| k.into_iter().map(Kind::from).collect()),
+            pubkeys: s.relay_allowed_pubkeys.map(|p| {
+                p.into_iter()
+                    .filter_map(|pk| PublicKey::from_hex(&pk).ok())
+                    .collect()
+            }),
+            tagged_pubkeys: s.relay_allowed_tagged_pubkeys.map(|p| {
+                p.into_iter()
+                    .filter_map(|pk| PublicKey::from_hex(&pk).ok())
+                    .collect()
+            }),
+        };
+        builder = builder.write_policy(policies);
+    }
 
     let relay = LocalRelay::new(builder);
     let relay_clone = relay.clone();
