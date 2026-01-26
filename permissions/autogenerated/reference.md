@@ -66,6 +66,7 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 - `allow-stop-nostr-relay`
 - `allow-get-nostr-relay-status`
 - `allow-get-nostr-event-counts`
+- `allow-get-nostr-relay-events`
 
 ## Permission Table
 
@@ -1060,6 +1061,19 @@ Denies the generate_new_nsec command without any pre-configured scope.
 <td>
 
 Enables the get_nostr_event_counts command
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-get-nostr-relay-events`
+
+</td>
+<td>
+
+Enables the get_nostr_relay_events command.
 
 </td>
 </tr>

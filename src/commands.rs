@@ -766,3 +766,10 @@ pub async fn get_nostr_relay_status() -> Result<bool, String> {
 pub async fn get_nostr_event_counts() -> Result<std::collections::HashMap<u64, usize>, String> {
     relay::get_event_counts_core().await
 }
+
+#[tauri::command]
+#[cfg(feature = "relay")]
+pub async fn get_nostr_relay_events() -> Result<Vec<crate::models::EventResponse>, String> {
+    let events = relay::get_relay_events_core().await?;
+    Ok(events.into_iter().map(|e| e.into()).collect())
+}

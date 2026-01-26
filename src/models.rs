@@ -70,6 +70,23 @@ pub struct EventResponse {
     pub source: Option<BookmarkSource>,
 }
 
+impl From<nostr_sdk::Event> for EventResponse {
+    fn from(event: nostr_sdk::Event) -> Self {
+        Self {
+            id: event.id.to_hex(),
+            pubkey: event.pubkey.to_hex(),
+            created_at: event.created_at.as_u64() as i64,
+            kind: event.kind.as_u16(),
+            tags: event.tags.into_iter().map(|t| t.to_vec()).collect(),
+            content: event.content.to_string(),
+            is_private: false, // Default to false
+            bech32: None,
+            private_tags: None,
+            source: None,
+        }
+    }
+}
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct ChatMessageRequest {
     pub content: String,

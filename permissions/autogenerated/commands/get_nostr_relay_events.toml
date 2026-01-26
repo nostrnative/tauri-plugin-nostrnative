@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-get-nostr-relay-events"
+description = "Enables the get_nostr_relay_events command."
+commands.allow = ["get_nostr_relay_events"]

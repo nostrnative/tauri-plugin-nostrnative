@@ -9,6 +9,7 @@
     "nostrnative:allow-blossom-get-blob",
     "nostrnative:allow-blossom-delete",
     "nostrnative:allow-blossom-list",
-    "nostrnative:allow-get-nostr-event-counts"
+    "nostrnative:allow-get-nostr-event-counts",
+    "nostrnative:allow-get-nostr-relay-events"
   ]
 }

@@ -211,6 +211,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::get_nostr_relay_status,
             #[cfg(feature = "relay")]
             commands::get_nostr_event_counts,
+            #[cfg(feature = "relay")]
+            commands::get_nostr_relay_events,
         ])
         .build()
 }

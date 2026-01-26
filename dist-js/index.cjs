@@ -45,6 +45,9 @@ async function getNostrRelayStatus() {
 async function getNostrEventCounts() {
     return await core.invoke("plugin:nostrnative|get_nostr_event_counts");
 }
+async function getNostrRelayEvents() {
+    return await core.invoke("plugin:nostrnative|get_nostr_relay_events");
+}
 async function publishCalendarEvent(nsec, relays, eventData, clientNsec) {
     return await core.invoke("plugin:nostrnative|publish_calendar_event", {
         nsec,
@@ -474,6 +477,7 @@ exports.fetchUserRsvps = fetchUserRsvps;
 exports.fetchVirtualFs = fetchVirtualFs;
 exports.generateNewNsec = generateNewNsec;
 exports.getNostrEventCounts = getNostrEventCounts;
+exports.getNostrRelayEvents = getNostrRelayEvents;
 exports.getNostrRelayStatus = getNostrRelayStatus;
 exports.parsePubkey = parsePubkey;
 exports.publishBatchCalendarEvents = publishBatchCalendarEvents;

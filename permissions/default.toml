@@ -62,5 +62,6 @@ permissions = [
     "allow-start-nostr-relay",
     "allow-stop-nostr-relay",
     "allow-get-nostr-relay-status",
-    "allow-get-nostr-event-counts"
+    "allow-get-nostr-event-counts",
+    "allow-get-nostr-relay-events"
 ]

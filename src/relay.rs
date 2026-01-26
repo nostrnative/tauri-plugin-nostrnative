@@ -185,3 +185,14 @@ pub async fn get_event_counts_core() -> Result<HashMap<u64, usize>, String> {
         Err("Relay database not initialized".to_string())
     }
 }
+
+pub async fn get_relay_events_core() -> Result<Vec<Event>, String> {
+    let db_lock = DATABASE.lock().await;
+    if let Some(db) = &*db_lock {
+        let filter = Filter::new();
+        let events = db.query(filter).await.map_err(|e| e.to_string())?;
+        Ok(events.to_vec())
+    } else {
+        Err("Relay database not initialized".to_string())
+    }
+}

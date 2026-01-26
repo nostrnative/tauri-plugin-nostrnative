@@ -88,6 +88,7 @@ export declare function startNostrRelay(port: number, dbPath: string): Promise<v
 export declare function stopNostrRelay(): Promise<void>;
 export declare function getNostrRelayStatus(): Promise<boolean>;
 export declare function getNostrEventCounts(): Promise<Record<number, number>>;
+export declare function getNostrRelayEvents(): Promise<EventResponse[]>;
 export declare function publishCalendarEvent(nsec: string, relays: string[], eventData: CalendarEventRequest, clientNsec?: string): Promise<string>;
 export declare function deleteCalendarEvent(nsec: string, relays: string[], eventIds: string[], clientNsec?: string): Promise<string>;
 export declare function fetchCalendars(pubkey: string, relays: string[]): Promise<EventResponse[]>;

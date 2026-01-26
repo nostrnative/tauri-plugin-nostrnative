@@ -155,6 +155,10 @@ export async function getNostrEventCounts(): Promise<Record<number, number>> {
   return await invoke("plugin:nostrnative|get_nostr_event_counts");
 }
 
+export async function getNostrRelayEvents(): Promise<EventResponse[]> {
+  return await invoke("plugin:nostrnative|get_nostr_relay_events");
+}
+
 
 export async function publishCalendarEvent(
   nsec: string,
