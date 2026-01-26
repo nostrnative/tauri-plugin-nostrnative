@@ -70,7 +70,11 @@ impl SyncManager {
         *settings = new_settings;
     }
 
-    pub async fn manual_sync(&self, app: AppHandle) -> Result<(), String> {
+    pub async fn manual_sync(&self, app: AppHandle, force_all: bool) -> Result<(), String> {
+        if force_all {
+            let mut settings = self.settings.write().await;
+            settings.last_sync_timestamp = None;
+        }
         let current_settings = self.settings.read().await.clone();
 
         if !current_settings.enabled {
