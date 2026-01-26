@@ -251,30 +251,27 @@ async function deleteNotebook(nsec, relays, notebookId, clientNsec) {
     });
 }
 // Blossom
-async function blossomMirror(serverUrl, nsec, url, clientNsec) {
+async function blossomMirror(serverUrl, authHeader, url) {
     return await core.invoke("plugin:nostrnative|blossom_mirror", {
         serverUrl,
-        nsec,
+        authHeader,
         url,
-        clientNsec,
     });
 }
-async function blossomUpload(serverUrl, nsec, filePath, clientNsec) {
+async function blossomUpload(serverUrl, authHeader, filePath) {
     return await core.invoke("plugin:nostrnative|blossom_upload", {
         serverUrl,
-        nsec,
+        authHeader,
         filePath,
-        clientNsec,
     });
 }
-async function blossomUploadContent(serverUrl, nsec, content, filename, mediaType, clientNsec) {
+async function blossomUploadContent(serverUrl, authHeader, content, filename, mediaType) {
     return await core.invoke("plugin:nostrnative|blossom_upload_content", {
         serverUrl,
-        nsec,
+        authHeader,
         content,
         filename,
         mediaType,
-        clientNsec,
     });
 }
 async function blossomGetBlob(serverUrl, hash) {
@@ -283,20 +280,18 @@ async function blossomGetBlob(serverUrl, hash) {
         hash,
     });
 }
-async function blossomDelete(serverUrl, nsec, hash, clientNsec) {
+async function blossomDelete(serverUrl, authHeader, hash) {
     return await core.invoke("plugin:nostrnative|blossom_delete", {
         serverUrl,
-        nsec,
+        authHeader,
         hash,
-        clientNsec,
     });
 }
-async function blossomList(serverUrl, pubkey, nsec, clientNsec) {
+async function blossomList(serverUrl, pubkey, authHeader) {
     return await core.invoke("plugin:nostrnative|blossom_list", {
         serverUrl,
         pubkey,
-        nsec,
-        clientNsec,
+        authHeader,
     });
 }
 // Chat
