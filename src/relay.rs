@@ -35,7 +35,7 @@ impl WritePolicy for RelayPolicies {
             if self
                 .kinds
                 .as_ref()
-                .is_some_and(|k| !k.contains(&event.kind))
+                .is_some_and(|k| !k.is_empty() && !k.contains(&event.kind))
             {
                 return PolicyResult::Reject(format!(
                     "{}: kind not accepted",
@@ -47,7 +47,7 @@ impl WritePolicy for RelayPolicies {
             if self
                 .pubkeys
                 .as_ref()
-                .is_some_and(|p| !p.contains(&event.pubkey))
+                .is_some_and(|p| !p.is_empty() && !p.contains(&event.pubkey))
             {
                 return PolicyResult::Reject(format!(
                     "{}: pubkey not allowed",
@@ -57,21 +57,23 @@ impl WritePolicy for RelayPolicies {
 
             // Check tagged pubkeys ("p" tags)
             if let Some(tagged_pubkeys) = &self.tagged_pubkeys {
-                let has_allowed_tag = event.tags.iter().any(|tag| {
-                    if tag.kind() == TagKind::p()
-                        && let Some(pk_hex) = tag.content()
-                        && let Ok(pk) = PublicKey::from_hex(pk_hex)
-                    {
-                        return tagged_pubkeys.contains(&pk);
-                    }
-                    false
-                });
+                if !tagged_pubkeys.is_empty() {
+                    let has_allowed_tag = event.tags.iter().any(|tag| {
+                        if tag.kind() == TagKind::p()
+                            && let Some(pk_hex) = tag.content()
+                            && let Ok(pk) = PublicKey::from_hex(pk_hex)
+                        {
+                            return tagged_pubkeys.contains(&pk);
+                        }
+                        false
+                    });
 
-                if !has_allowed_tag {
-                    return PolicyResult::Reject(format!(
-                        "{}: no allowed tagged pubkey found",
-                        MachineReadablePrefix::Blocked
-                    ));
+                    if !has_allowed_tag {
+                        return PolicyResult::Reject(format!(
+                            "{}: no allowed tagged pubkey found",
+                            MachineReadablePrefix::Blocked
+                        ));
+                    }
                 }
             }
 
@@ -103,21 +105,35 @@ pub async fn start_relay_core(
     }
 
     if let Some(s) = settings {
+        println!("settings: {:?}", s);
         let policies = RelayPolicies {
             kinds: s
                 .relay_allowed_kinds
                 .map(|k| k.into_iter().map(Kind::from).collect()),
             pubkeys: s.relay_allowed_pubkeys.map(|p| {
                 p.into_iter()
-                    .filter_map(|pk| PublicKey::from_hex(&pk).ok())
+                    .filter_map(|pk| {
+                        if pk.starts_with("npub") {
+                            PublicKey::from_bech32(&pk).ok()
+                        } else {
+                            PublicKey::from_hex(&pk).ok()
+                        }
+                    })
                     .collect()
             }),
             tagged_pubkeys: s.relay_allowed_tagged_pubkeys.map(|p| {
                 p.into_iter()
-                    .filter_map(|pk| PublicKey::from_hex(&pk).ok())
+                    .filter_map(|pk| {
+                        if pk.starts_with("npub") {
+                            PublicKey::from_bech32(&pk).ok()
+                        } else {
+                            PublicKey::from_hex(&pk).ok()
+                        }
+                    })
                     .collect()
             }),
         };
+        println!("settings: {:?}", policies);
         builder = builder.write_policy(policies);
     }
 
