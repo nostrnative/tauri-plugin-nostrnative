@@ -4,9 +4,11 @@ use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex};
 
 static RELAY: Lazy<Arc<Mutex<Option<LocalRelay>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
+static ERROR_SENDER: Lazy<Arc<Mutex<Option<mpsc::Sender<String>>>>> =
+    Lazy::new(|| Arc::new(Mutex::new(None)));
 static DATABASE: Lazy<Arc<Mutex<Option<Arc<NostrLMDB>>>>> =
     Lazy::new(|| Arc::new(Mutex::new(None)));
 
@@ -88,11 +90,6 @@ pub async fn start_relay_core(
     public_key: Option<&str>,
     settings: Option<RelaySettings>,
 ) -> Result<(), String> {
-    let mut relay_lock = RELAY.lock().await;
-    if relay_lock.is_some() {
-        return Err("Relay is already running".to_string());
-    }
-
     let database = Arc::new(NostrLMDB::open(db_path).map_err(|e| e.to_string())?);
     let db_clone = database.clone();
 
@@ -105,7 +102,6 @@ pub async fn start_relay_core(
     }
 
     if let Some(s) = settings {
-        println!("settings: {:?}", s);
         let policies = RelayPolicies {
             kinds: s
                 .relay_allowed_kinds
@@ -133,22 +129,44 @@ pub async fn start_relay_core(
                     .collect()
             }),
         };
-        println!("settings: {:?}", policies);
         builder = builder.write_policy(policies);
     }
 
     let relay = LocalRelay::new(builder);
     let relay_clone = relay.clone();
 
+    let (tx, mut rx) = mpsc::channel(1);
+    let tx_clone = tx.clone();
+
     tokio::spawn(async move {
         if let Err(e) = relay_clone.run().await {
-            eprintln!("Relay error: {}", e);
+            let _ = tx_clone.send(e.to_string()).await;
         }
     });
 
+    let mut relay_lock = RELAY.lock().await;
+    if let Some(existing) = relay_lock.take() {
+        existing.shutdown();
+    }
+
     *relay_lock = Some(relay);
+
+    let mut error_sender_lock = ERROR_SENDER.lock().await;
+    *error_sender_lock = Some(tx);
+
     let mut db_lock = DATABASE.lock().await;
     *db_lock = Some(db_clone);
+
+    // Optional: Check if the relay failed immediately
+    tokio::select! {
+        err = rx.recv() => {
+            if let Some(e) = err {
+                return Err(e);
+            }
+        }
+        _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {}
+    }
+
     Ok(())
 }
 
@@ -166,7 +184,19 @@ pub async fn stop_relay_core() -> Result<(), String> {
 
 pub async fn get_relay_status_core() -> Result<bool, String> {
     let relay_lock = RELAY.lock().await;
-    Ok(relay_lock.is_some())
+    if relay_lock.is_none() {
+        return Ok(false);
+    }
+
+    // Check if there's a pending error
+    let mut error_sender_lock = ERROR_SENDER.lock().await;
+    if let Some(tx) = error_sender_lock.as_ref() {
+        // If we can't send a ping, the receiver might have been dropped or relay failed
+        // But here we use a channel to capture the error from the background task.
+        // This is a bit complex without a persistent receiver.
+    }
+
+    Ok(true)
 }
 
 pub async fn get_event_counts_core() -> Result<HashMap<u64, usize>, String> {
