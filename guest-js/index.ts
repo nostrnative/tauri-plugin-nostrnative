@@ -85,6 +85,18 @@ export interface PnsDerivedKeys {
   secret_key: string;
 }
 
+export interface RoutstrProvider {
+  pubkey: string;
+  name: string;
+  about: string;
+  urls: string[];
+  mints: string[];
+  version?: string | null;
+  is_official: boolean;
+  price_prompt?: number | null;
+  price_completion?: number | null;
+}
+
 // Keys
 export async function generateNewNsec(): Promise<string> {
   return await invoke("plugin:nostrnative|generate_new_nsec");
@@ -687,6 +699,23 @@ export async function fetchDiscoveryEvents(
   });
 }
 
+// Routstr
+export async function discoverRoutstrProviders(
+  relays: string[],
+): Promise<RoutstrProvider[]> {
+  return await invoke("plugin:nostrnative|discover_routstr_providers", {
+    relays,
+  });
+}
+
+export async function compareRoutstrPrices(
+  providerUrls: string[],
+): Promise<any> {
+  return await invoke("plugin:nostrnative|compare_routstr_prices", {
+    providerUrls,
+  });
+}
+
 export interface NFPTemperature {
   value: number; // in Celsius
   time: string; // time taken (HH:MM)
@@ -950,5 +979,13 @@ export async function deleteVirtualFs(
     relays,
     identifier,
     clientNsec,
+  });
+}
+
+export async function fetchRoutstrModels(
+  providerUrl: string
+): Promise<any[]> {
+  return await invoke("plugin:nostrnative|fetch_routstr_models", {
+    providerUrl,
   });
 }

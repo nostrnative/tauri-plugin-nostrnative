@@ -773,3 +773,24 @@ pub async fn get_nostr_relay_events() -> Result<Vec<crate::models::EventResponse
     let events = relay::get_relay_events_core().await?;
     Ok(events.into_iter().map(|e| e.into()).collect())
 }
+
+#[tauri::command]
+pub async fn discover_routstr_providers(
+    relays: Vec<String>,
+) -> Result<Vec<crate::routstr::RoutstrProvider>, String> {
+    crate::routstr::discover_routstr_providers_core(relays).await
+}
+
+#[tauri::command]
+pub async fn compare_routstr_prices(
+    provider_urls: Vec<String>,
+) -> Result<serde_json::Value, String> {
+    crate::routstr::compare_routstr_prices_core(provider_urls).await
+}
+
+#[tauri::command]
+pub async fn fetch_routstr_models(
+    provider_url: String,
+) -> Result<serde_json::Value, String> {
+    crate::routstr::fetch_routstr_models_core(provider_url).await
+}

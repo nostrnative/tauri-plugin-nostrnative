@@ -40,6 +40,9 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 - `allow-fetch-pns-events`
 - `allow-delete-chat-messages`
 - `allow-fetch-discovery-events`
+- `allow-discover-routstr-providers`
+- `allow-compare-routstr-prices`
+- `allow-fetch-routstr-models`
 - `allow-create-note`
 - `allow-update-note`
 - `allow-delete-note`
@@ -242,6 +245,19 @@ Enables the blossom_upload_content command without any pre-configured scope.
 <td>
 
 Denies the blossom_upload_content command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-compare-routstr-prices`
+
+</td>
+<td>
+
+Enables the compare_routstr_prices command.
 
 </td>
 </tr>
@@ -580,6 +596,19 @@ Enables the derive_pns_keys command without any pre-configured scope.
 <td>
 
 Denies the derive_pns_keys command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-discover-routstr-providers`
+
+</td>
+<td>
+
+Enables the discover_routstr_providers command.
 
 </td>
 </tr>
@@ -944,6 +973,19 @@ Enables the fetch_received_rsvps command without any pre-configured scope.
 <td>
 
 Denies the fetch_received_rsvps command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-fetch-routstr-models`
+
+</td>
+<td>
+
+Enables the fetch_routstr_models command.
 
 </td>
 </tr>

@@ -10,6 +10,9 @@
     "nostrnative:allow-blossom-delete",
     "nostrnative:allow-blossom-list",
     "nostrnative:allow-get-nostr-event-counts",
-    "nostrnative:allow-get-nostr-relay-events"
+    "nostrnative:allow-get-nostr-relay-events",
+    "nostrnative:allow-discover-routstr-providers",
+    "nostrnative:allow-compare-routstr-prices",
+    "nostrnative:allow-fetch-routstr-models"
   ]
 }

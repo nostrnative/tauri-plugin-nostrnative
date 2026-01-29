@@ -353,6 +353,17 @@ async function fetchDiscoveryEvents(pubkey, relays) {
         relays,
     });
 }
+// Routstr
+async function discoverRoutstrProviders(relays) {
+    return await invoke("plugin:nostrnative|discover_routstr_providers", {
+        relays,
+    });
+}
+async function compareRoutstrPrices(providerUrls) {
+    return await invoke("plugin:nostrnative|compare_routstr_prices", {
+        providerUrls,
+    });
+}
 // NFP Functions
 async function fetchNfpObservations(pubkey, nsec, relays, rangeStart, rangeEnd, clientNsec) {
     return await invoke("plugin:nostrnative|fetch_nfp_observations", {
@@ -435,5 +446,10 @@ async function deleteVirtualFs(nsec, relays, identifier, clientNsec) {
         clientNsec,
     });
 }
+async function fetchRoutstrModels(providerUrl) {
+    return await invoke("plugin:nostrnative|fetch_routstr_models", {
+        providerUrl,
+    });
+}
 
-export { addNoteToNotebook, blossomDelete, blossomGetBlob, blossomList, blossomMirror, blossomUpload, blossomUploadContent, createDiscoveryEvent, createNote, createNotebook, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, deleteNfpData, deleteNote, deleteNotebook, deleteVirtualFs, derivePnsKeys, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchNfpCycles, fetchNfpObservations, fetchNfpSettings, fetchNotebooks, fetchNotes, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRsvps, fetchUserRsvps, fetchVirtualFs, generateNewNsec, getNostrEventCounts, getNostrRelayEvents, getNostrRelayStatus, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishNfpCycle, publishNfpObservation, publishNfpSettings, publishRsvp, publishVirtualFs, removeBookmark, removeNoteFromNotebook, saveBookmark, sendDirectMessage, startNostrRelay, stopNostrRelay, updateContactList, updateNote, verifyNsec };
+export { addNoteToNotebook, blossomDelete, blossomGetBlob, blossomList, blossomMirror, blossomUpload, blossomUploadContent, compareRoutstrPrices, createDiscoveryEvent, createNote, createNotebook, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, deleteNfpData, deleteNote, deleteNotebook, deleteVirtualFs, derivePnsKeys, discoverRoutstrProviders, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchNfpCycles, fetchNfpObservations, fetchNfpSettings, fetchNotebooks, fetchNotes, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRoutstrModels, fetchRsvps, fetchUserRsvps, fetchVirtualFs, generateNewNsec, getNostrEventCounts, getNostrRelayEvents, getNostrRelayStatus, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishNfpCycle, publishNfpObservation, publishNfpSettings, publishRsvp, publishVirtualFs, removeBookmark, removeNoteFromNotebook, saveBookmark, sendDirectMessage, startNostrRelay, stopNostrRelay, updateContactList, updateNote, verifyNsec };

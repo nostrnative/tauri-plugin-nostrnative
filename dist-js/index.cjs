@@ -355,6 +355,17 @@ async function fetchDiscoveryEvents(pubkey, relays) {
         relays,
     });
 }
+// Routstr
+async function discoverRoutstrProviders(relays) {
+    return await core.invoke("plugin:nostrnative|discover_routstr_providers", {
+        relays,
+    });
+}
+async function compareRoutstrPrices(providerUrls) {
+    return await core.invoke("plugin:nostrnative|compare_routstr_prices", {
+        providerUrls,
+    });
+}
 // NFP Functions
 async function fetchNfpObservations(pubkey, nsec, relays, rangeStart, rangeEnd, clientNsec) {
     return await core.invoke("plugin:nostrnative|fetch_nfp_observations", {
@@ -437,6 +448,11 @@ async function deleteVirtualFs(nsec, relays, identifier, clientNsec) {
         clientNsec,
     });
 }
+async function fetchRoutstrModels(providerUrl) {
+    return await core.invoke("plugin:nostrnative|fetch_routstr_models", {
+        providerUrl,
+    });
+}
 
 exports.addNoteToNotebook = addNoteToNotebook;
 exports.blossomDelete = blossomDelete;
@@ -445,6 +461,7 @@ exports.blossomList = blossomList;
 exports.blossomMirror = blossomMirror;
 exports.blossomUpload = blossomUpload;
 exports.blossomUploadContent = blossomUploadContent;
+exports.compareRoutstrPrices = compareRoutstrPrices;
 exports.createDiscoveryEvent = createDiscoveryEvent;
 exports.createNote = createNote;
 exports.createNotebook = createNotebook;
@@ -458,6 +475,7 @@ exports.deleteNote = deleteNote;
 exports.deleteNotebook = deleteNotebook;
 exports.deleteVirtualFs = deleteVirtualFs;
 exports.derivePnsKeys = derivePnsKeys;
+exports.discoverRoutstrProviders = discoverRoutstrProviders;
 exports.fetchBookmarks = fetchBookmarks;
 exports.fetchCalendarEvents = fetchCalendarEvents;
 exports.fetchCalendars = fetchCalendars;
@@ -472,6 +490,7 @@ exports.fetchNotes = fetchNotes;
 exports.fetchPnsEvents = fetchPnsEvents;
 exports.fetchProfiles = fetchProfiles;
 exports.fetchReceivedRsvps = fetchReceivedRsvps;
+exports.fetchRoutstrModels = fetchRoutstrModels;
 exports.fetchRsvps = fetchRsvps;
 exports.fetchUserRsvps = fetchUserRsvps;
 exports.fetchVirtualFs = fetchVirtualFs;

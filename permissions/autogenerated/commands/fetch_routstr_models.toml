@@ -1,0 +1,8 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-fetch-routstr-models"
+description = "Enables the fetch_routstr_models command."
+commands.allow = ["fetch_routstr_models"]

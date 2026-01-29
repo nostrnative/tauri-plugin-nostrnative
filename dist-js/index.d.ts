@@ -73,6 +73,17 @@ export interface PnsDerivedKeys {
     public_key: string;
     secret_key: string;
 }
+export interface RoutstrProvider {
+    pubkey: string;
+    name: string;
+    about: string;
+    urls: string[];
+    mints: string[];
+    version?: string | null;
+    is_official: boolean;
+    price_prompt?: number | null;
+    price_completion?: number | null;
+}
 export declare function generateNewNsec(): Promise<string>;
 export declare function parsePubkey(pubkey: string): Promise<string>;
 export declare function verifyNsec(nsec: string): Promise<string>;
@@ -136,6 +147,8 @@ export declare function decryptPnsEvent(pnsNsec: string, content: string, client
 export declare function fetchPnsEvents(pnsPubkey: string, relays: string[], eventId?: string): Promise<EventResponse[]>;
 export declare function deleteChatMessages(pnsNsec: string, relays: string[], eventIds: string[], clientNsec?: string): Promise<string>;
 export declare function fetchDiscoveryEvents(pubkey: string, relays: string[]): Promise<EventResponse[]>;
+export declare function discoverRoutstrProviders(relays: string[]): Promise<RoutstrProvider[]>;
+export declare function compareRoutstrPrices(providerUrls: string[]): Promise<any>;
 export interface NFPTemperature {
     value: number;
     time: string;
@@ -254,3 +267,4 @@ export declare function deleteNfpData(nsec: string, relays: string[], eventIds: 
 export declare function publishVirtualFs(nsec: string, relays: string[], req: FilesystemRequest, clientNsec?: string): Promise<string>;
 export declare function fetchVirtualFs(pubkey: string, relays: string[]): Promise<EventResponse[]>;
 export declare function deleteVirtualFs(nsec: string, relays: string[], identifier: string, clientNsec?: string): Promise<string>;
+export declare function fetchRoutstrModels(providerUrl: string): Promise<any[]>;

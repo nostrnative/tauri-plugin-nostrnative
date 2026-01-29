@@ -1,3 +1,5 @@
+# Automatically generated - DO NOT EDIT!
+
 [default]
 description = "Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by default."
 permissions = [
@@ -37,6 +39,9 @@ permissions = [
     "allow-fetch-pns-events",
     "allow-delete-chat-messages",
     "allow-fetch-discovery-events",
+    "allow-discover-routstr-providers",
+    "allow-compare-routstr-prices",
+    "allow-fetch-routstr-models",
     "allow-create-note",
     "allow-update-note",
     "allow-delete-note",
