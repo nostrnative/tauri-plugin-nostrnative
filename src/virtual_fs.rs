@@ -246,10 +246,9 @@ impl VirtualFilesystem {
         }
 
         let mut current_node = &mut self.root;
-        let mut current_depth = 0;
 
-        for part in parts {
-            current_depth += 1;
+        for (current_depth, part) in parts.into_iter().enumerate() {
+            let current_depth = (current_depth + 1) as u8;
 
             let found_index = match current_node {
                 VirtualNode::Directory { children, .. } => {

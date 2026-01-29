@@ -6,7 +6,7 @@ use std::time::Duration;
 use tauri::AppHandle;
 use tokio::sync::RwLock;
 
-const SYNC_KINDS: &[u16] = &[31922, 31923, 31924, 31925, 5, 3, 0];
+const SYNC_KINDS: &[u16] = &[31922, 31923, 31924, 31925, 5, 3, 0, 1];
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SyncSettings {

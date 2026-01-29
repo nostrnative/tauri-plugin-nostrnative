@@ -64,6 +64,7 @@ pub async fn fetch_contact_list_core(
         .fetch_events(filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
+    println!("events {:?}", events);
 
     let mut events: Vec<_> = events.into_iter().collect();
     events.sort_by(|a, b| b.created_at.cmp(&a.created_at));
@@ -74,6 +75,7 @@ pub async fn fetch_contact_list_core(
             .iter()
             .filter_map(|tag| {
                 let t = tag.clone().to_vec();
+                println!("tag {:?}", t);
                 if t.len() >= 2 && t[0] == "p" {
                     let pubkey = t[1].clone();
                     let alias = if t.len() >= 4 {

@@ -58,8 +58,8 @@ impl WritePolicy for RelayPolicies {
             }
 
             // Check tagged pubkeys ("p" tags)
-            if let Some(tagged_pubkeys) = &self.tagged_pubkeys {
-                if !tagged_pubkeys.is_empty() {
+            if let Some(tagged_pubkeys) = &self.tagged_pubkeys
+                && !tagged_pubkeys.is_empty() {
                     let has_allowed_tag = event.tags.iter().any(|tag| {
                         if tag.kind() == TagKind::p()
                             && let Some(pk_hex) = tag.content()
@@ -77,7 +77,6 @@ impl WritePolicy for RelayPolicies {
                         ));
                     }
                 }
-            }
 
             PolicyResult::Accept
         })
@@ -189,8 +188,8 @@ pub async fn get_relay_status_core() -> Result<bool, String> {
     }
 
     // Check if there's a pending error
-    let mut error_sender_lock = ERROR_SENDER.lock().await;
-    if let Some(tx) = error_sender_lock.as_ref() {
+    let error_sender_lock = ERROR_SENDER.lock().await;
+    if let Some(_tx) = error_sender_lock.as_ref() {
         // If we can't send a ping, the receiver might have been dropped or relay failed
         // But here we use a channel to capture the error from the background task.
         // This is a bit complex without a persistent receiver.

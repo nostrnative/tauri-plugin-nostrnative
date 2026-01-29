@@ -81,10 +81,9 @@ pub async fn discover_routstr_providers_core(
                 }
             }
 
-            if mints.is_empty() {
-                if let Some(m) = content["mints"].as_array() {
+            if mints.is_empty()
+                && let Some(m) = content["mints"].as_array() {
                     mints = m.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect();
-                }
             }
 
             let is_official = urls.iter().any(|u: &String| u.contains("api.routstr.com"));

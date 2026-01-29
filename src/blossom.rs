@@ -12,7 +12,7 @@ pub async fn blossom_mirror_core(
     let path = url.split('?').next().unwrap_or(url).trim_end_matches('/');
     let filename = path
         .split('/')
-        .last()
+        .next_back()
         .ok_or_else(|| format!("Invalid URL path: {}", url))?;
     let sha256 = filename
         .split('.')
