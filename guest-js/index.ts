@@ -28,11 +28,13 @@ export interface CalendarRequest {
 
 export interface Contact {
   pubkey: string;
+  npub?: string;
   alias?: string | null;
 }
 
 export interface UserProfile {
   pubkey: string;
+  npub?: string;
   name?: string | null;
   display_name?: string | null;
   about?: string | null;
@@ -98,6 +100,14 @@ export interface RoutstrProvider {
 }
 
 // Keys
+export async function hexToNpub(hex: string): Promise<string> {
+  return await invoke("plugin:nostrnative|hex_to_npub", { hex });
+}
+
+export async function npubToHex(npub: string): Promise<string> {
+  return await invoke("plugin:nostrnative|npub_to_hex", { npub });
+}
+
 export async function generateNewNsec(): Promise<string> {
   return await invoke("plugin:nostrnative|generate_new_nsec");
 }
@@ -170,7 +180,6 @@ export async function getNostrEventCounts(): Promise<Record<number, number>> {
 export async function getNostrRelayEvents(): Promise<EventResponse[]> {
   return await invoke("plugin:nostrnative|get_nostr_relay_events");
 }
-
 
 export async function publishCalendarEvent(
   nsec: string,
@@ -982,9 +991,7 @@ export async function deleteVirtualFs(
   });
 }
 
-export async function fetchRoutstrModels(
-  providerUrl: string
-): Promise<any[]> {
+export async function fetchRoutstrModels(providerUrl: string): Promise<any[]> {
   return await invoke("plugin:nostrnative|fetch_routstr_models", {
     providerUrl,
   });

@@ -1,6 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 
 // Keys
+async function hexToNpub(hex) {
+    return await invoke("plugin:nostrnative|hex_to_npub", { hex });
+}
+async function npubToHex(npub) {
+    return await invoke("plugin:nostrnative|npub_to_hex", { npub });
+}
 async function generateNewNsec() {
     return await invoke("plugin:nostrnative|generate_new_nsec");
 }
@@ -452,4 +458,4 @@ async function fetchRoutstrModels(providerUrl) {
     });
 }
 
-export { addNoteToNotebook, blossomDelete, blossomGetBlob, blossomList, blossomMirror, blossomUpload, blossomUploadContent, compareRoutstrPrices, createDiscoveryEvent, createNote, createNotebook, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, deleteNfpData, deleteNote, deleteNotebook, deleteVirtualFs, derivePnsKeys, discoverRoutstrProviders, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchNfpCycles, fetchNfpObservations, fetchNfpSettings, fetchNotebooks, fetchNotes, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRoutstrModels, fetchRsvps, fetchUserRsvps, fetchVirtualFs, generateNewNsec, getNostrEventCounts, getNostrRelayEvents, getNostrRelayStatus, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishNfpCycle, publishNfpObservation, publishNfpSettings, publishRsvp, publishVirtualFs, removeBookmark, removeNoteFromNotebook, saveBookmark, sendDirectMessage, startNostrRelay, stopNostrRelay, updateContactList, updateNote, verifyNsec };
+export { addNoteToNotebook, blossomDelete, blossomGetBlob, blossomList, blossomMirror, blossomUpload, blossomUploadContent, compareRoutstrPrices, createDiscoveryEvent, createNote, createNotebook, decryptDiscoveryEvent, decryptPnsEvent, deleteCalendar, deleteCalendarEvent, deleteChatMessages, deleteNfpData, deleteNote, deleteNotebook, deleteVirtualFs, derivePnsKeys, discoverRoutstrProviders, fetchBookmarks, fetchCalendarEvents, fetchCalendars, fetchContactList, fetchDiscoveryEvents, fetchEventDetails, fetchNfpCycles, fetchNfpObservations, fetchNfpSettings, fetchNotebooks, fetchNotes, fetchPnsEvents, fetchProfiles, fetchReceivedRsvps, fetchRoutstrModels, fetchRsvps, fetchUserRsvps, fetchVirtualFs, generateNewNsec, getNostrEventCounts, getNostrRelayEvents, getNostrRelayStatus, hexToNpub, npubToHex, parsePubkey, publishBatchCalendarEvents, publishCalendar, publishCalendarEvent, publishChatMessage, publishNfpCycle, publishNfpObservation, publishNfpSettings, publishRsvp, publishVirtualFs, removeBookmark, removeNoteFromNotebook, saveBookmark, sendDirectMessage, startNostrRelay, stopNostrRelay, updateContactList, updateNote, verifyNsec };

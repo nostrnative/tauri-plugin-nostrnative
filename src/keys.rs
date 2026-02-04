@@ -11,6 +11,16 @@ pub fn parse_pubkey(pubkey: &str) -> Result<String, String> {
     Ok(pk.to_hex())
 }
 
+pub fn hex_to_npub(hex: &str) -> Result<String, String> {
+    let pk = PublicKey::from_hex(hex).map_err(|e| e.to_string())?;
+    pk.to_bech32().map_err(|e| e.to_string())
+}
+
+pub fn npub_to_hex(npub: &str) -> Result<String, String> {
+    let pk = PublicKey::from_bech32(npub).map_err(|e| e.to_string())?;
+    Ok(pk.to_hex())
+}
+
 pub async fn verify_nsec(nsec: &str) -> Result<String, String> {
     if nsec.starts_with("bunker://") {
         let uri = NostrConnectURI::parse(nsec).map_err(|e| e.to_string())?;

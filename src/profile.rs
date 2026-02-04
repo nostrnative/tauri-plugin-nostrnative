@@ -34,6 +34,7 @@ pub async fn fetch_profiles_core(
         if let Ok(content) = serde_json::from_str::<serde_json::Value>(&event.content) {
             profiles.push(UserProfile {
                 pubkey: event.pubkey.to_hex(),
+                npub: event.pubkey.to_bech32().ok(),
                 name: content["name"].as_str().map(|s| s.to_string()),
                 display_name: content["display_name"].as_str().map(|s| s.to_string()),
                 about: content["about"].as_str().map(|s| s.to_string()),
@@ -83,7 +84,8 @@ pub async fn fetch_contact_list_core(
                     } else {
                         None
                     };
-                    Some(Contact { pubkey, alias })
+                    let npub = PublicKey::from_hex(&pubkey).ok().and_then(|pk| pk.to_bech32().ok());
+                    Some(Contact { pubkey, npub, alias })
                 } else {
                     None
                 }

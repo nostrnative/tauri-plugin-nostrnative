@@ -33,12 +33,14 @@ pub struct CalendarRequest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Contact {
     pub pubkey: String,
+    pub npub: Option<String>,
     pub alias: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserProfile {
     pub pubkey: String,
+    pub npub: Option<String>,
     pub name: Option<String>,
     pub display_name: Option<String>,
     pub about: Option<String>,

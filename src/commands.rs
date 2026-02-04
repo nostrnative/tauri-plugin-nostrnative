@@ -48,6 +48,18 @@ use crate::models::FilesystemRequest;
 
 #[tauri::command]
 #[cfg(feature = "keys")]
+pub async fn hex_to_npub(hex: String) -> Result<String, String> {
+    keys::hex_to_npub(&hex)
+}
+
+#[tauri::command]
+#[cfg(feature = "keys")]
+pub async fn npub_to_hex(npub: String) -> Result<String, String> {
+    keys::npub_to_hex(&npub)
+}
+
+#[tauri::command]
+#[cfg(feature = "keys")]
 pub async fn generate_new_nsec() -> String {
     keys::generate_new_nsec()
 }

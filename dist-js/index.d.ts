@@ -24,10 +24,12 @@ export interface CalendarRequest {
 }
 export interface Contact {
     pubkey: string;
+    npub?: string;
     alias?: string | null;
 }
 export interface UserProfile {
     pubkey: string;
+    npub?: string;
     name?: string | null;
     display_name?: string | null;
     about?: string | null;
@@ -84,6 +86,8 @@ export interface RoutstrProvider {
     price_prompt?: number | null;
     price_completion?: number | null;
 }
+export declare function hexToNpub(hex: string): Promise<string>;
+export declare function npubToHex(npub: string): Promise<string>;
 export declare function generateNewNsec(): Promise<string>;
 export declare function parsePubkey(pubkey: string): Promise<string>;
 export declare function verifyNsec(nsec: string): Promise<string>;

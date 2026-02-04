@@ -92,6 +92,8 @@ impl NostrNativeBuilder {
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("nostrnative")
         .invoke_handler(tauri::generate_handler![
+            commands::hex_to_npub,
+            commands::npub_to_hex,
             commands::generate_new_nsec,
             commands::parse_pubkey,
             commands::verify_nsec,

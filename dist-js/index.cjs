@@ -3,6 +3,12 @@
 var core = require('@tauri-apps/api/core');
 
 // Keys
+async function hexToNpub(hex) {
+    return await core.invoke("plugin:nostrnative|hex_to_npub", { hex });
+}
+async function npubToHex(npub) {
+    return await core.invoke("plugin:nostrnative|npub_to_hex", { npub });
+}
 async function generateNewNsec() {
     return await core.invoke("plugin:nostrnative|generate_new_nsec");
 }
@@ -498,6 +504,8 @@ exports.generateNewNsec = generateNewNsec;
 exports.getNostrEventCounts = getNostrEventCounts;
 exports.getNostrRelayEvents = getNostrRelayEvents;
 exports.getNostrRelayStatus = getNostrRelayStatus;
+exports.hexToNpub = hexToNpub;
+exports.npubToHex = npubToHex;
 exports.parsePubkey = parsePubkey;
 exports.publishBatchCalendarEvents = publishBatchCalendarEvents;
 exports.publishCalendar = publishCalendar;
