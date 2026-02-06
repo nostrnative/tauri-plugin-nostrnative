@@ -39,7 +39,7 @@ pub async fn discover_routstr_providers_core(
         if let Ok(content) = serde_json::from_str::<serde_json::Value>(&event.content) {
             let name = content["name"].as_str().unwrap_or("Unknown").to_string();
             let about = content["about"].as_str().unwrap_or("").to_string();
-            
+
             let mut urls = Vec::new();
             let mut mints = Vec::new();
             let mut version = content["version"].as_str().map(|s| s.to_string());
@@ -73,7 +73,10 @@ pub async fn discover_routstr_providers_core(
             // 2. Fallback to Content JSON
             if urls.is_empty() {
                 if let Some(u) = content["urls"].as_array() {
-                    urls = u.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect();
+                    urls = u
+                        .iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect();
                 } else if let Some(u) = content["url"].as_str() {
                     urls.push(u.to_string());
                 } else if let Some(u) = content["endpoint"].as_str() {
@@ -82,12 +85,16 @@ pub async fn discover_routstr_providers_core(
             }
 
             if mints.is_empty()
-                && let Some(m) = content["mints"].as_array() {
-                    mints = m.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect();
+                && let Some(m) = content["mints"].as_array()
+            {
+                mints = m
+                    .iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect();
             }
 
             let is_official = urls.iter().any(|u: &String| u.contains("api.routstr.com"));
-            
+
             providers.push(RoutstrProvider {
                 pubkey: event.pubkey.to_hex(),
                 name,

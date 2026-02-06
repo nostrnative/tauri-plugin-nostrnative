@@ -332,11 +332,13 @@ pub async fn publish_batch_calendar_events_core(
                 }
             }
         } else if let Some(end_tzid) = &event_data.end_tzid
-            && !end_tzid.is_empty() && !event_data.is_all_day {
-                tags.push(Tag::custom(
-                    TagKind::Custom(Cow::Borrowed("end_tzid")),
-                    vec![end_tzid.clone()],
-                ));
+            && !end_tzid.is_empty()
+            && !event_data.is_all_day
+        {
+            tags.push(Tag::custom(
+                TagKind::Custom(Cow::Borrowed("end_tzid")),
+                vec![end_tzid.clone()],
+            ));
         }
 
         let mut event_builder = EventBuilder::new(kind, content).tags(tags);

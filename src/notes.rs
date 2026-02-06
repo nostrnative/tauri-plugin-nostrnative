@@ -188,17 +188,18 @@ pub async fn fetch_notes_core(
         let mut group_id = None;
 
         if let Some(k) = &keys
-            && let Ok(decrypted) = nip44::decrypt(k.secret_key(), &e.pubkey, &e.content) {
-                if let Ok(json) = serde_json::from_str::<serde_json::Value>(&decrypted) {
-                    if let Some(c) = json.get("content").and_then(|v| v.as_str()) {
-                        content = c.to_string();
-                    }
-                    if let Some(g) = json.get("group_id").and_then(|v| v.as_str()) {
-                        group_id = Some(g.to_string());
-                    }
-                } else {
-                    content = decrypted;
+            && let Ok(decrypted) = nip44::decrypt(k.secret_key(), &e.pubkey, &e.content)
+        {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&decrypted) {
+                if let Some(c) = json.get("content").and_then(|v| v.as_str()) {
+                    content = c.to_string();
                 }
+                if let Some(g) = json.get("group_id").and_then(|v| v.as_str()) {
+                    group_id = Some(g.to_string());
+                }
+            } else {
+                content = decrypted;
+            }
         }
 
         let mut tags = e
@@ -310,11 +311,14 @@ pub async fn fetch_notebooks_core(
 
     for e in events {
         let mut private_tags = None;
-        if !e.content.is_empty() && let Some(n) = nsec {
+        if !e.content.is_empty()
+            && let Some(n) = nsec
+        {
             let keys = Keys::parse(n).map_err(|e| e.to_string())?;
             if let Ok(decrypted) = nip44::decrypt(keys.secret_key(), &e.pubkey, &e.content)
-                && let Ok(ptags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted) {
-                    private_tags = Some(ptags);
+                && let Ok(ptags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted)
+            {
+                private_tags = Some(ptags);
             }
         }
 
@@ -370,8 +374,9 @@ pub async fn add_note_to_notebook_core(
 
     if !event.content.is_empty()
         && let Ok(decrypted) = nip44::decrypt(keys.secret_key(), &event.pubkey, &event.content)
-        && let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted) {
-            current_tags = tags;
+        && let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted)
+    {
+        current_tags = tags;
     }
 
     let coordinate = format!("{}:{}:{}", 31323, my_public_key.to_hex(), note_id);
@@ -433,8 +438,9 @@ pub async fn remove_note_from_notebook_core(
 
     if !event.content.is_empty()
         && let Ok(decrypted) = nip44::decrypt(keys.secret_key(), &event.pubkey, &event.content)
-        && let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted) {
-            current_tags = tags;
+        && let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted)
+    {
+        current_tags = tags;
     }
 
     let coordinate = format!("{}:{}:{}", 31323, my_public_key.to_hex(), note_id);

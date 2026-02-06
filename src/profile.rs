@@ -84,8 +84,14 @@ pub async fn fetch_contact_list_core(
                     } else {
                         None
                     };
-                    let npub = PublicKey::from_hex(&pubkey).ok().and_then(|pk| pk.to_bech32().ok());
-                    Some(Contact { pubkey, npub, alias })
+                    let npub = PublicKey::from_hex(&pubkey)
+                        .ok()
+                        .and_then(|pk| pk.to_bech32().ok());
+                    Some(Contact {
+                        pubkey,
+                        npub,
+                        alias,
+                    })
                 } else {
                     None
                 }

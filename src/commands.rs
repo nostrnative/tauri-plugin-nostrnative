@@ -458,14 +458,8 @@ pub async fn blossom_upload_content(
     filename: Option<String>,
     media_type: Option<String>,
 ) -> Result<String, String> {
-    blossom::blossom_upload_content_core(
-        &server_url,
-        &auth_header,
-        content,
-        filename,
-        media_type,
-    )
-    .await
+    blossom::blossom_upload_content_core(&server_url, &auth_header, content, filename, media_type)
+        .await
 }
 
 #[tauri::command]
@@ -491,12 +485,7 @@ pub async fn blossom_list(
     pubkey: String,
     auth_header: Option<String>,
 ) -> Result<serde_json::Value, String> {
-    blossom::blossom_list_core(
-        &server_url,
-        &pubkey,
-        auth_header.as_deref(),
-    )
-    .await
+    blossom::blossom_list_core(&server_url, &pubkey, auth_header.as_deref()).await
 }
 
 #[tauri::command]
@@ -801,8 +790,6 @@ pub async fn compare_routstr_prices(
 }
 
 #[tauri::command]
-pub async fn fetch_routstr_models(
-    provider_url: String,
-) -> Result<serde_json::Value, String> {
+pub async fn fetch_routstr_models(provider_url: String) -> Result<serde_json::Value, String> {
     crate::routstr::fetch_routstr_models_core(provider_url).await
 }

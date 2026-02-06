@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{Mutex, mpsc};
 
 static RELAY: Lazy<Arc<Mutex<Option<LocalRelay>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
 static ERROR_SENDER: Lazy<Arc<Mutex<Option<mpsc::Sender<String>>>>> =
@@ -59,24 +59,25 @@ impl WritePolicy for RelayPolicies {
 
             // Check tagged pubkeys ("p" tags)
             if let Some(tagged_pubkeys) = &self.tagged_pubkeys
-                && !tagged_pubkeys.is_empty() {
-                    let has_allowed_tag = event.tags.iter().any(|tag| {
-                        if tag.kind() == TagKind::p()
-                            && let Some(pk_hex) = tag.content()
-                            && let Ok(pk) = PublicKey::from_hex(pk_hex)
-                        {
-                            return tagged_pubkeys.contains(&pk);
-                        }
-                        false
-                    });
-
-                    if !has_allowed_tag {
-                        return PolicyResult::Reject(format!(
-                            "{}: no allowed tagged pubkey found",
-                            MachineReadablePrefix::Blocked
-                        ));
+                && !tagged_pubkeys.is_empty()
+            {
+                let has_allowed_tag = event.tags.iter().any(|tag| {
+                    if tag.kind() == TagKind::p()
+                        && let Some(pk_hex) = tag.content()
+                        && let Ok(pk) = PublicKey::from_hex(pk_hex)
+                    {
+                        return tagged_pubkeys.contains(&pk);
                     }
+                    false
+                });
+
+                if !has_allowed_tag {
+                    return PolicyResult::Reject(format!(
+                        "{}: no allowed tagged pubkey found",
+                        MachineReadablePrefix::Blocked
+                    ));
                 }
+            }
 
             PolicyResult::Accept
         })
