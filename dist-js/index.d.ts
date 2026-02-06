@@ -22,6 +22,11 @@ export interface CalendarRequest {
     description?: string;
     identifier: string;
 }
+export interface CalendarContactListRequest {
+    identifier: string;
+    contacts: string[];
+    is_private: boolean;
+}
 export interface Contact {
     pubkey: string;
     npub?: string;
@@ -109,6 +114,11 @@ export declare function deleteCalendarEvent(nsec: string, relays: string[], even
 export declare function fetchCalendars(pubkey: string, relays: string[]): Promise<EventResponse[]>;
 export declare function publishCalendar(nsec: string, relays: string[], calendar: CalendarRequest, clientNsec?: string): Promise<string>;
 export declare function deleteCalendar(nsec: string, relays: string[], identifier: string, clientNsec?: string): Promise<string>;
+export declare function fetchCalendarContactLists(pubkey: string, relays: string[], options?: {
+    nsec?: string;
+    clientNsec?: string;
+}): Promise<EventResponse[]>;
+export declare function publishCalendarContactList(nsec: string, relays: string[], request: CalendarContactListRequest, clientNsec?: string): Promise<string>;
 export declare function fetchRsvps(eventCoordinate: string, relays: string[]): Promise<EventResponse[]>;
 export declare function fetchUserRsvps(pubkey: string, relays: string[]): Promise<EventResponse[]>;
 export declare function fetchReceivedRsvps(pubkey: string, relays: string[]): Promise<EventResponse[]>;

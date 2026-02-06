@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-fetch-calendar-contact-lists"
+description = "Enables the fetch_calendar_contact_lists command without any pre-configured scope."
+commands.allow = ["fetch_calendar_contact_lists"]
+
+[[permission]]
+identifier = "deny-fetch-calendar-contact-lists"
+description = "Denies the fetch_calendar_contact_lists command without any pre-configured scope."
+commands.deny = ["fetch_calendar_contact_lists"]

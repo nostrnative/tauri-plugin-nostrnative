@@ -6,7 +6,7 @@ use serde_json::json;
 use std::borrow::Cow;
 use std::time::Duration;
 
-use crate::models::{CalendarEventRequest, CalendarRequest, EventResponse};
+use crate::models::{CalendarEventRequest, CalendarEventResponse, CalendarRequest};
 use crate::utils::{get_client, get_event_bech32, get_public_key_from_signer, parse_public_key};
 
 pub async fn fetch_calendar_events_core(
@@ -17,7 +17,7 @@ pub async fn fetch_calendar_events_core(
     range_end: Option<i64>,
     authors: Option<Vec<String>>,
     client_nsec: Option<&str>,
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     let public_key = parse_public_key(pubkey)?;
 
     let client = if let Some(ns) = nsec {
@@ -164,7 +164,7 @@ pub async fn fetch_calendar_events_core(
                 response_tags.push(vec!["end_tzid".to_string(), end_tz.clone()]);
             }
 
-            response.push(EventResponse {
+            response.push(CalendarEventResponse {
                 id: e.id.to_hex(),
                 pubkey: e.pubkey.to_hex(),
                 created_at: e.created_at.as_secs() as i64,
@@ -174,7 +174,7 @@ pub async fn fetch_calendar_events_core(
                 is_private,
                 bech32: Some(get_event_bech32(&e, Some(relays.to_vec()))),
                 private_tags: None,
-                source: None,
+                calendar_contacts: None,
             });
         }
     }
@@ -405,7 +405,7 @@ pub async fn delete_calendar_event_core(
 pub async fn fetch_calendars_core(
     pubkey: &str,
     relays: &[String],
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     let public_key = parse_public_key(pubkey)?;
     let ephemeral_keys = Keys::generate();
     let client = get_client(&ephemeral_keys, relays).await?;
@@ -421,7 +421,7 @@ pub async fn fetch_calendars_core(
 
     let response = events
         .into_iter()
-        .map(|e| EventResponse {
+        .map(|e| CalendarEventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
             created_at: e.created_at.as_secs() as i64,
@@ -431,7 +431,7 @@ pub async fn fetch_calendars_core(
             is_private: false,
             bech32: Some(get_event_bech32(&e, Some(relays.to_vec()))),
             private_tags: None,
-            source: None,
+            calendar_contacts: None,
         })
         .collect();
 
@@ -488,4 +488,107 @@ pub async fn delete_calendar_core(
         .map_err(|e| e.to_string())?;
 
     Ok(deletion_id.to_hex())
+}
+
+pub async fn fetch_calendar_contact_lists_core(
+    pubkey: &str,
+    nsec: Option<&str>,
+    relays: &[String],
+    client_nsec: Option<&str>,
+) -> Result<Vec<CalendarEventResponse>, String> {
+    let public_key = parse_public_key(pubkey)?;
+    let client = if let Some(ns) = nsec {
+        crate::utils::get_client_with_signer(ns, relays, client_nsec).await?
+    } else {
+        get_client(&Keys::generate(), relays).await?
+    };
+
+    let filter = Filter::new()
+        .authors(vec![public_key])
+        .kind(Kind::from(30000));
+
+    let events = client
+        .fetch_events(filter, Duration::from_secs(10))
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut response = Vec::new();
+    for e in events {
+        let tags_vec: Vec<Vec<String>> = e.tags.iter().map(|t| t.clone().to_vec()).collect();
+        let identifier = tags_vec
+            .iter()
+            .find(|t| t.first() == Some(&"d".to_string()))
+            .and_then(|t| t.get(1).cloned())
+            .unwrap_or_default();
+
+        let is_private = identifier == "calendar-contacts-private";
+
+        let mut private_tags = None;
+        if is_private && !e.content.is_empty() {
+            if let Ok(signer) = client.signer().await {
+                if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
+                    if let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted) {
+                        private_tags = Some(tags);
+                    }
+                }
+            }
+        }
+
+        response.push(CalendarEventResponse {
+            id: e.id.to_hex(),
+            pubkey: e.pubkey.to_hex(),
+            created_at: e.created_at.as_secs() as i64,
+            kind: e.kind.as_u16(),
+            tags: e.tags.iter().map(|t| t.clone().to_vec()).collect(),
+            content: e.content.to_string(),
+            is_private,
+            bech32: Some(get_event_bech32(&e, Some(relays.to_vec()))),
+            private_tags,
+            calendar_contacts: None,
+        });
+    }
+
+    Ok(response)
+}
+
+pub async fn publish_calendar_contact_list_core(
+    nsec: &str,
+    relays: &[String],
+    request: crate::models::CalendarContactListRequest,
+    client_nsec: Option<&str>,
+) -> Result<String, String> {
+    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let my_public_key = get_public_key_from_signer(nsec)?;
+
+    let mut tags = vec![Tag::identifier(&request.identifier)];
+
+    let content = if request.is_private {
+        let p_tags: Vec<Vec<String>> = request
+            .contacts
+            .iter()
+            .map(|pk| vec!["p".to_string(), pk.clone()])
+            .collect();
+
+        let signer = client.signer().await.map_err(|e| e.to_string())?;
+        match signer
+            .nip44_encrypt(&my_public_key, &serde_json::to_string(&p_tags).unwrap())
+            .await
+        {
+            Ok(c) => c,
+            Err(e) => return Err(format!("Failed to encrypt: {e}")),
+        }
+    } else {
+        for pk in request.contacts {
+            tags.push(Tag::custom(TagKind::Custom(Cow::Borrowed("p")), vec![pk]));
+        }
+        "".to_string()
+    };
+
+    let event_builder = EventBuilder::new(Kind::from(30000), content).tags(tags);
+    let id = client
+        .send_event_builder(event_builder)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(id.to_hex())
 }

@@ -32,7 +32,7 @@ use crate::virtual_fs;
 use crate::models::{BookmarkSource, EventResponse};
 
 #[cfg(feature = "calendar")]
-use crate::models::{CalendarEventRequest, CalendarRequest};
+use crate::models::{CalendarEventRequest, CalendarEventResponse, CalendarRequest};
 
 #[cfg(feature = "chat")]
 use crate::models::{ChatMessageRequest, PnsDerivedKeys};
@@ -86,7 +86,7 @@ pub async fn fetch_calendar_events(
     range_end: Option<i64>,
     authors: Option<Vec<String>>,
     client_nsec: Option<String>,
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     calendar::fetch_calendar_events_core(
         &pubkey,
         nsec.as_deref(),
@@ -145,7 +145,7 @@ pub async fn delete_calendar_event(
 pub async fn fetch_calendars(
     pubkey: String,
     relays: Vec<String>,
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     calendar::fetch_calendars_core(&pubkey, &relays).await
 }
 
@@ -169,6 +169,35 @@ pub async fn delete_calendar(
     client_nsec: Option<String>,
 ) -> Result<String, String> {
     calendar::delete_calendar_core(&nsec, &relays, identifier, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
+#[cfg(feature = "calendar")]
+pub async fn fetch_calendar_contact_lists(
+    pubkey: String,
+    nsec: Option<String>,
+    relays: Vec<String>,
+    client_nsec: Option<String>,
+) -> Result<Vec<CalendarEventResponse>, String> {
+    calendar::fetch_calendar_contact_lists_core(
+        &pubkey,
+        nsec.as_deref(),
+        &relays,
+        client_nsec.as_deref(),
+    )
+    .await
+}
+
+#[tauri::command]
+#[cfg(feature = "calendar")]
+pub async fn publish_calendar_contact_list(
+    nsec: String,
+    relays: Vec<String>,
+    request: crate::models::CalendarContactListRequest,
+    client_nsec: Option<String>,
+) -> Result<String, String> {
+    calendar::publish_calendar_contact_list_core(&nsec, &relays, request, client_nsec.as_deref())
+        .await
 }
 
 #[tauri::command]
@@ -205,7 +234,7 @@ pub async fn update_contact_list(
 pub async fn fetch_rsvps(
     event_coordinate: String,
     relays: Vec<String>,
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     calendar::rsvp::fetch_rsvps_core(&event_coordinate, &relays).await
 }
 
@@ -214,7 +243,7 @@ pub async fn fetch_rsvps(
 pub async fn fetch_user_rsvps(
     pubkey: String,
     relays: Vec<String>,
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     calendar::rsvp::fetch_user_rsvps_core(&pubkey, &relays).await
 }
 
@@ -223,7 +252,7 @@ pub async fn fetch_user_rsvps(
 pub async fn fetch_received_rsvps(
     pubkey: String,
     relays: Vec<String>,
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     calendar::rsvp::fetch_received_rsvps_core(&pubkey, &relays).await
 }
 

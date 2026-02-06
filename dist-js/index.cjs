@@ -92,6 +92,22 @@ async function deleteCalendar(nsec, relays, identifier, clientNsec) {
         clientNsec,
     });
 }
+async function fetchCalendarContactLists(pubkey, relays, options) {
+    return await core.invoke("plugin:nostrnative|fetch_calendar_contact_lists", {
+        pubkey,
+        relays,
+        nsec: options?.nsec,
+        clientNsec: options?.clientNsec,
+    });
+}
+async function publishCalendarContactList(nsec, relays, request, clientNsec) {
+    return await core.invoke("plugin:nostrnative|publish_calendar_contact_list", {
+        nsec,
+        relays,
+        request,
+        clientNsec,
+    });
+}
 // RSVP
 async function fetchRsvps(eventCoordinate, relays) {
     return await core.invoke("plugin:nostrnative|fetch_rsvps", {
@@ -483,6 +499,7 @@ exports.deleteVirtualFs = deleteVirtualFs;
 exports.derivePnsKeys = derivePnsKeys;
 exports.discoverRoutstrProviders = discoverRoutstrProviders;
 exports.fetchBookmarks = fetchBookmarks;
+exports.fetchCalendarContactLists = fetchCalendarContactLists;
 exports.fetchCalendarEvents = fetchCalendarEvents;
 exports.fetchCalendars = fetchCalendars;
 exports.fetchContactList = fetchContactList;
@@ -509,6 +526,7 @@ exports.npubToHex = npubToHex;
 exports.parsePubkey = parsePubkey;
 exports.publishBatchCalendarEvents = publishBatchCalendarEvents;
 exports.publishCalendar = publishCalendar;
+exports.publishCalendarContactList = publishCalendarContactList;
 exports.publishCalendarEvent = publishCalendarEvent;
 exports.publishChatMessage = publishChatMessage;
 exports.publishNfpCycle = publishNfpCycle;

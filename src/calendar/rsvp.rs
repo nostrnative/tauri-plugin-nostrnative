@@ -2,13 +2,13 @@ use nostr_sdk::prelude::*;
 use std::borrow::Cow;
 use std::time::Duration;
 
-use crate::models::EventResponse;
+use crate::models::CalendarEventResponse;
 use crate::utils::{get_client, parse_public_key};
 
 pub async fn fetch_rsvps_core(
     event_coordinate: &str,
     relays: &[String],
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     let keys = Keys::generate();
     let client = get_client(&keys, relays).await?;
 
@@ -29,7 +29,7 @@ pub async fn fetch_rsvps_core(
 
     let response = events
         .into_iter()
-        .map(|e| EventResponse {
+        .map(|e| CalendarEventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
             created_at: e.created_at.as_secs() as i64,
@@ -39,7 +39,7 @@ pub async fn fetch_rsvps_core(
             is_private: false,
             bech32: None,
             private_tags: None,
-            source: None,
+            calendar_contacts: None,
         })
         .collect();
 
@@ -49,7 +49,7 @@ pub async fn fetch_rsvps_core(
 pub async fn fetch_user_rsvps_core(
     pubkey: &str,
     relays: &[String],
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     let pk = parse_public_key(pubkey)?;
     let keys = Keys::generate();
     let client = get_client(&keys, relays).await?;
@@ -63,7 +63,7 @@ pub async fn fetch_user_rsvps_core(
 
     let response = events
         .into_iter()
-        .map(|e| EventResponse {
+        .map(|e| CalendarEventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
             created_at: e.created_at.as_secs() as i64,
@@ -73,7 +73,7 @@ pub async fn fetch_user_rsvps_core(
             is_private: false,
             bech32: None,
             private_tags: None,
-            source: None,
+            calendar_contacts: None,
         })
         .collect();
 
@@ -83,7 +83,7 @@ pub async fn fetch_user_rsvps_core(
 pub async fn fetch_received_rsvps_core(
     pubkey: &str,
     relays: &[String],
-) -> Result<Vec<EventResponse>, String> {
+) -> Result<Vec<CalendarEventResponse>, String> {
     let pk = parse_public_key(pubkey)?;
     let keys = Keys::generate();
     let client = get_client(&keys, relays).await?;
@@ -97,7 +97,7 @@ pub async fn fetch_received_rsvps_core(
 
     let response = events
         .into_iter()
-        .map(|e| EventResponse {
+        .map(|e| CalendarEventResponse {
             id: e.id.to_hex(),
             pubkey: e.pubkey.to_hex(),
             created_at: e.created_at.as_secs() as i64,
@@ -107,7 +107,7 @@ pub async fn fetch_received_rsvps_core(
             is_private: false,
             bech32: None,
             private_tags: None,
-            source: None,
+            calendar_contacts: None,
         })
         .collect();
 

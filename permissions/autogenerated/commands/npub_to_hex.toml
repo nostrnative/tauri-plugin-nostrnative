@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-npub-to-hex"
+description = "Enables the npub_to_hex command without any pre-configured scope."
+commands.allow = ["npub_to_hex"]
+
+[[permission]]
+identifier = "deny-npub-to-hex"
+description = "Denies the npub_to_hex command without any pre-configured scope."
+commands.deny = ["npub_to_hex"]

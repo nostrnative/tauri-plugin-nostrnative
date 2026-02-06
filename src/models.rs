@@ -31,6 +31,13 @@ pub struct CalendarRequest {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CalendarContactListRequest {
+    pub identifier: String,    // d-tag
+    pub contacts: Vec<String>, // pubkeys
+    pub is_private: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Contact {
     pub pubkey: String,
     pub npub: Option<String>,
@@ -56,6 +63,20 @@ pub enum BookmarkSource {
     Public,
     Private,
     Website,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CalendarEventResponse {
+    pub id: String,
+    pub pubkey: String,
+    pub created_at: i64,
+    pub kind: u16,
+    pub tags: Vec<Vec<String>>,
+    pub content: String,
+    pub is_private: bool,
+    pub bech32: Option<String>,
+    pub private_tags: Option<Vec<Vec<String>>>,
+    pub calendar_contacts: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -26,6 +26,12 @@ export interface CalendarRequest {
   identifier: string; // d-tag
 }
 
+export interface CalendarContactListRequest {
+  identifier: string;
+  contacts: string[];
+  is_private: boolean;
+}
+
 export interface Contact {
   pubkey: string;
   npub?: string;
@@ -243,6 +249,33 @@ export async function deleteCalendar(
     nsec,
     relays,
     identifier,
+    clientNsec,
+  });
+}
+
+export async function fetchCalendarContactLists(
+  pubkey: string,
+  relays: string[],
+  options?: { nsec?: string; clientNsec?: string },
+): Promise<EventResponse[]> {
+  return await invoke("plugin:nostrnative|fetch_calendar_contact_lists", {
+    pubkey,
+    relays,
+    nsec: options?.nsec,
+    clientNsec: options?.clientNsec,
+  });
+}
+
+export async function publishCalendarContactList(
+  nsec: string,
+  relays: string[],
+  request: CalendarContactListRequest,
+  clientNsec?: string,
+): Promise<string> {
+  return await invoke("plugin:nostrnative|publish_calendar_contact_list", {
+    nsec,
+    relays,
+    request,
     clientNsec,
   });
 }

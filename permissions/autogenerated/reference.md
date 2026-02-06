@@ -148,6 +148,32 @@ Denies the add_note_to_notebook command without any pre-configured scope.
 <tr>
 <td>
 
+`nostrnative:allow-blossom-delete`
+
+</td>
+<td>
+
+Enables the blossom_delete command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-blossom-delete`
+
+</td>
+<td>
+
+Denies the blossom_delete command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-blossom-get-blob`
 
 </td>
@@ -167,6 +193,32 @@ Enables the blossom_get_blob command without any pre-configured scope.
 <td>
 
 Denies the blossom_get_blob command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-blossom-list`
+
+</td>
+<td>
+
+Enables the blossom_list command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-blossom-list`
+
+</td>
+<td>
+
+Denies the blossom_list command without any pre-configured scope.
 
 </td>
 </tr>
@@ -635,6 +687,32 @@ Enables the fetch_bookmarks command without any pre-configured scope.
 <td>
 
 Denies the fetch_bookmarks command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-fetch-calendar-contact-lists`
+
+</td>
+<td>
+
+Enables the fetch_calendar_contact_lists command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-fetch-calendar-contact-lists`
+
+</td>
+<td>
+
+Denies the fetch_calendar_contact_lists command without any pre-configured scope.
 
 </td>
 </tr>
@@ -1136,6 +1214,58 @@ Enables the get_nostr_relay_status command
 <tr>
 <td>
 
+`nostrnative:allow-hex-to-npub`
+
+</td>
+<td>
+
+Enables the hex_to_npub command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-hex-to-npub`
+
+</td>
+<td>
+
+Denies the hex_to_npub command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-npub-to-hex`
+
+</td>
+<td>
+
+Enables the npub_to_hex command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-npub-to-hex`
+
+</td>
+<td>
+
+Denies the npub_to_hex command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-parse-pubkey`
 
 </td>
@@ -1207,6 +1337,32 @@ Enables the publish_calendar command without any pre-configured scope.
 <td>
 
 Denies the publish_calendar command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-publish-calendar-contact-list`
+
+</td>
+<td>
+
+Enables the publish_calendar_contact_list command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-publish-calendar-contact-list`
+
+</td>
+<td>
+
+Denies the publish_calendar_contact_list command without any pre-configured scope.
 
 </td>
 </tr>
