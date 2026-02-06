@@ -805,6 +805,7 @@ pub async fn get_nostr_relay_events() -> Result<Vec<crate::models::EventResponse
 }
 
 #[tauri::command]
+#[cfg(feature = "routstr")]
 pub async fn discover_routstr_providers(
     relays: Vec<String>,
 ) -> Result<Vec<crate::routstr::RoutstrProvider>, String> {
@@ -812,6 +813,7 @@ pub async fn discover_routstr_providers(
 }
 
 #[tauri::command]
+#[cfg(feature = "routstr")]
 pub async fn compare_routstr_prices(
     provider_urls: Vec<String>,
 ) -> Result<serde_json::Value, String> {
@@ -819,6 +821,7 @@ pub async fn compare_routstr_prices(
 }
 
 #[tauri::command]
+#[cfg(feature = "routstr")]
 pub async fn fetch_routstr_models(provider_url: String) -> Result<serde_json::Value, String> {
     crate::routstr::fetch_routstr_models_core(provider_url).await
 }

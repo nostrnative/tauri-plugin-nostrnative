@@ -38,6 +38,7 @@ pub mod virtual_fs;
 #[cfg(feature = "relay")]
 pub mod relay;
 
+#[cfg(feature = "routstr")]
 pub mod routstr;
 
 #[cfg(feature = "tauri-plugin")]
@@ -217,8 +218,11 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::get_nostr_event_counts,
             #[cfg(feature = "relay")]
             commands::get_nostr_relay_events,
+            #[cfg(feature = "routstr")]
             commands::discover_routstr_providers,
+            #[cfg(feature = "routstr")]
             commands::compare_routstr_prices,
+            #[cfg(feature = "routstr")]
             commands::fetch_routstr_models,
         ])
         .build()

@@ -1,3 +1,4 @@
+#![cfg(feature = "routstr")]
 use nostr_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;

@@ -61,6 +61,9 @@ const pubkey = await nostr.parsePubkey(somePubkey);
 const events = await nostr.fetchCalendarEvents(pubkey, ["wss://relay.damus.io"], {
   rangeStart: Math.floor(Date.now() / 1000)
 });
+
+const providers = await nostr.discoverRoutstrProviders(["wss://relay.routstr.com"]);
+const models = await nostr.fetchRoutstrModels(providers[0].urls[0]);
 ```
 
 ## Available Features
@@ -75,6 +78,7 @@ const events = await nostr.fetchCalendarEvents(pubkey, ["wss://relay.damus.io"],
 | `notes`        | Secure notes and notebooks management.                      |
 | `blossom`      | Blob Storage Server Operations (mirror, upload, get).       |
 | `chat`         | Advanced chat functionality with PNS key derivation.        |
+| `routstr`      | Routstr provider discovery and price comparison.            |
 | `tauri-plugin` | Exports all enabled features as Tauri commands.             |
 | `full`         | Enables all functional features (excluding `tauri-plugin`). |
 
