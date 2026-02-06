@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-blossom-delete"
+description = "Enables the blossom_delete command without any pre-configured scope."
+commands.allow = ["blossom_delete"]
+
+[[permission]]
+identifier = "deny-blossom-delete"
+description = "Denies the blossom_delete command without any pre-configured scope."
+commands.deny = ["blossom_delete"]
