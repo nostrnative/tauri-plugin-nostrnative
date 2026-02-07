@@ -194,13 +194,6 @@ pub async fn publish_batch_calendar_events_core(
     let mut event_ids = Vec::new();
 
     for event_data in events {
-        if let Some(old_id) = &event_data.old_event_id
-            && let Ok(oid) = EventId::from_hex(old_id)
-        {
-            let event_builder = EventBuilder::delete(EventDeletionRequest::new().ids(vec![oid]));
-            let _ = client.send_event_builder(event_builder).await;
-        }
-
         let kind = if event_data.is_all_day {
             Kind::from(31922)
         } else {
