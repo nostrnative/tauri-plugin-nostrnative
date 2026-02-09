@@ -113,6 +113,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             #[cfg(feature = "calendar")]
             commands::delete_calendar,
             #[cfg(feature = "calendar")]
+            commands::fetch_calendar_contact_lists,
+            #[cfg(feature = "calendar")]
+            commands::publish_calendar_contact_list,
+            #[cfg(feature = "calendar")]
             commands::fetch_rsvps,
             #[cfg(feature = "calendar")]
             commands::fetch_user_rsvps,

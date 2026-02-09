@@ -514,7 +514,8 @@ pub async fn fetch_calendar_contact_lists_core(
             .and_then(|t| t.get(1).cloned())
             .unwrap_or_default();
 
-        let is_private = identifier == "calendar-contacts-private";
+        let is_private =
+            identifier == "calendar-contacts-private" || identifier == "calendar-emails-private";
 
         let mut private_tags = None;
         if is_private && !e.content.is_empty() {
