@@ -17,6 +17,7 @@ pub async fn fetch_calendar_events_core(
     range_end: Option<i64>,
     authors: Option<Vec<String>>,
     client_nsec: Option<&str>,
+    filters: Option<Vec<serde_json::Value>>,
 ) -> Result<Vec<CalendarEventResponse>, String> {
     let public_key = parse_public_key(pubkey)?;
 
@@ -25,8 +26,6 @@ pub async fn fetch_calendar_events_core(
     } else {
         get_client(&Keys::generate(), relays).await?
     };
-
-    let mut filter = Filter::new().kinds([Kind::from(31922), Kind::from(31923)]);
 
     let mut authors_pks = vec![public_key];
     if let Some(auths) = &authors {
@@ -38,37 +37,74 @@ pub async fn fetch_calendar_events_core(
             }
         }
     }
-    filter = filter.authors(authors_pks);
 
-    if let Some(start) = range_start {
-        filter = filter.since(Timestamp::from(start as u64));
+    let mut final_filters = Vec::new();
+
+    if let Some(custom_filters) = filters {
+        for (_i, f) in custom_filters.iter().enumerate() {
+            if let Ok(filter) = serde_json::from_value::<Filter>(f.clone()) {
+                final_filters.push(filter);
+            } else {
+            }
+        }
+    } else {
     }
-    if let Some(end) = range_end {
-        filter = filter.until(Timestamp::from(end as u64));
+
+    if final_filters.is_empty() {
+        let mut filter = Filter::new()
+            .kinds([Kind::from(31922), Kind::from(31923)])
+            .authors(authors_pks.clone());
+
+        if let Some(start) = range_start {
+            filter = filter.since(Timestamp::from(start as u64));
+        }
+        if let Some(end) = range_end {
+            filter = filter.until(Timestamp::from(end as u64));
+        }
+        final_filters.push(filter);
     }
 
-    let owned_events = client
-        .fetch_events(filter, Duration::from_secs(10))
-        .await
-        .map_err(|e| e.to_string())?;
-
-    let mut attendee_filter = Filter::new()
+    // Always add attendee filter to find events where user is invited (p-tagged)
+    let attendee_filter = Filter::new()
         .kinds([Kind::from(31922), Kind::from(31923)])
         .pubkey(public_key);
+    let attendee_filter = if let Some(start) = range_start {
+        attendee_filter.since(Timestamp::from(start as u64))
+    } else {
+        attendee_filter
+    };
+    let attendee_filter = if let Some(end) = range_end {
+        attendee_filter.until(Timestamp::from(end as u64))
+    } else {
+        attendee_filter
+    };
+    final_filters.push(attendee_filter);
 
-    if let Some(start) = range_start {
-        attendee_filter = attendee_filter.since(Timestamp::from(start as u64));
+    let mut all_events = Vec::new();
+    for (_i, filter) in final_filters.iter().enumerate() {
+        let events = client
+            .fetch_events(filter.clone(), Duration::from_secs(10))
+            .await
+            .map_err(|e| e.to_string())?;
+        let events_vec: Vec<Event> = events.into_iter().collect();
+        for e in &events_vec {
+            let _p_tags: Vec<String> = e
+                .tags
+                .iter()
+                .filter_map(|t: &Tag| {
+                    let v = t.as_slice();
+                    if v.first() == Some(&"p".to_string()) {
+                        v.get(1).cloned()
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+        }
+        all_events.extend(events_vec);
     }
-    if let Some(end) = range_end {
-        attendee_filter = attendee_filter.until(Timestamp::from(end as u64));
-    }
 
-    let attendee_events = client
-        .fetch_events(attendee_filter, Duration::from_secs(10))
-        .await
-        .map_err(|e| e.to_string())?;
-
-    let events: Vec<_> = owned_events.into_iter().chain(attendee_events).collect();
+    let events = all_events;
 
     let mut response = Vec::new();
     for e in events {

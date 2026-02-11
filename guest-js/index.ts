@@ -136,6 +136,7 @@ export async function fetchCalendarEvents(
     rangeEnd?: number;
     authors?: string[];
     clientNsec?: string;
+    filters?: unknown[];
   },
 ): Promise<EventResponse[]> {
   return await invoke("plugin:nostrnative|fetch_calendar_events", {
@@ -146,6 +147,7 @@ export async function fetchCalendarEvents(
     rangeEnd: options?.rangeEnd,
     authors: options?.authors,
     clientNsec: options?.clientNsec,
+    filters: options?.filters,
   });
 }
 

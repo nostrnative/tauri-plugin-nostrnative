@@ -102,6 +102,7 @@ export declare function fetchCalendarEvents(pubkey: string, relays: string[], op
     rangeEnd?: number;
     authors?: string[];
     clientNsec?: string;
+    filters?: unknown[];
 }): Promise<EventResponse[]>;
 export declare function publishBatchCalendarEvents(nsec: string, relays: string[], events: CalendarEventRequest[], clientNsec?: string): Promise<string[]>;
 export declare function startNostrRelay(port: number, dbPath: string): Promise<void>;

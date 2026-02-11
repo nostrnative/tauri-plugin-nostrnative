@@ -86,6 +86,7 @@ pub async fn fetch_calendar_events(
     range_end: Option<i64>,
     authors: Option<Vec<String>>,
     client_nsec: Option<String>,
+    filters: Option<Vec<serde_json::Value>>,
 ) -> Result<Vec<CalendarEventResponse>, String> {
     calendar::fetch_calendar_events_core(
         &pubkey,
@@ -95,6 +96,7 @@ pub async fn fetch_calendar_events(
         range_end,
         authors,
         client_nsec.as_deref(),
+        filters,
     )
     .await
 }

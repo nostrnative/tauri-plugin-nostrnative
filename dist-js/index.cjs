@@ -28,6 +28,7 @@ async function fetchCalendarEvents(pubkey, relays, options) {
         rangeEnd: options?.rangeEnd,
         authors: options?.authors,
         clientNsec: options?.clientNsec,
+        filters: options?.filters,
     });
 }
 async function publishBatchCalendarEvents(nsec, relays, events, clientNsec) {
