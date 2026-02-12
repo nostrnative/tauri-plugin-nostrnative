@@ -21,6 +21,8 @@ pub struct CalendarEventRequest {
     pub use_different_timestamp: Option<bool>,
     pub start_tzid: Option<String>,
     pub end_tzid: Option<String>,
+    pub start_date: Option<String>,
+    pub end_date: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]

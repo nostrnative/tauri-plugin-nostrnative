@@ -13,8 +13,8 @@ pub async fn fetch_calendar_events_core(
     pubkey: &str,
     nsec: Option<&str>,
     relays: &[String],
-    range_start: Option<i64>,
-    range_end: Option<i64>,
+    _range_start: Option<i64>,
+    _range_end: Option<i64>,
     authors: Option<Vec<String>>,
     client_nsec: Option<&str>,
     filters: Option<Vec<serde_json::Value>>,
@@ -41,67 +41,25 @@ pub async fn fetch_calendar_events_core(
     let mut final_filters = Vec::new();
 
     if let Some(custom_filters) = filters {
-        for (_i, f) in custom_filters.iter().enumerate() {
+        for f in custom_filters.iter() {
             if let Ok(filter) = serde_json::from_value::<Filter>(f.clone()) {
                 final_filters.push(filter);
-            } else {
             }
         }
-    } else {
     }
 
-    if final_filters.is_empty() {
-        let mut filter = Filter::new()
-            .kinds([Kind::from(31922), Kind::from(31923)])
-            .authors(authors_pks.clone());
-
-        if let Some(start) = range_start {
-            filter = filter.since(Timestamp::from(start as u64));
-        }
-        if let Some(end) = range_end {
-            filter = filter.until(Timestamp::from(end as u64));
-        }
-        final_filters.push(filter);
-    }
-
-    // Always add attendee filter to find events where user is invited (p-tagged)
-    let attendee_filter = Filter::new()
-        .kinds([Kind::from(31922), Kind::from(31923)])
-        .pubkey(public_key);
-    let attendee_filter = if let Some(start) = range_start {
-        attendee_filter.since(Timestamp::from(start as u64))
-    } else {
-        attendee_filter
-    };
-    let attendee_filter = if let Some(end) = range_end {
-        attendee_filter.until(Timestamp::from(end as u64))
-    } else {
-        attendee_filter
-    };
-    final_filters.push(attendee_filter);
-
+    let mut seen_ids = std::collections::HashSet::new();
     let mut all_events = Vec::new();
-    for (_i, filter) in final_filters.iter().enumerate() {
+    for filter in final_filters.iter() {
         let events = client
             .fetch_events(filter.clone(), Duration::from_secs(10))
             .await
             .map_err(|e| e.to_string())?;
-        let events_vec: Vec<Event> = events.into_iter().collect();
-        for e in &events_vec {
-            let _p_tags: Vec<String> = e
-                .tags
-                .iter()
-                .filter_map(|t: &Tag| {
-                    let v = t.as_slice();
-                    if v.first() == Some(&"p".to_string()) {
-                        v.get(1).cloned()
-                    } else {
-                        None
-                    }
-                })
-                .collect();
+        for e in events {
+            if seen_ids.insert(e.id) {
+                all_events.push(e);
+            }
         }
-        all_events.extend(events_vec);
     }
 
     let events = all_events;
@@ -135,84 +93,65 @@ pub async fn fetch_calendar_events_core(
 
         let start = start_val.unwrap_or(e.created_at.as_secs() as i64);
 
-        let mut include = true;
-        if let Some(rs) = range_start {
-            if let Some(ee) = end_val {
-                if ee < rs {
-                    include = false;
-                }
-            } else if start < rs {
-                include = false;
-            }
-        }
-        if let Some(re) = range_end
-            && start > re
-        {
-            include = false;
-        }
-
-        if include {
-            if is_private {
-                let signer = client.signer().await.map_err(|e| e.to_string())?;
-                if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await
-                    && let Ok(json_content) = serde_json::from_str::<serde_json::Value>(&decrypted)
-                {
-                    private_title = json_content["title"].as_str().map(|s| s.to_string());
-                    private_description =
-                        json_content["description"].as_str().map(|s| s.to_string());
-                }
-            }
-
-            let (final_title, final_content) = if is_private {
-                if let (Some(t), Some(d)) = (private_title, private_description) {
-                    (Some(t), d)
-                } else {
-                    (None, "Encrypted Content".to_string())
-                }
-            } else {
-                (None, e.content.to_string())
-            };
-
-            let mut response_tags = e
-                .tags
-                .iter()
-                .map(|t| t.clone().to_vec())
-                .collect::<Vec<_>>();
-
-            if let Some(t) = final_title {
-                response_tags.retain(|tag| tag.is_empty() || tag[0] != "title");
-                response_tags.push(vec!["title".to_string(), t]);
-            } else if is_private
-                && !response_tags
-                    .iter()
-                    .any(|tag| !tag.is_empty() && tag[0] == "title")
+        if is_private {
+            let signer = client.signer().await.map_err(|e| e.to_string())?;
+            if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await
+                && let Ok(json_content) = serde_json::from_str::<serde_json::Value>(&decrypted)
             {
-                response_tags.push(vec!["title".to_string(), "Private Event".to_string()]);
+                private_title = json_content["title"].as_str().map(|s| s.to_string());
+                private_description = json_content["description"].as_str().map(|s| s.to_string());
             }
-
-            // Ensure timezone tags are included in the response if they exist
-            if let Some(start_tz) = &start_tzid {
-                response_tags.retain(|tag| tag.is_empty() || tag[0] != "start_tzid");
-                response_tags.push(vec!["start_tzid".to_string(), start_tz.clone()]);
-            }
-            if let Some(end_tz) = &end_tzid {
-                response_tags.retain(|tag| tag.is_empty() || tag[0] != "end_tzid");
-                response_tags.push(vec!["end_tzid".to_string(), end_tz.clone()]);
-            }
-
-            response.push(CalendarEventResponse {
-                id: e.id.to_hex(),
-                pubkey: e.pubkey.to_hex(),
-                created_at: e.created_at.as_secs() as i64,
-                kind: e.kind.as_u16(),
-                tags: response_tags,
-                content: final_content,
-                is_private,
-                bech32: Some(get_event_bech32(&e, Some(relays.to_vec()))),
-                private_tags: None,
-                calendar_contacts: None,
-            });
         }
+
+        let (final_title, final_content) = if is_private {
+            if let (Some(t), Some(d)) = (private_title, private_description) {
+                (Some(t), d)
+            } else {
+                (None, "Encrypted Content".to_string())
+            }
+        } else {
+            (None, e.content.to_string())
+        };
+
+        let mut response_tags = e
+            .tags
+            .iter()
+            .map(|t| t.clone().to_vec())
+            .collect::<Vec<_>>();
+
+        if let Some(t) = final_title {
+            response_tags.retain(|tag| tag.is_empty() || tag[0] != "title");
+            response_tags.push(vec!["title".to_string(), t]);
+        } else if is_private
+            && !response_tags
+                .iter()
+                .any(|tag| !tag.is_empty() && tag[0] == "title")
+        {
+            response_tags.push(vec!["title".to_string(), "Private Event".to_string()]);
+        }
+
+        // Ensure timezone tags are included in the response if they exist
+        if let Some(start_tz) = &start_tzid {
+            response_tags.retain(|tag| tag.is_empty() || tag[0] != "start_tzid");
+            response_tags.push(vec!["start_tzid".to_string(), start_tz.clone()]);
+        }
+        if let Some(end_tz) = &end_tzid {
+            response_tags.retain(|tag| tag.is_empty() || tag[0] != "end_tzid");
+            response_tags.push(vec!["end_tzid".to_string(), end_tz.clone()]);
+        }
+
+        response.push(CalendarEventResponse {
+            id: e.id.to_hex(),
+            pubkey: e.pubkey.to_hex(),
+            created_at: e.created_at.as_secs() as i64,
+            kind: e.kind.as_u16(),
+            tags: response_tags,
+            content: final_content,
+            is_private,
+            bech32: Some(get_event_bech32(&e, Some(relays.to_vec()))),
+            private_tags: None,
+            calendar_contacts: None,
+        });
     }
 
     Ok(response)
@@ -236,14 +175,25 @@ pub async fn publish_batch_calendar_events_core(
             Kind::from(31923)
         };
 
+        // For date-based events (kind 31922), use YYYY-MM-DD strings per NIP-52
+        let start_tag_value = if event_data.is_all_day {
+            event_data
+                .start_date
+                .clone()
+                .unwrap_or_else(|| event_data.start.to_string())
+        } else {
+            event_data.start.to_string()
+        };
+
         let mut tags = vec![
             Tag::identifier(&event_data.identifier),
             Tag::custom(
                 TagKind::Custom(Cow::Borrowed("start")),
-                vec![event_data.start.to_string()],
+                vec![start_tag_value],
             ),
         ];
 
+        println!("{:?}", event_data);
         let content = if event_data.is_private.unwrap_or(false) {
             tags.push(Tag::custom(
                 TagKind::Custom(Cow::Borrowed("private")),
@@ -271,7 +221,15 @@ pub async fn publish_batch_calendar_events_core(
             event_data.description.clone().unwrap_or_default()
         };
 
-        if let Some(end) = event_data.end {
+        // For date-based events (kind 31922), use YYYY-MM-DD strings per NIP-52
+        if event_data.is_all_day {
+            if let Some(end_date) = &event_data.end_date {
+                tags.push(Tag::custom(
+                    TagKind::Custom(Cow::Borrowed("end")),
+                    vec![end_date.clone()],
+                ));
+            }
+        } else if let Some(end) = event_data.end {
             tags.push(Tag::custom(
                 TagKind::Custom(Cow::Borrowed("end")),
                 vec![end.to_string()],
