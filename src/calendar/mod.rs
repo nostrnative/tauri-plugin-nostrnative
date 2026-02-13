@@ -221,7 +221,26 @@ pub async fn publish_batch_calendar_events_core(
             ),
         ];
 
-        // println!("{:?}", event_data);
+        // For time-based events (kind 31923), add uppercase D tag(s) per NIP-52
+        // for day-granularity calendar queries: floor(unix_seconds / 86400)
+        if !event_data.is_all_day {
+            let start_day = event_data.start / 86400;
+            tags.push(Tag::custom(
+                TagKind::Custom(Cow::Borrowed("D")),
+                vec![start_day.to_string()],
+            ));
+
+            // For multi-day events, add D tag for the end day too
+            if let Some(end_ts) = event_data.end {
+                let end_day = end_ts / 86400;
+                if end_day != start_day {
+                    tags.push(Tag::custom(
+                        TagKind::Custom(Cow::Borrowed("D")),
+                        vec![end_day.to_string()],
+                    ));
+                }
+            }
+        }
         let content = if event_data.is_private.unwrap_or(false) {
             tags.push(Tag::custom(
                 TagKind::Custom(Cow::Borrowed("private")),
