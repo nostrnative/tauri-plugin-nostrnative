@@ -320,6 +320,8 @@ export async function publishRsvp(
   status: string,
   eventAuthor?: string,
   clientNsec?: string,
+  fb?: string,
+  content?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|publish_rsvp", {
     nsec,
@@ -328,6 +330,8 @@ export async function publishRsvp(
     status,
     eventAuthor,
     clientNsec,
+    fb,
+    content,
   });
 }
 

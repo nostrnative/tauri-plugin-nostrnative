@@ -121,6 +121,8 @@ pub async fn publish_rsvp_core(
     status: String,
     event_author: Option<String>,
     client_nsec: Option<&str>,
+    fb: Option<String>,
+    content: Option<String>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
 
@@ -140,8 +142,18 @@ pub async fn publish_rsvp_core(
 
     tags.push(Tag::custom(
         TagKind::Custom(Cow::Borrowed("status")),
-        vec![status],
+        vec![status.clone()],
     ));
+
+    // NIP-52: fb tag should be omitted when status is "declined"
+    if let Some(ref fb_value) = fb {
+        if status != "declined" {
+            tags.push(Tag::custom(
+                TagKind::Custom(Cow::Borrowed("fb")),
+                vec![fb_value.clone()],
+            ));
+        }
+    }
 
     if let Some(author) = event_author {
         tags.push(Tag::custom(
@@ -153,7 +165,8 @@ pub async fn publish_rsvp_core(
     let identifier = Keys::generate().public_key().to_hex();
     tags.push(Tag::identifier(identifier));
 
-    let event_builder = EventBuilder::new(Kind::from(31925), "").tags(tags);
+    let event_content = content.unwrap_or_default();
+    let event_builder = EventBuilder::new(Kind::from(31925), event_content).tags(tags);
 
     let event_id = client
         .send_event_builder(event_builder)

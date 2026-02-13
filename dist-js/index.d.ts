@@ -123,7 +123,7 @@ export declare function publishCalendarContactList(nsec: string, relays: string[
 export declare function fetchRsvps(eventCoordinate: string, relays: string[]): Promise<EventResponse[]>;
 export declare function fetchUserRsvps(pubkey: string, relays: string[]): Promise<EventResponse[]>;
 export declare function fetchReceivedRsvps(pubkey: string, relays: string[]): Promise<EventResponse[]>;
-export declare function publishRsvp(nsec: string, relays: string[], eventCoordinate: string, status: string, eventAuthor?: string, clientNsec?: string): Promise<string>;
+export declare function publishRsvp(nsec: string, relays: string[], eventCoordinate: string, status: string, eventAuthor?: string, clientNsec?: string, fb?: string, content?: string): Promise<string>;
 export declare function fetchProfiles(pubkeys: string[], relays: string[]): Promise<UserProfile[]>;
 export declare function fetchContactList(pubkey: string, relays: string[]): Promise<Contact[]>;
 export declare function updateContactList(nsec: string, relays: string[], contacts: Contact[], clientNsec?: string): Promise<string>;

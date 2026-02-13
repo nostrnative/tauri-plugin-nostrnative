@@ -128,7 +128,7 @@ async function fetchReceivedRsvps(pubkey, relays) {
         relays,
     });
 }
-async function publishRsvp(nsec, relays, eventCoordinate, status, eventAuthor, clientNsec) {
+async function publishRsvp(nsec, relays, eventCoordinate, status, eventAuthor, clientNsec, fb, content) {
     return await core.invoke("plugin:nostrnative|publish_rsvp", {
         nsec,
         relays,
@@ -136,6 +136,8 @@ async function publishRsvp(nsec, relays, eventCoordinate, status, eventAuthor, c
         status,
         eventAuthor,
         clientNsec,
+        fb,
+        content,
     });
 }
 // Profile

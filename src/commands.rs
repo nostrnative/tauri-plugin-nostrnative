@@ -267,6 +267,8 @@ pub async fn publish_rsvp(
     status: String,
     event_author: Option<String>,
     client_nsec: Option<String>,
+    fb: Option<String>,
+    content: Option<String>,
 ) -> Result<String, String> {
     calendar::rsvp::publish_rsvp_core(
         &nsec,
@@ -275,6 +277,8 @@ pub async fn publish_rsvp(
         status,
         event_author,
         client_nsec.as_deref(),
+        fb,
+        content,
     )
     .await
 }
