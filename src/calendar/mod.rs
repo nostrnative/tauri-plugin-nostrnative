@@ -2,7 +2,6 @@ pub mod calendar_sync;
 pub mod rsvp;
 
 use nostr_sdk::prelude::*;
-use serde_json::json;
 use std::borrow::Cow;
 use std::time::Duration;
 
@@ -66,8 +65,6 @@ pub async fn fetch_calendar_events_core(
 
     let mut response = Vec::new();
     for e in events {
-        let mut start_val: Option<i64> = None;
-        let mut end_val: Option<i64> = None;
         let mut is_private = false;
         let mut private_title: Option<String> = None;
         let mut private_description: Option<String> = None;
@@ -78,11 +75,7 @@ pub async fn fetch_calendar_events_core(
         for tag in e.tags.iter() {
             let t = tag.clone().to_vec();
             if t.len() >= 2 {
-                if t[0] == "start" {
-                    start_val = t[1].parse::<i64>().ok();
-                } else if t[0] == "end" {
-                    end_val = t[1].parse::<i64>().ok();
-                } else if t[0] == "private" {
+                if t[0] == "private" {
                     is_private = true;
                 } else if t[0] == "start_tzid" {
                     start_tzid = Some(t[1].clone());
@@ -95,7 +88,7 @@ pub async fn fetch_calendar_events_core(
         if is_private {
             let signer = client.signer().await.map_err(|e| e.to_string())?;
 
-            // Decrypt title from the title tag
+            // Decrypt title from the title tag (new format)
             for tag in e.tags.iter() {
                 let t = tag.clone().to_vec();
                 if t.len() >= 2 && t[0] == "title" {
@@ -106,7 +99,7 @@ pub async fn fetch_calendar_events_core(
                 }
             }
 
-            // Decrypt location from the location tag
+            // Decrypt location from the location tag (new format)
             for tag in e.tags.iter() {
                 let t = tag.clone().to_vec();
                 if t.len() >= 2 && t[0] == "location" && !t[1].is_empty() {
@@ -117,11 +110,22 @@ pub async fn fetch_calendar_events_core(
                 }
             }
 
-            // Decrypt description from content
+            // Decrypt content
             if !e.content.is_empty() {
-                if let Ok(decrypted_desc) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
-                    // Trim because empty descriptions are encrypted as " " (NIP-44 requires non-empty plaintext)
-                    private_description = Some(decrypted_desc.trim().to_string());
+                if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
+                    let trimmed = decrypted.trim().to_string();
+                    // Old format: content was a JSON payload with "title" and "description"
+                    if let Ok(json_content) = serde_json::from_str::<serde_json::Value>(&trimmed) {
+                        if let Some(title) = json_content["title"].as_str() {
+                            private_title = Some(title.to_string());
+                        }
+                        if let Some(desc) = json_content["description"].as_str() {
+                            private_description = Some(desc.to_string());
+                        }
+                    } else {
+                        // New format: content is just the encrypted description
+                        private_description = Some(trimmed);
+                    }
                 }
             } else {
                 private_description = Some(String::new());
@@ -177,9 +181,6 @@ pub async fn fetch_calendar_events_core(
             private_tags: None,
             calendar_contacts: None,
         });
-        if is_private {
-            println!("{:?} ", response);
-        }
     }
 
     Ok(response)
@@ -429,7 +430,6 @@ pub async fn publish_batch_calendar_events_core(
             ));
         }
 
-        // println!("{:?}", event_data);
         match client.send_event_builder(event_builder).await {
             Ok(id) => event_ids.push(id.to_hex()),
             Err(e) => return Err(format!("Failed to publish event: {e}")),
