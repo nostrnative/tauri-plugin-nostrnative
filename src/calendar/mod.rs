@@ -71,6 +71,7 @@ pub async fn fetch_calendar_events_core(
         let mut is_private = false;
         let mut private_title: Option<String> = None;
         let mut private_description: Option<String> = None;
+        let mut private_location: Option<String> = None;
         let mut start_tzid: Option<String> = None;
         let mut end_tzid: Option<String> = None;
 
@@ -91,15 +92,39 @@ pub async fn fetch_calendar_events_core(
             }
         }
 
-        let start = start_val.unwrap_or(e.created_at.as_secs() as i64);
-
         if is_private {
             let signer = client.signer().await.map_err(|e| e.to_string())?;
-            if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await
-                && let Ok(json_content) = serde_json::from_str::<serde_json::Value>(&decrypted)
-            {
-                private_title = json_content["title"].as_str().map(|s| s.to_string());
-                private_description = json_content["description"].as_str().map(|s| s.to_string());
+
+            // Decrypt title from the title tag
+            for tag in e.tags.iter() {
+                let t = tag.clone().to_vec();
+                if t.len() >= 2 && t[0] == "title" {
+                    if let Ok(decrypted_title) = signer.nip44_decrypt(&e.pubkey, &t[1]).await {
+                        private_title = Some(decrypted_title.trim().to_string());
+                    }
+                    break;
+                }
+            }
+
+            // Decrypt location from the location tag
+            for tag in e.tags.iter() {
+                let t = tag.clone().to_vec();
+                if t.len() >= 2 && t[0] == "location" && !t[1].is_empty() {
+                    if let Ok(decrypted_loc) = signer.nip44_decrypt(&e.pubkey, &t[1]).await {
+                        private_location = Some(decrypted_loc);
+                    }
+                    break;
+                }
+            }
+
+            // Decrypt description from content
+            if !e.content.is_empty() {
+                if let Ok(decrypted_desc) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
+                    // Trim because empty descriptions are encrypted as " " (NIP-44 requires non-empty plaintext)
+                    private_description = Some(decrypted_desc.trim().to_string());
+                }
+            } else {
+                private_description = Some(String::new());
             }
         }
 
@@ -122,12 +147,12 @@ pub async fn fetch_calendar_events_core(
         if let Some(t) = final_title {
             response_tags.retain(|tag| tag.is_empty() || tag[0] != "title");
             response_tags.push(vec!["title".to_string(), t]);
-        } else if is_private
-            && !response_tags
-                .iter()
-                .any(|tag| !tag.is_empty() && tag[0] == "title")
-        {
-            response_tags.push(vec!["title".to_string(), "Private Event".to_string()]);
+        }
+
+        // Replace encrypted location with decrypted value
+        if let Some(loc) = private_location {
+            response_tags.retain(|tag| tag.is_empty() || tag[0] != "location");
+            response_tags.push(vec!["location".to_string(), loc]);
         }
 
         // Ensure timezone tags are included in the response if they exist
@@ -152,6 +177,9 @@ pub async fn fetch_calendar_events_core(
             private_tags: None,
             calendar_contacts: None,
         });
+        if is_private {
+            println!("{:?} ", response);
+        }
     }
 
     Ok(response)
@@ -193,26 +221,43 @@ pub async fn publish_batch_calendar_events_core(
             ),
         ];
 
-        println!("{:?}", event_data);
+        // println!("{:?}", event_data);
         let content = if event_data.is_private.unwrap_or(false) {
             tags.push(Tag::custom(
                 TagKind::Custom(Cow::Borrowed("private")),
                 vec!["true".to_string()],
             ));
 
-            let payload = json!({
-                "title": event_data.title,
-                "description": event_data.description.clone().unwrap_or_default()
-            });
-
             let signer = client.signer().await.map_err(|e| e.to_string())?;
-            match signer
-                .nip44_encrypt(&my_public_key, &payload.to_string())
+
+            // Encrypt title and store in tag
+            // NIP-44 requires non-empty plaintext, so use a single space as fallback
+            let title_to_encrypt = if event_data.title.is_empty() {
+                " ".to_string()
+            } else {
+                event_data.title.clone()
+            };
+            let encrypted_title = signer
+                .nip44_encrypt(&my_public_key, &title_to_encrypt)
                 .await
-            {
-                Ok(c) => c,
-                Err(e) => return Err(format!("Failed to encrypt event: {e}")),
-            }
+                .map_err(|e| format!("Failed to encrypt title: {e}"))?;
+            tags.push(Tag::custom(
+                TagKind::Custom(Cow::Borrowed("title")),
+                vec![encrypted_title],
+            ));
+
+            // Encrypt description and store in content
+            // NIP-44 requires non-empty plaintext, so use a single space as fallback
+            let description = event_data.description.clone().unwrap_or_default();
+            let description_to_encrypt = if description.is_empty() {
+                " ".to_string()
+            } else {
+                description
+            };
+            signer
+                .nip44_encrypt(&my_public_key, &description_to_encrypt)
+                .await
+                .map_err(|e| format!("Failed to encrypt description: {e}"))?
         } else {
             tags.push(Tag::custom(
                 TagKind::Custom(Cow::Borrowed("title")),
@@ -236,12 +281,26 @@ pub async fn publish_batch_calendar_events_core(
             ));
         }
 
-        if let Some(loc) = &event_data.location {
-            tags.push(Tag::custom(
-                TagKind::Custom(Cow::Borrowed("location")),
-                vec![loc.clone()],
-            ));
-        }
+        let location = if event_data.is_private.unwrap_or(false) {
+            let loc = event_data.location.clone().unwrap_or_default();
+            if loc.is_empty() {
+                // Skip encryption for empty location — just store empty string
+                String::new()
+            } else {
+                let signer = client.signer().await.map_err(|e| e.to_string())?;
+                signer
+                    .nip44_encrypt(&my_public_key, &loc)
+                    .await
+                    .map_err(|e| format!("Failed to encrypt location: {e}"))?
+            }
+        } else {
+            event_data.location.clone().unwrap_or_default()
+        };
+
+        tags.push(Tag::custom(
+            TagKind::Custom(Cow::Borrowed("location")),
+            vec![location],
+        ));
 
         if let Some(reminder) = event_data.reminder_minutes
             && reminder > 0
@@ -351,6 +410,7 @@ pub async fn publish_batch_calendar_events_core(
             ));
         }
 
+        // println!("{:?}", event_data);
         match client.send_event_builder(event_builder).await {
             Ok(id) => event_ids.push(id.to_hex()),
             Err(e) => return Err(format!("Failed to publish event: {e}")),
