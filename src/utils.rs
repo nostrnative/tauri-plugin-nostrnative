@@ -1,4 +1,4 @@
-use nostr_connect::client::NostrConnect;
+use nostr_connect::prelude::*;
 use nostr_sdk::prelude::*;
 use std::time::Duration;
 
@@ -61,9 +61,9 @@ pub async fn get_client_with_signer(
         } else {
             Keys::generate()
         };
-        let signer = NostrConnect::new(uri, app_keys, Duration::from_secs(60), None)
+        let signer = NostrConnect::new(uri, app_keys, Duration::from_secs(120), None)
             .map_err(|e| e.to_string())?;
-        Client::new(signer)
+        Client::builder().signer(signer).build()
     } else {
         let keys = Keys::parse(signer_str).map_err(|e| e.to_string())?;
         Client::new(keys)

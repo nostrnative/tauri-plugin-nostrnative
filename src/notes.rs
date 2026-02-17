@@ -43,23 +43,18 @@ pub async fn create_note_core(
         )
     });
 
-    // Encrypt content (NIP-44)
+    // Encrypt content (NIP-44) via signer (supports both local keys and bunker)
     let content_json = serde_json::json!({
         "content": note.content,
         "group_id": note.group_id
     })
     .to_string();
 
-    // Using NIP-44 v2 encryption to self
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-
-    let encrypted_content = nip44::encrypt(
-        keys.secret_key(),
-        &public_key,
-        content_json,
-        nip44::Version::V2,
-    )
-    .map_err(|e| e.to_string())?;
+    let signer = client.signer().await.map_err(|e| e.to_string())?;
+    let encrypted_content = signer
+        .nip44_encrypt(&public_key, &content_json)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let tags = vec![
         Tag::parse(["d", &identifier]).map_err(|e| e.to_string())?,
@@ -96,22 +91,18 @@ pub async fn update_note_core(
         .await
         .unwrap();
 
-    // Encrypt content (NIP-44)
+    // Encrypt content (NIP-44) via signer (supports both local keys and bunker)
     let content_json = serde_json::json!({
         "content": note.content,
         "group_id": note.group_id
     })
     .to_string();
 
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-
-    let encrypted_content = nip44::encrypt(
-        keys.secret_key(),
-        &public_key,
-        content_json,
-        nip44::Version::V2,
-    )
-    .map_err(|e| e.to_string())?;
+    let signer = client.signer().await.map_err(|e| e.to_string())?;
+    let encrypted_content = signer
+        .nip44_encrypt(&public_key, &content_json)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let tags = vec![
         Tag::parse(["d", &identifier]).map_err(|e| e.to_string())?,
@@ -175,30 +166,25 @@ pub async fn fetch_notes_core(
         .await
         .map_err(|e| e.to_string())?;
 
-    let keys = if let Some(ns) = nsec {
-        Some(Keys::parse(ns).map_err(|e| e.to_string())?)
-    } else {
-        None
-    };
-
     let mut responses: Vec<EventResponse> = Vec::new();
 
     for e in events {
         let mut content = e.content.to_string();
         let mut group_id = None;
 
-        if let Some(k) = &keys
-            && let Ok(decrypted) = nip44::decrypt(k.secret_key(), &e.pubkey, &e.content)
-        {
-            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&decrypted) {
-                if let Some(c) = json.get("content").and_then(|v| v.as_str()) {
-                    content = c.to_string();
+        if nsec.is_some() {
+            let signer = client.signer().await.map_err(|e| e.to_string())?;
+            if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
+                if let Ok(json) = serde_json::from_str::<serde_json::Value>(&decrypted) {
+                    if let Some(c) = json.get("content").and_then(|v| v.as_str()) {
+                        content = c.to_string();
+                    }
+                    if let Some(g) = json.get("group_id").and_then(|v| v.as_str()) {
+                        group_id = Some(g.to_string());
+                    }
+                } else {
+                    content = decrypted;
                 }
-                if let Some(g) = json.get("group_id").and_then(|v| v.as_str()) {
-                    group_id = Some(g.to_string());
-                }
-            } else {
-                content = decrypted;
             }
         }
 
@@ -270,10 +256,11 @@ pub async fn create_notebook_core(
         tags.push(Tag::parse(["description", &desc]).map_err(|e| e.to_string())?);
     }
 
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
-    let encrypted_content =
-        nip44::encrypt(keys.secret_key(), &public_key, "[]", nip44::Version::V2)
-            .map_err(|e| e.to_string())?;
+    let signer = client.signer().await.map_err(|e| e.to_string())?;
+    let encrypted_content = signer
+        .nip44_encrypt(&public_key, "[]")
+        .await
+        .map_err(|e| e.to_string())?;
 
     let builder = EventBuilder::new(Kind::from(31301), encrypted_content).tags(tags);
     let id = client
@@ -311,11 +298,9 @@ pub async fn fetch_notebooks_core(
 
     for e in events {
         let mut private_tags = None;
-        if !e.content.is_empty()
-            && let Some(n) = nsec
-        {
-            let keys = Keys::parse(n).map_err(|e| e.to_string())?;
-            if let Ok(decrypted) = nip44::decrypt(keys.secret_key(), &e.pubkey, &e.content)
+        if !e.content.is_empty() && nsec.is_some() {
+            let signer = client.signer().await.map_err(|e| e.to_string())?;
+            if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await
                 && let Ok(ptags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted)
             {
                 private_tags = Some(ptags);
@@ -368,12 +353,12 @@ pub async fn add_note_to_notebook_core(
 
     let event = events.first().ok_or("Notebook not found")?;
 
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
+    let signer = client.signer().await.map_err(|e| e.to_string())?;
 
     let mut current_tags: Vec<Vec<String>> = Vec::new();
 
     if !event.content.is_empty()
-        && let Ok(decrypted) = nip44::decrypt(keys.secret_key(), &event.pubkey, &event.content)
+        && let Ok(decrypted) = signer.nip44_decrypt(&event.pubkey, &event.content).await
         && let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted)
     {
         current_tags = tags;
@@ -391,9 +376,10 @@ pub async fn add_note_to_notebook_core(
     current_tags.push(vec!["a".to_string(), coordinate]);
 
     let json = serde_json::to_string(&current_tags).map_err(|e| e.to_string())?;
-    let encrypted_content =
-        nip44::encrypt(keys.secret_key(), &event.pubkey, json, nip44::Version::V2)
-            .map_err(|e| e.to_string())?;
+    let encrypted_content = signer
+        .nip44_encrypt(&event.pubkey, &json)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let builder = EventBuilder::new(Kind::from(31301), encrypted_content).tags(event.tags.clone());
     let id = client
@@ -432,12 +418,12 @@ pub async fn remove_note_from_notebook_core(
         .map_err(|e| e.to_string())?;
 
     let event = events.first().ok_or("Notebook not found")?;
-    let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
+    let signer = client.signer().await.map_err(|e| e.to_string())?;
 
     let mut current_tags: Vec<Vec<String>> = Vec::new();
 
     if !event.content.is_empty()
-        && let Ok(decrypted) = nip44::decrypt(keys.secret_key(), &event.pubkey, &event.content)
+        && let Ok(decrypted) = signer.nip44_decrypt(&event.pubkey, &event.content).await
         && let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted)
     {
         current_tags = tags;
@@ -452,9 +438,10 @@ pub async fn remove_note_from_notebook_core(
     }
 
     let json = serde_json::to_string(&current_tags).map_err(|e| e.to_string())?;
-    let encrypted_content =
-        nip44::encrypt(keys.secret_key(), &event.pubkey, json, nip44::Version::V2)
-            .map_err(|e| e.to_string())?;
+    let encrypted_content = signer
+        .nip44_encrypt(&event.pubkey, &json)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let builder = EventBuilder::new(Kind::from(31301), encrypted_content).tags(event.tags.clone());
     let id = client
