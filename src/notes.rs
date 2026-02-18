@@ -25,13 +25,7 @@ pub async fn create_note_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let public_key = client
-        .signer()
-        .await
-        .unwrap()
-        .get_public_key()
-        .await
-        .unwrap();
+    let public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let identifier = note.identifier.unwrap_or_else(|| {
         format!(
@@ -83,13 +77,7 @@ pub async fn update_note_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let public_key = client
-        .signer()
-        .await
-        .unwrap()
-        .get_public_key()
-        .await
-        .unwrap();
+    let public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     // Encrypt content (NIP-44) via signer (supports both local keys and bunker)
     let content_json = serde_json::json!({
@@ -230,13 +218,7 @@ pub async fn create_notebook_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let public_key = client
-        .signer()
-        .await
-        .unwrap()
-        .get_public_key()
-        .await
-        .unwrap();
+    let public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let identifier = format!(
         "notebook_{}",
@@ -332,13 +314,7 @@ pub async fn add_note_to_notebook_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = client
-        .signer()
-        .await
-        .unwrap()
-        .get_public_key()
-        .await
-        .unwrap();
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let filter = Filter::new()
         .authors(vec![my_public_key])
@@ -398,13 +374,7 @@ pub async fn remove_note_from_notebook_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = client
-        .signer()
-        .await
-        .unwrap()
-        .get_public_key()
-        .await
-        .unwrap();
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let filter = Filter::new()
         .authors(vec![my_public_key])
@@ -459,13 +429,7 @@ pub async fn delete_notebook_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let public_key = client
-        .signer()
-        .await
-        .unwrap()
-        .get_public_key()
-        .await
-        .unwrap();
+    let public_key = client.public_key().await.map_err(|e| e.to_string())?;
     let coordinate = format!("{}:{}:{}", 31301, public_key.to_hex(), notebook_id);
 
     let tags = vec![Tag::parse(["a", &coordinate]).map_err(|e| e.to_string())?];

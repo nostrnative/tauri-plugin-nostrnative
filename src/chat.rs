@@ -1,5 +1,5 @@
 use crate::models::{ChatMessageRequest, EventResponse, PnsDerivedKeys};
-use crate::utils::{get_client, get_event_bech32, get_public_key_from_signer};
+use crate::utils::{get_client, get_event_bech32};
 use ::hkdf::Hkdf;
 use nostr_sdk::prelude::*;
 use sha2::Sha256;
@@ -45,7 +45,7 @@ pub async fn create_discovery_event_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let signer = client.signer().await.map_err(|e| e.to_string())?;
     let encrypted_content = signer
@@ -69,7 +69,7 @@ pub async fn decrypt_discovery_event_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, &[], client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let signer = client.signer().await.map_err(|e| e.to_string())?;
     if content.contains("?iv=")
@@ -92,7 +92,7 @@ pub async fn publish_chat_message_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(pns_nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(pns_nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let mut inner_tags = vec![
         vec!["d".to_string(), msg.conversation_id],
@@ -151,7 +151,7 @@ pub async fn decrypt_pns_event_core(
     client_nsec: Option<&str>,
 ) -> Result<serde_json::Value, String> {
     let client = crate::utils::get_client_with_signer(pns_nsec, &[], client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(pns_nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let signer = client.signer().await.map_err(|e| e.to_string())?;
     let decrypted = signer

@@ -95,7 +95,9 @@ export declare function hexToNpub(hex: string): Promise<string>;
 export declare function npubToHex(npub: string): Promise<string>;
 export declare function generateNewNsec(): Promise<string>;
 export declare function parsePubkey(pubkey: string): Promise<string>;
-export declare function verifyNsec(nsec: string): Promise<string>;
+export declare function verifyNsec(nsec: string, options?: {
+    clientNsec?: string;
+}): Promise<string>;
 export declare function fetchCalendarEvents(pubkey: string, relays: string[], options?: {
     nsec?: string;
     rangeStart?: number;
@@ -120,6 +122,18 @@ export declare function fetchCalendarContactLists(pubkey: string, relays: string
     clientNsec?: string;
 }): Promise<EventResponse[]>;
 export declare function publishCalendarContactList(nsec: string, relays: string[], request: CalendarContactListRequest, clientNsec?: string): Promise<string>;
+export declare function decryptPrivateEvents(nsec: string, relays: string[], events: Array<{
+    id: string;
+    pubkey: string;
+    encrypted_title?: string;
+    encrypted_content?: string;
+    encrypted_location?: string;
+}>, clientNsec?: string): Promise<Array<{
+    id: string;
+    title?: string;
+    description?: string;
+    location?: string;
+}>>;
 export declare function fetchRsvps(eventCoordinate: string, relays: string[]): Promise<EventResponse[]>;
 export declare function fetchUserRsvps(pubkey: string, relays: string[]): Promise<EventResponse[]>;
 export declare function fetchReceivedRsvps(pubkey: string, relays: string[]): Promise<EventResponse[]>;

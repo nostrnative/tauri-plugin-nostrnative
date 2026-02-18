@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::time::Duration;
 
 use crate::models::{EventResponse, NFPCycleRequest, NFPObservationRequest, NFPSettingsRequest};
-use crate::utils::{get_client, get_event_bech32, get_public_key_from_signer, parse_public_key};
+use crate::utils::{get_client, get_event_bech32, parse_public_key};
 
 // Custom NFP event kinds
 pub const NFP_OBSERVATION_KIND: u16 = 31103; // Daily observations
@@ -79,7 +79,7 @@ pub async fn publish_nfp_observation_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     // Create tags
     let mut tags = vec![
@@ -136,7 +136,7 @@ pub async fn update_nfp_observation_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
     let target_id = EventId::from_hex(event_id).map_err(|e| e.to_string())?;
 
     // Create tags
@@ -247,7 +247,7 @@ pub async fn publish_nfp_cycle_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     // Create tags
     let mut tags = vec![
@@ -363,7 +363,7 @@ pub async fn publish_nfp_settings_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     // Create tags
     let mut tags = vec![
@@ -453,7 +453,7 @@ pub async fn update_nfp_cycle_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
     let target_id = EventId::from_hex(event_id).map_err(|e| e.to_string())?;
 
     let mut tags = vec![
@@ -518,7 +518,7 @@ pub async fn update_nfp_settings_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
     let target_id = EventId::from_hex(event_id).map_err(|e| e.to_string())?;
 
     let mut tags = vec![

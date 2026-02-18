@@ -447,6 +447,32 @@ Denies the decrypt_pns_event command without any pre-configured scope.
 <tr>
 <td>
 
+`nostrnative:allow-decrypt-private-events`
+
+</td>
+<td>
+
+Enables the decrypt_private_events command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-decrypt-private-events`
+
+</td>
+<td>
+
+Denies the decrypt_private_events command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-delete-calendar`
 
 </td>

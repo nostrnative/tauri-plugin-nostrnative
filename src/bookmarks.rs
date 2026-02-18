@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::time::Duration;
 
 use crate::models::{BookmarkSource, EventResponse};
-use crate::utils::{get_client, get_event_bech32, get_public_key_from_signer, parse_public_key};
+use crate::utils::{get_client, get_event_bech32, parse_public_key};
 
 pub async fn fetch_bookmarks_core(
     pubkey: &str,
@@ -215,7 +215,7 @@ pub async fn save_bookmark_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let filter = Filter::new()
         .authors(vec![my_public_key])
@@ -321,7 +321,7 @@ pub async fn remove_bookmark_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let filter = Filter::new()
         .authors(vec![my_public_key])

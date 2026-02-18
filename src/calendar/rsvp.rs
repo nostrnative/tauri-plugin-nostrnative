@@ -114,6 +114,7 @@ pub async fn fetch_received_rsvps_core(
     Ok(response)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn publish_rsvp_core(
     nsec: &str,
     relays: &[String],
@@ -146,13 +147,13 @@ pub async fn publish_rsvp_core(
     ));
 
     // NIP-52: fb tag should be omitted when status is "declined"
-    if let Some(ref fb_value) = fb {
-        if status != "declined" {
-            tags.push(Tag::custom(
-                TagKind::Custom(Cow::Borrowed("fb")),
-                vec![fb_value.clone()],
-            ));
-        }
+    if let Some(ref fb_value) = fb
+        && status != "declined"
+    {
+        tags.push(Tag::custom(
+            TagKind::Custom(Cow::Borrowed("fb")),
+            vec![fb_value.clone()],
+        ));
     }
 
     if let Some(author) = event_author {

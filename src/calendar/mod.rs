@@ -5,9 +5,13 @@ use nostr_sdk::prelude::*;
 use std::borrow::Cow;
 use std::time::Duration;
 
-use crate::models::{CalendarEventRequest, CalendarEventResponse, CalendarRequest};
-use crate::utils::{get_client, get_event_bech32, get_public_key_from_signer, parse_public_key};
+use crate::models::{
+    CalendarEventRequest, CalendarEventResponse, CalendarRequest, DecryptEventRequest,
+    DecryptedEventFields,
+};
+use crate::utils::{get_client, get_event_bech32, parse_public_key};
 
+#[allow(clippy::too_many_arguments)]
 pub async fn fetch_calendar_events_core(
     pubkey: &str,
     nsec: Option<&str>,
@@ -66,9 +70,6 @@ pub async fn fetch_calendar_events_core(
     let mut response = Vec::new();
     for e in events {
         let mut is_private = false;
-        let mut private_title: Option<String> = None;
-        let mut private_description: Option<String> = None;
-        let mut private_location: Option<String> = None;
         let mut start_tzid: Option<String> = None;
         let mut end_tzid: Option<String> = None;
 
@@ -85,79 +86,15 @@ pub async fn fetch_calendar_events_core(
             }
         }
 
-        if is_private {
-            let signer = client.signer().await.map_err(|e| e.to_string())?;
-
-            // Decrypt title from the title tag (new format)
-            for tag in e.tags.iter() {
-                let t = tag.clone().to_vec();
-                if t.len() >= 2 && t[0] == "title" {
-                    if let Ok(decrypted_title) = signer.nip44_decrypt(&e.pubkey, &t[1]).await {
-                        private_title = Some(decrypted_title.trim().to_string());
-                    }
-                    break;
-                }
-            }
-
-            // Decrypt location from the location tag (new format)
-            for tag in e.tags.iter() {
-                let t = tag.clone().to_vec();
-                if t.len() >= 2 && t[0] == "location" && !t[1].is_empty() {
-                    if let Ok(decrypted_loc) = signer.nip44_decrypt(&e.pubkey, &t[1]).await {
-                        private_location = Some(decrypted_loc);
-                    }
-                    break;
-                }
-            }
-
-            // Decrypt content
-            if !e.content.is_empty() {
-                if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
-                    let trimmed = decrypted.trim().to_string();
-                    // Old format: content was a JSON payload with "title" and "description"
-                    if let Ok(json_content) = serde_json::from_str::<serde_json::Value>(&trimmed) {
-                        if let Some(title) = json_content["title"].as_str() {
-                            private_title = Some(title.to_string());
-                        }
-                        if let Some(desc) = json_content["description"].as_str() {
-                            private_description = Some(desc.to_string());
-                        }
-                    } else {
-                        // New format: content is just the encrypted description
-                        private_description = Some(trimmed);
-                    }
-                }
-            } else {
-                private_description = Some(String::new());
-            }
-        }
-
-        let (final_title, final_content) = if is_private {
-            if let (Some(t), Some(d)) = (private_title, private_description) {
-                (Some(t), d)
-            } else {
-                (None, "Encrypted Content".to_string())
-            }
-        } else {
-            (None, e.content.to_string())
-        };
+        // For private events, pass through raw encrypted data as-is (no decryption).
+        // Decryption happens later via decrypt_private_events_core.
+        let final_content = e.content.to_string();
 
         let mut response_tags = e
             .tags
             .iter()
             .map(|t| t.clone().to_vec())
             .collect::<Vec<_>>();
-
-        if let Some(t) = final_title {
-            response_tags.retain(|tag| tag.is_empty() || tag[0] != "title");
-            response_tags.push(vec!["title".to_string(), t]);
-        }
-
-        // Replace encrypted location with decrypted value
-        if let Some(loc) = private_location {
-            response_tags.retain(|tag| tag.is_empty() || tag[0] != "location");
-            response_tags.push(vec!["location".to_string(), loc]);
-        }
 
         // Ensure timezone tags are included in the response if they exist
         if let Some(start_tz) = &start_tzid {
@@ -193,7 +130,7 @@ pub async fn publish_batch_calendar_events_core(
     client_nsec: Option<&str>,
 ) -> Result<Vec<String>, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let mut event_ids = Vec::new();
 
@@ -257,10 +194,18 @@ pub async fn publish_batch_calendar_events_core(
             } else {
                 event_data.title.clone()
             };
+            eprintln!(
+                "[bunker] nip44_encrypt title, pubkey={}",
+                my_public_key.to_hex()
+            );
             let encrypted_title = signer
                 .nip44_encrypt(&my_public_key, &title_to_encrypt)
                 .await
-                .map_err(|e| format!("Failed to encrypt title: {e}"))?;
+                .map_err(|e| {
+                    eprintln!("[bunker] nip44_encrypt title FAILED: {e}");
+                    format!("Failed to encrypt title: {e}")
+                })?;
+            eprintln!("[bunker] nip44_encrypt title OK");
             tags.push(Tag::custom(
                 TagKind::Custom(Cow::Borrowed("title")),
                 vec![encrypted_title],
@@ -274,10 +219,18 @@ pub async fn publish_batch_calendar_events_core(
             } else {
                 description
             };
-            signer
-                .nip44_encrypt(&my_public_key, &description_to_encrypt)
-                .await
-                .map_err(|e| format!("Failed to encrypt description: {e}"))?
+            {
+                eprintln!("[bunker] nip44_encrypt description...");
+                let res = signer
+                    .nip44_encrypt(&my_public_key, &description_to_encrypt)
+                    .await
+                    .map_err(|e| {
+                        eprintln!("[bunker] nip44_encrypt description FAILED: {e}");
+                        format!("Failed to encrypt description: {e}")
+                    })?;
+                eprintln!("[bunker] nip44_encrypt description OK");
+                res
+            }
         } else {
             tags.push(Tag::custom(
                 TagKind::Custom(Cow::Borrowed("title")),
@@ -308,10 +261,14 @@ pub async fn publish_batch_calendar_events_core(
                 String::new()
             } else {
                 let signer = client.signer().await.map_err(|e| e.to_string())?;
+                eprintln!("[bunker] nip44_encrypt location...");
                 signer
                     .nip44_encrypt(&my_public_key, &loc)
                     .await
-                    .map_err(|e| format!("Failed to encrypt location: {e}"))?
+                    .map_err(|e| {
+                        eprintln!("[bunker] nip44_encrypt location FAILED: {e}");
+                        format!("Failed to encrypt location: {e}")
+                    })?
             }
         } else {
             event_data.location.clone().unwrap_or_default()
@@ -430,9 +387,19 @@ pub async fn publish_batch_calendar_events_core(
             ));
         }
 
+        eprintln!(
+            "[bunker] send_event_builder (sign_event) kind={}...",
+            kind.as_u16()
+        );
         match client.send_event_builder(event_builder).await {
-            Ok(id) => event_ids.push(id.to_hex()),
-            Err(e) => return Err(format!("Failed to publish event: {e}")),
+            Ok(id) => {
+                eprintln!("[bunker] send_event_builder OK, id={}", id.to_hex());
+                event_ids.push(id.to_hex());
+            }
+            Err(e) => {
+                eprintln!("[bunker] send_event_builder FAILED: {e}");
+                return Err(format!("Failed to publish event: {e}"));
+            }
         }
     }
 
@@ -445,6 +412,7 @@ pub async fn delete_calendar_event_core(
     event_ids: Vec<String>,
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
+    eprintln!("[bunker] delete_calendar_event_core, ids={event_ids:?}");
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
 
     let mut event_id_objs = Vec::new();
@@ -455,15 +423,21 @@ pub async fn delete_calendar_event_core(
     }
 
     if event_id_objs.is_empty() {
+        eprintln!("[bunker] delete: no valid event ids, skipping");
         return Ok("".to_string());
     }
 
     let event_builder = EventBuilder::delete(EventDeletionRequest::new().ids(event_id_objs));
 
+    eprintln!("[bunker] send_event_builder (sign_event kind=5 deletion)...");
     let deletion_id = client
         .send_event_builder(event_builder)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            eprintln!("[bunker] deletion sign_event FAILED: {e}");
+            e.to_string()
+        })?;
+    eprintln!("[bunker] deletion OK, id={}", deletion_id.to_hex());
 
     Ok(deletion_id.to_hex())
 }
@@ -537,8 +511,9 @@ pub async fn delete_calendar_core(
     identifier: String,
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
+    eprintln!("[bunker] delete_calendar_core, identifier={identifier}");
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let coordinate = Coordinate::new(Kind::from(31924), my_public_key).identifier(identifier);
     let event_builder =
@@ -548,10 +523,15 @@ pub async fn delete_calendar_core(
                 vec![Kind::from(31924).as_u16().to_string()],
             ));
 
+    eprintln!("[bunker] send_event_builder (sign_event kind=5 calendar deletion)...");
     let deletion_id = client
         .send_event_builder(event_builder)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            eprintln!("[bunker] calendar deletion sign_event FAILED: {e}");
+            e.to_string()
+        })?;
+    eprintln!("[bunker] calendar deletion OK, id={}", deletion_id.to_hex());
 
     Ok(deletion_id.to_hex())
 }
@@ -591,12 +571,20 @@ pub async fn fetch_calendar_contact_lists_core(
             identifier == "calendar-contacts-private" || identifier == "calendar-emails-private";
 
         let mut private_tags = None;
-        if is_private && !e.content.is_empty() {
-            if let Ok(signer) = client.signer().await {
-                if let Ok(decrypted) = signer.nip44_decrypt(&e.pubkey, &e.content).await {
+        if is_private
+            && !e.content.is_empty()
+            && let Ok(signer) = client.signer().await
+        {
+            eprintln!("[bunker] nip44_decrypt contact list...");
+            match signer.nip44_decrypt(&e.pubkey, &e.content).await {
+                Ok(decrypted) => {
+                    eprintln!("[bunker] nip44_decrypt contact list OK");
                     if let Ok(tags) = serde_json::from_str::<Vec<Vec<String>>>(&decrypted) {
                         private_tags = Some(tags);
                     }
+                }
+                Err(e) => {
+                    eprintln!("[bunker] nip44_decrypt contact list FAILED: {e}");
                 }
             }
         }
@@ -625,7 +613,7 @@ pub async fn publish_calendar_contact_list_core(
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
-    let my_public_key = get_public_key_from_signer(nsec)?;
+    let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let mut tags = vec![Tag::identifier(&request.identifier)];
 
@@ -637,12 +625,19 @@ pub async fn publish_calendar_contact_list_core(
             .collect();
 
         let signer = client.signer().await.map_err(|e| e.to_string())?;
+        eprintln!("[bunker] nip44_encrypt contact list...");
         match signer
             .nip44_encrypt(&my_public_key, &serde_json::to_string(&p_tags).unwrap())
             .await
         {
-            Ok(c) => c,
-            Err(e) => return Err(format!("Failed to encrypt: {e}")),
+            Ok(c) => {
+                eprintln!("[bunker] nip44_encrypt contact list OK");
+                c
+            }
+            Err(e) => {
+                eprintln!("[bunker] nip44_encrypt contact list FAILED: {e}");
+                return Err(format!("Failed to encrypt: {e}"));
+            }
         }
     } else {
         for pk in request.contacts {
@@ -658,4 +653,120 @@ pub async fn publish_calendar_contact_list_core(
         .map_err(|e| e.to_string())?;
 
     Ok(id.to_hex())
+}
+
+pub async fn decrypt_private_events_core(
+    nsec: &str,
+    relays: &[String],
+    events: Vec<DecryptEventRequest>,
+    client_nsec: Option<&str>,
+) -> Result<Vec<DecryptedEventFields>, String> {
+    if events.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    eprintln!(
+        "[bunker] decrypt_private_events_core, count={}",
+        events.len()
+    );
+    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let signer = client.signer().await.map_err(|e| {
+        eprintln!("[bunker] failed to get signer: {e}");
+        e.to_string()
+    })?;
+
+    let mut results = Vec::with_capacity(events.len());
+
+    for event in events {
+        let pubkey = match PublicKey::from_hex(&event.pubkey) {
+            Ok(pk) => pk,
+            Err(_) => {
+                eprintln!("[bunker] decrypt: invalid pubkey for event {}", event.id);
+                results.push(DecryptedEventFields {
+                    id: event.id,
+                    title: None,
+                    description: None,
+                    location: None,
+                });
+                continue;
+            }
+        };
+
+        let mut title: Option<String> = None;
+        let mut description: Option<String> = None;
+        let mut location: Option<String> = None;
+
+        // Decrypt title tag
+        if let Some(ref encrypted_title) = event.encrypted_title
+            && !encrypted_title.is_empty()
+        {
+            eprintln!("[bunker] nip44_decrypt title for event {}...", event.id);
+            match signer.nip44_decrypt(&pubkey, encrypted_title).await {
+                Ok(decrypted) => {
+                    eprintln!("[bunker] nip44_decrypt title OK");
+                    title = Some(decrypted.trim().to_string());
+                }
+                Err(e) => {
+                    eprintln!("[bunker] nip44_decrypt title FAILED: {e}");
+                }
+            }
+        }
+
+        // Decrypt content (description)
+        if let Some(ref encrypted_content) = event.encrypted_content {
+            if !encrypted_content.is_empty() {
+                eprintln!("[bunker] nip44_decrypt content for event {}...", event.id);
+                match signer.nip44_decrypt(&pubkey, encrypted_content).await {
+                    Ok(decrypted) => {
+                        eprintln!("[bunker] nip44_decrypt content OK");
+                        let trimmed = decrypted.trim().to_string();
+                        // Old format: content was a JSON payload with "title" and "description"
+                        if let Ok(json_content) =
+                            serde_json::from_str::<serde_json::Value>(&trimmed)
+                        {
+                            if let Some(t) = json_content["title"].as_str() {
+                                title = Some(t.to_string());
+                            }
+                            if let Some(d) = json_content["description"].as_str() {
+                                description = Some(d.to_string());
+                            }
+                        } else {
+                            // New format: content is just the encrypted description
+                            description = Some(trimmed);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("[bunker] nip44_decrypt content FAILED: {e}");
+                    }
+                }
+            }
+        } else {
+            description = Some(String::new());
+        }
+
+        // Decrypt location tag
+        if let Some(ref encrypted_loc) = event.encrypted_location
+            && !encrypted_loc.is_empty()
+        {
+            eprintln!("[bunker] nip44_decrypt location for event {}...", event.id);
+            match signer.nip44_decrypt(&pubkey, encrypted_loc).await {
+                Ok(decrypted) => {
+                    eprintln!("[bunker] nip44_decrypt location OK");
+                    location = Some(decrypted);
+                }
+                Err(e) => {
+                    eprintln!("[bunker] nip44_decrypt location FAILED: {e}");
+                }
+            }
+        }
+
+        results.push(DecryptedEventFields {
+            id: event.id,
+            title,
+            description,
+            location,
+        });
+    }
+
+    Ok(results)
 }

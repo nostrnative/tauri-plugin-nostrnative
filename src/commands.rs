@@ -32,7 +32,10 @@ use crate::virtual_fs;
 use crate::models::{BookmarkSource, EventResponse};
 
 #[cfg(feature = "calendar")]
-use crate::models::{CalendarEventRequest, CalendarEventResponse, CalendarRequest};
+use crate::models::{
+    CalendarEventRequest, CalendarEventResponse, CalendarRequest, DecryptEventRequest,
+    DecryptedEventFields,
+};
 
 #[cfg(feature = "chat")]
 use crate::models::{ChatMessageRequest, PnsDerivedKeys};
@@ -72,12 +75,13 @@ pub async fn parse_pubkey(pubkey: String) -> Result<String, String> {
 
 #[tauri::command]
 #[cfg(feature = "keys")]
-pub async fn verify_nsec(nsec: String) -> Result<String, String> {
-    keys::verify_nsec(&nsec).await
+pub async fn verify_nsec(nsec: String, client_nsec: Option<String>) -> Result<String, String> {
+    keys::verify_nsec(&nsec, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
+#[allow(clippy::too_many_arguments)]
 pub async fn fetch_calendar_events(
     pubkey: String,
     nsec: Option<String>,
@@ -203,6 +207,17 @@ pub async fn publish_calendar_contact_list(
 }
 
 #[tauri::command]
+#[cfg(feature = "calendar")]
+pub async fn decrypt_private_events(
+    nsec: String,
+    relays: Vec<String>,
+    events: Vec<DecryptEventRequest>,
+    client_nsec: Option<String>,
+) -> Result<Vec<DecryptedEventFields>, String> {
+    calendar::decrypt_private_events_core(&nsec, &relays, events, client_nsec.as_deref()).await
+}
+
+#[tauri::command]
 #[cfg(feature = "profile")]
 pub async fn fetch_profiles(
     pubkeys: Vec<String>,
@@ -260,6 +275,7 @@ pub async fn fetch_received_rsvps(
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
+#[allow(clippy::too_many_arguments)]
 pub async fn publish_rsvp(
     nsec: String,
     relays: Vec<String>,

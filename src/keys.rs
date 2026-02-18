@@ -1,5 +1,5 @@
-use crate::utils::parse_public_key;
-use nostr_sdk::prelude::*;
+use nostr_connect::prelude::*;
+use nostr_sdk::prelude::{Keys, NostrConnectURI, PublicKey};
 
 pub fn generate_new_nsec() -> String {
     let keys = Keys::generate();
@@ -7,7 +7,7 @@ pub fn generate_new_nsec() -> String {
 }
 
 pub fn parse_pubkey(pubkey: &str) -> Result<String, String> {
-    let pk = parse_public_key(pubkey)?;
+    let pk = crate::utils::parse_public_key(pubkey)?;
     Ok(pk.to_hex())
 }
 
@@ -21,16 +21,18 @@ pub fn npub_to_hex(npub: &str) -> Result<String, String> {
     Ok(pk.to_hex())
 }
 
-pub async fn verify_nsec(nsec: &str) -> Result<String, String> {
+pub async fn verify_nsec(nsec: &str, client_nsec: Option<&str>) -> Result<String, String> {
     if nsec.starts_with("bunker://") {
         let uri = NostrConnectURI::parse(nsec).map_err(|e| e.to_string())?;
-        match uri {
-            NostrConnectURI::Bunker {
-                remote_signer_public_key,
-                ..
-            } => Ok(remote_signer_public_key.to_hex()),
-            _ => Err("Invalid bunker URI".to_string()),
-        }
+        let app_keys = if let Some(c_nsec) = client_nsec {
+            Keys::parse(c_nsec).map_err(|e| e.to_string())?
+        } else {
+            Keys::generate()
+        };
+        let signer = NostrConnect::new(uri, app_keys, std::time::Duration::from_secs(120), None)
+            .map_err(|e| e.to_string())?;
+        let user_pubkey = signer.get_public_key().await.map_err(|e| e.to_string())?;
+        Ok(user_pubkey.to_hex())
     } else {
         let keys = Keys::parse(nsec).map_err(|e| e.to_string())?;
         Ok(keys.public_key().to_hex())

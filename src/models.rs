@@ -267,3 +267,20 @@ pub struct FilesystemRequest {
     pub name: String,
     pub filesystem: VirtualFilesystem,
 }
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct DecryptEventRequest {
+    pub id: String,
+    pub pubkey: String,
+    pub encrypted_title: Option<String>,
+    pub encrypted_content: Option<String>,
+    pub encrypted_location: Option<String>,
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub struct DecryptedEventFields {
+    pub id: String,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub location: Option<String>,
+}

@@ -122,8 +122,14 @@ export async function parsePubkey(pubkey: string): Promise<string> {
   return await invoke("plugin:nostrnative|parse_pubkey", { pubkey });
 }
 
-export async function verifyNsec(nsec: string): Promise<string> {
-  return await invoke("plugin:nostrnative|verify_nsec", { nsec });
+export async function verifyNsec(
+  nsec: string,
+  options?: { clientNsec?: string },
+): Promise<string> {
+  return await invoke("plugin:nostrnative|verify_nsec", {
+    nsec,
+    clientNsec: options?.clientNsec,
+  });
 }
 
 // Calendar
@@ -278,6 +284,27 @@ export async function publishCalendarContactList(
     nsec,
     relays,
     request,
+    clientNsec,
+  });
+}
+
+// Decrypt private events
+export async function decryptPrivateEvents(
+  nsec: string,
+  relays: string[],
+  events: Array<{
+    id: string;
+    pubkey: string;
+    encrypted_title?: string;
+    encrypted_content?: string;
+    encrypted_location?: string;
+  }>,
+  clientNsec?: string,
+): Promise<Array<{ id: string; title?: string; description?: string; location?: string }>> {
+  return await invoke("plugin:nostrnative|decrypt_private_events", {
+    nsec,
+    relays,
+    events,
     clientNsec,
   });
 }
