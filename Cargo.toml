@@ -23,7 +23,7 @@ tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "blocking", "rustls-tls", "gzip", "brotli", "deflate", "zstd"], optional = true }
 base64 = { version = "0.22", optional = true }
 urlencoding = { version = "2.1", optional = true }
-sha2 = { version = "0.10", optional = true }
+sha2 = { version = "0.11", optional = true }
 hkdf = { version = "0.12", optional = true }
 hex = { version = "0.4", optional = true }
 serde_cbor = { version = "0.11", optional = true }
