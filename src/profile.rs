@@ -65,10 +65,8 @@ pub async fn fetch_contact_list_core(
         .fetch_events(filter, Duration::from_secs(10))
         .await
         .map_err(|e| e.to_string())?;
-    println!("events {:?}", events);
-
     let mut events: Vec<_> = events.into_iter().collect();
-    events.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+    events.sort_by_key(|e| std::cmp::Reverse(e.created_at));
 
     if let Some(event) = events.first() {
         let contacts: Vec<Contact> = event

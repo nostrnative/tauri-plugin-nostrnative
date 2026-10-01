@@ -60,10 +60,8 @@ pub async fn discover_routstr_providers_core(
                         "mint" => {
                             mints.push(parts[1].clone());
                         }
-                        "version" => {
-                            if version.is_none() {
-                                version = Some(parts[1].clone());
-                            }
+                        "version" if version.is_none() => {
+                            version = Some(parts[1].clone());
                         }
                         _ => {}
                     }
