@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-bunker-take-auth-urls"
+description = "Enables the bunker_take_auth_urls command without any pre-configured scope."
+commands.allow = ["bunker_take_auth_urls"]
+
+[[permission]]
+identifier = "deny-bunker-take-auth-urls"
+description = "Denies the bunker_take_auth_urls command without any pre-configured scope."
+commands.deny = ["bunker_take_auth_urls"]

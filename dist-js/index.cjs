@@ -9,6 +9,9 @@ async function hexToNpub(hex) {
 async function npubToHex(npub) {
     return await core.invoke("plugin:nostrnative|npub_to_hex", { npub });
 }
+async function nsecToHex(nsec) {
+    return await core.invoke("plugin:nostrnative|nsec_to_hex", { nsec });
+}
 async function generateNewNsec() {
     return await core.invoke("plugin:nostrnative|generate_new_nsec");
 }
@@ -21,11 +24,47 @@ async function verifyNsec(nsec, options) {
         clientNsec: options?.clientNsec,
     });
 }
+function isBunkerUri(value) {
+    return value.trim().startsWith("bunker://");
+}
+function isNostrConnectUri(value) {
+    return value.trim().startsWith("nostrconnect://");
+}
+/** Connect to a bunker:// signer (or reuse the cached session). */
+async function bunkerConnect(uri, clientNsec) {
+    return await core.invoke("plugin:nostrnative|bunker_connect", { uri, clientNsec });
+}
+/** Tear down the cached session for this bunker (e.g. on logout). */
+async function bunkerDisconnect(uri, clientNsec) {
+    return await core.invoke("plugin:nostrnative|bunker_disconnect", { uri, clientNsec });
+}
+/**
+ * Drain https auth_url challenges the signer asked the user to open, for a
+ * pairing (`token`) or a bunker login (`clientNsec`).
+ */
+async function bunkerTakeAuthUrls(scope) {
+    return await core.invoke("plugin:nostrnative|bunker_take_auth_urls", scope);
+}
+/** Start a client-initiated (QR code) pairing. */
+async function nostrConnectStart(relays, appName) {
+    return await core.invoke("plugin:nostrnative|nostrconnect_start", { relays, appName });
+}
+async function nostrConnectPoll(token) {
+    return await core.invoke("plugin:nostrnative|nostrconnect_poll", { token });
+}
+async function nostrConnectCancel(token) {
+    return await core.invoke("plugin:nostrnative|nostrconnect_cancel", { token });
+}
 // Calendar
+async function deriveCalendarKeys(deviceKeyHex) {
+    return await core.invoke("plugin:nostrnative|derive_calendar_keys", {
+        deviceKeyHex,
+    });
+}
 async function fetchCalendarEvents(pubkey, relays, options) {
     return await core.invoke("plugin:nostrnative|fetch_calendar_events", {
         pubkey,
-        nsec: options?.nsec,
+        key: options?.key,
         relays,
         rangeStart: options?.rangeStart,
         rangeEnd: options?.rangeEnd,
@@ -34,9 +73,9 @@ async function fetchCalendarEvents(pubkey, relays, options) {
         filters: options?.filters,
     });
 }
-async function publishBatchCalendarEvents(nsec, relays, events, clientNsec) {
+async function publishBatchCalendarEvents(key, relays, events, clientNsec) {
     return await core.invoke("plugin:nostrnative|publish_batch_calendar_events", {
-        nsec,
+        key,
         relays,
         events,
         clientNsec,
@@ -58,17 +97,17 @@ async function getNostrEventCounts() {
 async function getNostrRelayEvents() {
     return await core.invoke("plugin:nostrnative|get_nostr_relay_events");
 }
-async function publishCalendarEvent(nsec, relays, eventData, clientNsec) {
+async function publishCalendarEvent(key, relays, eventData, clientNsec) {
     return await core.invoke("plugin:nostrnative|publish_calendar_event", {
-        nsec,
+        key,
         relays,
         eventData,
         clientNsec,
     });
 }
-async function deleteCalendarEvent(nsec, relays, eventIds, clientNsec) {
+async function deleteCalendarEvent(key, relays, eventIds, clientNsec) {
     return await core.invoke("plugin:nostrnative|delete_calendar_event", {
-        nsec,
+        key,
         relays,
         eventIds,
         clientNsec,
@@ -80,17 +119,17 @@ async function fetchCalendars(pubkey, relays) {
         relays,
     });
 }
-async function publishCalendar(nsec, relays, calendar, clientNsec) {
+async function publishCalendar(key, relays, calendar, clientNsec) {
     return await core.invoke("plugin:nostrnative|publish_calendar", {
-        nsec,
+        key,
         relays,
         calendar,
         clientNsec,
     });
 }
-async function deleteCalendar(nsec, relays, identifier, clientNsec) {
+async function deleteCalendar(key, relays, identifier, clientNsec) {
     return await core.invoke("plugin:nostrnative|delete_calendar", {
-        nsec,
+        key,
         relays,
         identifier,
         clientNsec,
@@ -100,22 +139,22 @@ async function fetchCalendarContactLists(pubkey, relays, options) {
     return await core.invoke("plugin:nostrnative|fetch_calendar_contact_lists", {
         pubkey,
         relays,
-        nsec: options?.nsec,
+        key: options?.key,
         clientNsec: options?.clientNsec,
     });
 }
-async function publishCalendarContactList(nsec, relays, request, clientNsec) {
+async function publishCalendarContactList(key, relays, request, clientNsec) {
     return await core.invoke("plugin:nostrnative|publish_calendar_contact_list", {
-        nsec,
+        key,
         relays,
         request,
         clientNsec,
     });
 }
 // Decrypt private events
-async function decryptPrivateEvents(nsec, relays, events, clientNsec) {
+async function decryptPrivateEvents(key, relays, events, clientNsec) {
     return await core.invoke("plugin:nostrnative|decrypt_private_events", {
-        nsec,
+        key,
         relays,
         events,
         clientNsec,
@@ -140,9 +179,9 @@ async function fetchReceivedRsvps(pubkey, relays) {
         relays,
     });
 }
-async function publishRsvp(nsec, relays, eventCoordinate, status, eventAuthor, clientNsec, fb, content) {
+async function publishRsvp(key, relays, eventCoordinate, status, eventAuthor, clientNsec, fb, content) {
     return await core.invoke("plugin:nostrnative|publish_rsvp", {
-        nsec,
+        key,
         relays,
         eventCoordinate,
         status,
@@ -498,6 +537,9 @@ exports.blossomList = blossomList;
 exports.blossomMirror = blossomMirror;
 exports.blossomUpload = blossomUpload;
 exports.blossomUploadContent = blossomUploadContent;
+exports.bunkerConnect = bunkerConnect;
+exports.bunkerDisconnect = bunkerDisconnect;
+exports.bunkerTakeAuthUrls = bunkerTakeAuthUrls;
 exports.compareRoutstrPrices = compareRoutstrPrices;
 exports.createDiscoveryEvent = createDiscoveryEvent;
 exports.createNote = createNote;
@@ -512,6 +554,7 @@ exports.deleteNfpData = deleteNfpData;
 exports.deleteNote = deleteNote;
 exports.deleteNotebook = deleteNotebook;
 exports.deleteVirtualFs = deleteVirtualFs;
+exports.deriveCalendarKeys = deriveCalendarKeys;
 exports.derivePnsKeys = derivePnsKeys;
 exports.discoverRoutstrProviders = discoverRoutstrProviders;
 exports.fetchBookmarks = fetchBookmarks;
@@ -538,7 +581,13 @@ exports.getNostrEventCounts = getNostrEventCounts;
 exports.getNostrRelayEvents = getNostrRelayEvents;
 exports.getNostrRelayStatus = getNostrRelayStatus;
 exports.hexToNpub = hexToNpub;
+exports.isBunkerUri = isBunkerUri;
+exports.isNostrConnectUri = isNostrConnectUri;
+exports.nostrConnectCancel = nostrConnectCancel;
+exports.nostrConnectPoll = nostrConnectPoll;
+exports.nostrConnectStart = nostrConnectStart;
 exports.npubToHex = npubToHex;
+exports.nsecToHex = nsecToHex;
 exports.parsePubkey = parsePubkey;
 exports.publishBatchCalendarEvents = publishBatchCalendarEvents;
 exports.publishCalendar = publishCalendar;

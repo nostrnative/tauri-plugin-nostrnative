@@ -29,7 +29,10 @@ use crate::nfp;
 use crate::virtual_fs;
 
 #[cfg(feature = "bookmarks")]
-use crate::models::{BookmarkSource, EventResponse};
+use crate::models::BookmarkSource;
+
+#[cfg(any(feature = "bookmarks", feature = "nfp"))]
+use crate::models::EventResponse;
 
 #[cfg(feature = "calendar")]
 use crate::models::{
@@ -37,8 +40,11 @@ use crate::models::{
     DecryptedEventFields,
 };
 
+#[cfg(any(feature = "calendar", feature = "chat"))]
+use crate::models::PnsDerivedKeys;
+
 #[cfg(feature = "chat")]
-use crate::models::{ChatMessageRequest, PnsDerivedKeys};
+use crate::models::ChatMessageRequest;
 
 #[cfg(feature = "profile")]
 use crate::models::{Contact, UserProfile};
@@ -63,6 +69,12 @@ pub async fn npub_to_hex(npub: String) -> Result<String, String> {
 
 #[tauri::command]
 #[cfg(feature = "keys")]
+pub async fn nsec_to_hex(nsec: String) -> Result<String, String> {
+    keys::nsec_to_hex(&nsec)
+}
+
+#[tauri::command]
+#[cfg(feature = "keys")]
 pub async fn generate_new_nsec() -> String {
     keys::generate_new_nsec()
 }
@@ -79,12 +91,67 @@ pub async fn verify_nsec(nsec: String, client_nsec: Option<String>) -> Result<St
     keys::verify_nsec(&nsec, client_nsec.as_deref()).await
 }
 
+// ---------- NIP-46 remote signer ----------
+
+#[tauri::command]
+pub async fn bunker_connect(
+    uri: String,
+    client_nsec: Option<String>,
+) -> Result<crate::bunker::BunkerConnection, String> {
+    let session = crate::bunker::connect(&uri, client_nsec.as_deref(), &[]).await?;
+    Ok(crate::bunker::connection_of(&session))
+}
+
+#[tauri::command]
+pub async fn bunker_disconnect(uri: String, client_nsec: Option<String>) -> Result<bool, String> {
+    crate::bunker::disconnect(&uri, client_nsec.as_deref()).await
+}
+
+/// Drain `auth_url` challenges for a pairing (`token`) or a bunker login
+/// (`client_nsec`). Only https URLs are returned.
+#[tauri::command]
+pub async fn bunker_take_auth_urls(
+    token: Option<String>,
+    client_nsec: Option<String>,
+) -> Result<Vec<String>, String> {
+    let key = match (token, client_nsec) {
+        (Some(t), _) => t,
+        (None, Some(nsec)) => crate::bunker::auth_url_token_for_client(&nsec)?,
+        (None, None) => return Err("token or client_nsec is required".to_string()),
+    };
+    Ok(crate::bunker::take_auth_urls(&key))
+}
+
+#[tauri::command]
+pub async fn nostrconnect_start(
+    relays: Vec<String>,
+    app_name: Option<String>,
+) -> Result<crate::bunker::NostrConnectPairing, String> {
+    crate::bunker::start_pairing(&relays, app_name.as_deref().unwrap_or("nostrnative")).await
+}
+
+#[tauri::command]
+pub async fn nostrconnect_poll(token: String) -> crate::bunker::PairingStatus {
+    crate::bunker::poll_pairing(&token).await
+}
+
+#[tauri::command]
+pub async fn nostrconnect_cancel(token: String) {
+    crate::bunker::cancel_pairing(&token).await
+}
+
+#[tauri::command]
+#[cfg(feature = "calendar")]
+pub async fn derive_calendar_keys(device_key_hex: String) -> Result<PnsDerivedKeys, String> {
+    calendar::derive_calendar_keys_core(&device_key_hex)
+}
+
 #[tauri::command]
 #[cfg(feature = "calendar")]
 #[allow(clippy::too_many_arguments)]
 pub async fn fetch_calendar_events(
     pubkey: String,
-    nsec: Option<String>,
+    key: Option<String>,
     relays: Vec<String>,
     range_start: Option<i64>,
     range_end: Option<i64>,
@@ -94,7 +161,7 @@ pub async fn fetch_calendar_events(
 ) -> Result<Vec<CalendarEventResponse>, String> {
     calendar::fetch_calendar_events_core(
         &pubkey,
-        nsec.as_deref(),
+        key.as_deref(),
         &relays,
         range_start,
         range_end,
@@ -108,25 +175,25 @@ pub async fn fetch_calendar_events(
 #[tauri::command]
 #[cfg(feature = "calendar")]
 pub async fn publish_batch_calendar_events(
-    nsec: String,
+    key: String,
     relays: Vec<String>,
     events: Vec<CalendarEventRequest>,
     client_nsec: Option<String>,
 ) -> Result<Vec<String>, String> {
-    calendar::publish_batch_calendar_events_core(&nsec, &relays, events, client_nsec.as_deref())
+    calendar::publish_batch_calendar_events_core(&key, &relays, events, client_nsec.as_deref())
         .await
 }
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
 pub async fn publish_calendar_event(
-    nsec: String,
+    key: String,
     relays: Vec<String>,
     event_data: CalendarEventRequest,
     client_nsec: Option<String>,
 ) -> Result<String, String> {
     calendar::publish_batch_calendar_events_core(
-        &nsec,
+        &key,
         &relays,
         vec![event_data],
         client_nsec.as_deref(),
@@ -138,12 +205,12 @@ pub async fn publish_calendar_event(
 #[tauri::command]
 #[cfg(feature = "calendar")]
 pub async fn delete_calendar_event(
-    nsec: String,
+    key: String,
     relays: Vec<String>,
     event_ids: Vec<String>,
     client_nsec: Option<String>,
 ) -> Result<String, String> {
-    calendar::delete_calendar_event_core(&nsec, &relays, event_ids, client_nsec.as_deref()).await
+    calendar::delete_calendar_event_core(&key, &relays, event_ids, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -158,36 +225,36 @@ pub async fn fetch_calendars(
 #[tauri::command]
 #[cfg(feature = "calendar")]
 pub async fn publish_calendar(
-    nsec: String,
+    key: String,
     relays: Vec<String>,
     calendar: CalendarRequest,
     client_nsec: Option<String>,
 ) -> Result<String, String> {
-    calendar::publish_calendar_core(&nsec, &relays, calendar, client_nsec.as_deref()).await
+    calendar::publish_calendar_core(&key, &relays, calendar, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
 pub async fn delete_calendar(
-    nsec: String,
+    key: String,
     relays: Vec<String>,
     identifier: String,
     client_nsec: Option<String>,
 ) -> Result<String, String> {
-    calendar::delete_calendar_core(&nsec, &relays, identifier, client_nsec.as_deref()).await
+    calendar::delete_calendar_core(&key, &relays, identifier, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
 pub async fn fetch_calendar_contact_lists(
     pubkey: String,
-    nsec: Option<String>,
+    key: Option<String>,
     relays: Vec<String>,
     client_nsec: Option<String>,
 ) -> Result<Vec<CalendarEventResponse>, String> {
     calendar::fetch_calendar_contact_lists_core(
         &pubkey,
-        nsec.as_deref(),
+        key.as_deref(),
         &relays,
         client_nsec.as_deref(),
     )
@@ -197,24 +264,24 @@ pub async fn fetch_calendar_contact_lists(
 #[tauri::command]
 #[cfg(feature = "calendar")]
 pub async fn publish_calendar_contact_list(
-    nsec: String,
+    key: String,
     relays: Vec<String>,
     request: crate::models::CalendarContactListRequest,
     client_nsec: Option<String>,
 ) -> Result<String, String> {
-    calendar::publish_calendar_contact_list_core(&nsec, &relays, request, client_nsec.as_deref())
+    calendar::publish_calendar_contact_list_core(&key, &relays, request, client_nsec.as_deref())
         .await
 }
 
 #[tauri::command]
 #[cfg(feature = "calendar")]
 pub async fn decrypt_private_events(
-    nsec: String,
+    key: String,
     relays: Vec<String>,
     events: Vec<DecryptEventRequest>,
     client_nsec: Option<String>,
 ) -> Result<Vec<DecryptedEventFields>, String> {
-    calendar::decrypt_private_events_core(&nsec, &relays, events, client_nsec.as_deref()).await
+    calendar::decrypt_private_events_core(&key, &relays, events, client_nsec.as_deref()).await
 }
 
 #[tauri::command]
@@ -277,7 +344,7 @@ pub async fn fetch_received_rsvps(
 #[cfg(feature = "calendar")]
 #[allow(clippy::too_many_arguments)]
 pub async fn publish_rsvp(
-    nsec: String,
+    key: String,
     relays: Vec<String>,
     event_coordinate: String,
     status: String,
@@ -287,7 +354,7 @@ pub async fn publish_rsvp(
     content: Option<String>,
 ) -> Result<String, String> {
     calendar::rsvp::publish_rsvp_core(
-        &nsec,
+        &key,
         &relays,
         event_coordinate,
         status,

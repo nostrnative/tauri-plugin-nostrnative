@@ -1,20 +1,59 @@
 pub mod calendar_sync;
 pub mod rsvp;
 
+use ::hkdf::Hkdf;
 use nostr_sdk::prelude::*;
+use sha2::Sha256;
 use std::borrow::Cow;
 use std::time::Duration;
 
 use crate::models::{
     CalendarEventRequest, CalendarEventResponse, CalendarRequest, DecryptEventRequest,
-    DecryptedEventFields,
+    DecryptedEventFields, PnsDerivedKeys,
 };
 use crate::utils::{get_client, get_event_bech32, parse_public_key};
+
+const SALT: &[u8] = b"app-sync-v1";
+
+fn derive_pns_key_raw(device_key: &[u8]) -> [u8; 32] {
+    let hk = Hkdf::<Sha256>::new(Some(SALT), device_key);
+    let mut okm = [0u8; 32];
+    hk.expand(&[], &mut okm)
+        .expect("32 bytes is a valid length");
+    okm
+}
+
+pub fn derive_calendar_keys_core(device_key_hex: &str) -> Result<PnsDerivedKeys, String> {
+    let device_key_hex = device_key_hex.trim().trim_matches('"').trim_matches('\'');
+
+    if device_key_hex.is_empty() {
+        return Err("Device key cannot be empty".to_string());
+    }
+
+    let device_key_bytes: [u8; 32] = if device_key_hex.starts_with("nsec") {
+        let keys = Keys::parse(device_key_hex).map_err(|e| e.to_string())?;
+        keys.secret_key().to_secret_bytes()
+    } else {
+        let hex_str = device_key_hex.strip_prefix("0x").unwrap_or(device_key_hex);
+        hex::decode(hex_str)
+            .map_err(|e| format!("Hex decode failed: {}. Ensure you are passing a 64-character hex string (32 bytes) or an nsec.", e))?
+            .try_into()
+            .map_err(|_| "Invalid key length: expected 32 bytes (64 hex characters)".to_string())?
+    };
+
+    let pns_key_bytes = derive_pns_key_raw(&device_key_bytes);
+    let keys = Keys::parse(&hex::encode(pns_key_bytes)).map_err(|e| e.to_string())?;
+
+    Ok(PnsDerivedKeys {
+        public_key: keys.public_key().to_hex(),
+        secret_key: keys.secret_key().to_bech32().map_err(|e| e.to_string())?,
+    })
+}
 
 #[allow(clippy::too_many_arguments)]
 pub async fn fetch_calendar_events_core(
     pubkey: &str,
-    nsec: Option<&str>,
+    _key: Option<&str>,
     relays: &[String],
     _range_start: Option<i64>,
     _range_end: Option<i64>,
@@ -24,11 +63,15 @@ pub async fn fetch_calendar_events_core(
 ) -> Result<Vec<CalendarEventResponse>, String> {
     let public_key = parse_public_key(pubkey)?;
 
-    let client = if let Some(ns) = nsec {
-        crate::utils::get_client_with_signer(ns, relays, client_nsec).await?
+    let app_keys = if let Some(nsec) = client_nsec {
+        Keys::parse(nsec).map_err(|e| {
+            eprintln!("[bunker] client_nsec parse error: {e}");
+            e.to_string()
+        })?
     } else {
-        get_client(&Keys::generate(), relays).await?
+        Keys::generate()
     };
+    let client = get_client(&app_keys, relays).await?;
 
     let mut authors_pks = vec![public_key];
     if let Some(auths) = &authors {
@@ -45,10 +88,19 @@ pub async fn fetch_calendar_events_core(
 
     if let Some(custom_filters) = filters {
         for f in custom_filters.iter() {
-            if let Ok(filter) = serde_json::from_value::<Filter>(f.clone()) {
-                final_filters.push(filter);
+            match serde_json::from_value::<Filter>(f.clone()) {
+                Ok(filter) => final_filters.push(filter),
+                Err(e) => return Err(format!("Invalid filter {f}: {e}")),
             }
         }
+    }
+
+    // No explicit filters: fetch the authors' calendar events plus events
+    // where the user is tagged as a participant.
+    if final_filters.is_empty() {
+        let kinds = [Kind::from(31922), Kind::from(31923)];
+        final_filters.push(Filter::new().authors(authors_pks.clone()).kinds(kinds));
+        final_filters.push(Filter::new().kinds(kinds).pubkey(public_key));
     }
 
     let mut seen_ids = std::collections::HashSet::new();
@@ -124,12 +176,12 @@ pub async fn fetch_calendar_events_core(
 }
 
 pub async fn publish_batch_calendar_events_core(
-    nsec: &str,
+    key: &str,
     relays: &[String],
     events: Vec<CalendarEventRequest>,
     client_nsec: Option<&str>,
 ) -> Result<Vec<String>, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let client = crate::utils::get_client_with_signer(key, relays, client_nsec).await?;
     let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let mut event_ids = Vec::new();
@@ -203,7 +255,7 @@ pub async fn publish_batch_calendar_events_core(
                 .await
                 .map_err(|e| {
                     eprintln!("[bunker] nip44_encrypt title FAILED: {e}");
-                    format!("Failed to encrypt title: {e}")
+                    crate::utils::describe_signer_call_error("encrypt title", &e)
                 })?;
             eprintln!("[bunker] nip44_encrypt title OK");
             tags.push(Tag::custom(
@@ -226,7 +278,7 @@ pub async fn publish_batch_calendar_events_core(
                     .await
                     .map_err(|e| {
                         eprintln!("[bunker] nip44_encrypt description FAILED: {e}");
-                        format!("Failed to encrypt description: {e}")
+                        crate::utils::describe_signer_call_error("encrypt description", &e)
                     })?;
                 eprintln!("[bunker] nip44_encrypt description OK");
                 res
@@ -267,7 +319,7 @@ pub async fn publish_batch_calendar_events_core(
                     .await
                     .map_err(|e| {
                         eprintln!("[bunker] nip44_encrypt location FAILED: {e}");
-                        format!("Failed to encrypt location: {e}")
+                        crate::utils::describe_signer_call_error("encrypt location", &e)
                     })?
             }
         } else {
@@ -398,7 +450,10 @@ pub async fn publish_batch_calendar_events_core(
             }
             Err(e) => {
                 eprintln!("[bunker] send_event_builder FAILED: {e}");
-                return Err(format!("Failed to publish event: {e}"));
+                return Err(format!(
+                    "Failed to publish event: {}",
+                    crate::utils::describe_send_error(&e)
+                ));
             }
         }
     }
@@ -407,13 +462,13 @@ pub async fn publish_batch_calendar_events_core(
 }
 
 pub async fn delete_calendar_event_core(
-    nsec: &str,
+    key: &str,
     relays: &[String],
     event_ids: Vec<String>,
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     eprintln!("[bunker] delete_calendar_event_core, ids={event_ids:?}");
-    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let client = crate::utils::get_client_with_signer(key, relays, client_nsec).await?;
 
     let mut event_id_objs = Vec::new();
     for id in event_ids {
@@ -435,7 +490,7 @@ pub async fn delete_calendar_event_core(
         .await
         .map_err(|e| {
             eprintln!("[bunker] deletion sign_event FAILED: {e}");
-            e.to_string()
+            crate::utils::describe_send_error(&e)
         })?;
     eprintln!("[bunker] deletion OK, id={}", deletion_id.to_hex());
 
@@ -479,12 +534,12 @@ pub async fn fetch_calendars_core(
 }
 
 pub async fn publish_calendar_core(
-    nsec: &str,
+    key: &str,
     relays: &[String],
     calendar: CalendarRequest,
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let client = crate::utils::get_client_with_signer(key, relays, client_nsec).await?;
 
     let tags = vec![
         Tag::identifier(&calendar.identifier),
@@ -500,19 +555,19 @@ pub async fn publish_calendar_core(
     let event_id = client
         .send_event_builder(event_builder)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| crate::utils::describe_send_error(&e))?;
 
     Ok(event_id.to_hex())
 }
 
 pub async fn delete_calendar_core(
-    nsec: &str,
+    key: &str,
     relays: &[String],
     identifier: String,
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
     eprintln!("[bunker] delete_calendar_core, identifier={identifier}");
-    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let client = crate::utils::get_client_with_signer(key, relays, client_nsec).await?;
     let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let coordinate = Coordinate::new(Kind::from(31924), my_public_key).identifier(identifier);
@@ -529,7 +584,7 @@ pub async fn delete_calendar_core(
         .await
         .map_err(|e| {
             eprintln!("[bunker] calendar deletion sign_event FAILED: {e}");
-            e.to_string()
+            crate::utils::describe_send_error(&e)
         })?;
     eprintln!("[bunker] calendar deletion OK, id={}", deletion_id.to_hex());
 
@@ -538,12 +593,12 @@ pub async fn delete_calendar_core(
 
 pub async fn fetch_calendar_contact_lists_core(
     pubkey: &str,
-    nsec: Option<&str>,
+    key: Option<&str>,
     relays: &[String],
     client_nsec: Option<&str>,
 ) -> Result<Vec<CalendarEventResponse>, String> {
     let public_key = parse_public_key(pubkey)?;
-    let client = if let Some(ns) = nsec {
+    let client = if let Some(ns) = key {
         crate::utils::get_client_with_signer(ns, relays, client_nsec).await?
     } else {
         get_client(&Keys::generate(), relays).await?
@@ -607,12 +662,12 @@ pub async fn fetch_calendar_contact_lists_core(
 }
 
 pub async fn publish_calendar_contact_list_core(
-    nsec: &str,
+    key: &str,
     relays: &[String],
     request: crate::models::CalendarContactListRequest,
     client_nsec: Option<&str>,
 ) -> Result<String, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let client = crate::utils::get_client_with_signer(key, relays, client_nsec).await?;
     let my_public_key = client.public_key().await.map_err(|e| e.to_string())?;
 
     let mut tags = vec![Tag::identifier(&request.identifier)];
@@ -656,7 +711,7 @@ pub async fn publish_calendar_contact_list_core(
 }
 
 pub async fn decrypt_private_events_core(
-    nsec: &str,
+    key: &str,
     relays: &[String],
     events: Vec<DecryptEventRequest>,
     client_nsec: Option<&str>,
@@ -669,7 +724,7 @@ pub async fn decrypt_private_events_core(
         "[bunker] decrypt_private_events_core, count={}",
         events.len()
     );
-    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let client = crate::utils::get_client_with_signer(key, relays, client_nsec).await?;
     let signer = client.signer().await.map_err(|e| {
         eprintln!("[bunker] failed to get signer: {e}");
         e.to_string()

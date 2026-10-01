@@ -66,6 +66,50 @@ const providers = await nostr.discoverRoutstrProviders(["wss://relay.routstr.com
 const models = await nostr.fetchRoutstrModels(providers[0].urls[0]);
 ```
 
+## Remote signers (NIP-46 / bunker)
+
+Users do not have to paste an `nsec`. Any command that takes a key accepts a
+`bunker://` URI instead, and the plugin keeps one authenticated NIP-46 session
+per (signer, client key) pair for the lifetime of the process, so the
+`connect` handshake (and the one-time secret) is only sent once.
+
+Two pairing directions are supported:
+
+```ts
+import {
+  bunkerConnect,
+  nostrConnectStart,
+  nostrConnectPoll,
+  nostrConnectCancel,
+  bunkerDisconnect,
+  bunkerTakeAuthUrls,
+} from "tauri-plugin-nostrnative";
+
+// 1. Signer-initiated: the user pastes a bunker:// URI from Amber / nsec.app.
+const conn = await bunkerConnect(uri); // performs the handshake (60s timeout)
+// Persist conn.bunker_uri (secret stripped) and conn.client_nsec. Pass them as
+// `key` / `clientNsec` to every other command; they reuse the live session.
+
+// 2. Client-initiated: show a QR code, the signer app scans it.
+const pairing = await nostrConnectStart(["wss://relay.nsec.app"], "My App");
+renderQr(pairing.uri); // nostrconnect://...
+const status = await nostrConnectPoll(pairing.token); // pending | connected | failed
+// On `connected` you get the same { user_pubkey, bunker_uri, client_nsec }.
+
+// Some signers answer with an auth_url challenge the user must open:
+for (const url of await bunkerTakeAuthUrls()) openInBrowser(url);
+
+// On logout:
+await bunkerDisconnect(conn.bunker_uri, conn.client_nsec);
+```
+
+Timeouts: handshake 60s, each signing/encryption request 90s, QR pairing 5min.
+Errors are returned as readable strings (e.g. "Timed out waiting for the remote
+signer…"). From Rust, the same API lives in `tauri_plugin_nostrnative::bunker`.
+
+Run `cargo test` to execute the end-to-end NIP-46 suite (`tests/nip46_flow.rs`),
+which spins up an in-process relay and remote signer.
+
 ## Available Features
 
 | Feature        | Description                                                 |

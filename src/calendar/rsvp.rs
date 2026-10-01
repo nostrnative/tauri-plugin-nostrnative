@@ -116,7 +116,7 @@ pub async fn fetch_received_rsvps_core(
 
 #[allow(clippy::too_many_arguments)]
 pub async fn publish_rsvp_core(
-    nsec: &str,
+    key: &str,
     relays: &[String],
     event_coordinate: String,
     status: String,
@@ -125,7 +125,7 @@ pub async fn publish_rsvp_core(
     fb: Option<String>,
     content: Option<String>,
 ) -> Result<String, String> {
-    let client = crate::utils::get_client_with_signer(nsec, relays, client_nsec).await?;
+    let client = crate::utils::get_client_with_signer(key, relays, client_nsec).await?;
 
     let mut tags = Vec::new();
 
@@ -172,7 +172,7 @@ pub async fn publish_rsvp_core(
     let event_id = client
         .send_event_builder(event_builder)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| crate::utils::describe_send_error(&e))?;
 
     Ok(event_id.to_hex())
 }

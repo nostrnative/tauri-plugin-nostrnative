@@ -29,7 +29,7 @@ pub async fn send_direct_message_core(
     let event_id = client
         .send_event_builder(event_builder)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| crate::utils::describe_send_error(&e))?;
 
     Ok(event_id.to_hex())
 }

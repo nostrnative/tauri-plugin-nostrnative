@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-nostrconnect-cancel"
+description = "Enables the nostrconnect_cancel command without any pre-configured scope."
+commands.allow = ["nostrconnect_cancel"]
+
+[[permission]]
+identifier = "deny-nostrconnect-cancel"
+description = "Denies the nostrconnect_cancel command without any pre-configured scope."
+commands.deny = ["nostrconnect_cancel"]

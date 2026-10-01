@@ -44,6 +44,7 @@ pub mod routstr;
 #[cfg(feature = "tauri-plugin")]
 mod commands;
 
+pub mod bunker;
 pub mod utils;
 pub use utils::get_client_with_signer;
 
@@ -95,9 +96,18 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             commands::hex_to_npub,
             commands::npub_to_hex,
+            commands::nsec_to_hex,
             commands::generate_new_nsec,
             commands::parse_pubkey,
             commands::verify_nsec,
+            commands::bunker_connect,
+            commands::bunker_disconnect,
+            commands::bunker_take_auth_urls,
+            commands::nostrconnect_start,
+            commands::nostrconnect_poll,
+            commands::nostrconnect_cancel,
+            #[cfg(feature = "calendar")]
+            commands::derive_calendar_keys,
             #[cfg(feature = "calendar")]
             commands::fetch_calendar_events,
             #[cfg(feature = "calendar")]

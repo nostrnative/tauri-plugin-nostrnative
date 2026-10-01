@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-nostrconnect-poll"
+description = "Enables the nostrconnect_poll command without any pre-configured scope."
+commands.allow = ["nostrconnect_poll"]
+
+[[permission]]
+identifier = "deny-nostrconnect-poll"
+description = "Denies the nostrconnect_poll command without any pre-configured scope."
+commands.deny = ["nostrconnect_poll"]

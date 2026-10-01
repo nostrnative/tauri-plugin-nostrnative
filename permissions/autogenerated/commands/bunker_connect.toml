@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-bunker-connect"
+description = "Enables the bunker_connect command without any pre-configured scope."
+commands.allow = ["bunker_connect"]
+
+[[permission]]
+identifier = "deny-bunker-connect"
+description = "Denies the bunker_connect command without any pre-configured scope."
+commands.deny = ["bunker_connect"]

@@ -7,6 +7,7 @@ Default permissions for tauri-plugin-nostrnative plugin. Enables all commands by
 - `allow-generate-new-nsec`
 - `allow-parse-pubkey`
 - `allow-verify-nsec`
+- `allow-derive-calendar-keys`
 - `allow-fetch-calendar-events`
 - `allow-publish-batch-calendar-events`
 - `allow-publish-calendar-event`
@@ -297,6 +298,84 @@ Enables the blossom_upload_content command without any pre-configured scope.
 <td>
 
 Denies the blossom_upload_content command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-bunker-connect`
+
+</td>
+<td>
+
+Enables the bunker_connect command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-bunker-connect`
+
+</td>
+<td>
+
+Denies the bunker_connect command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-bunker-disconnect`
+
+</td>
+<td>
+
+Enables the bunker_disconnect command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-bunker-disconnect`
+
+</td>
+<td>
+
+Denies the bunker_disconnect command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-bunker-take-auth-urls`
+
+</td>
+<td>
+
+Enables the bunker_take_auth_urls command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-bunker-take-auth-urls`
+
+</td>
+<td>
+
+Denies the bunker_take_auth_urls command without any pre-configured scope.
 
 </td>
 </tr>
@@ -648,6 +727,32 @@ Enables the delete_virtual_fs command without any pre-configured scope.
 <td>
 
 Denies the delete_virtual_fs command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-derive-calendar-keys`
+
+</td>
+<td>
+
+Enables the derive_calendar_keys command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-derive-calendar-keys`
+
+</td>
+<td>
+
+Denies the derive_calendar_keys command without any pre-configured scope.
 
 </td>
 </tr>
@@ -1266,6 +1371,84 @@ Denies the hex_to_npub command without any pre-configured scope.
 <tr>
 <td>
 
+`nostrnative:allow-nostrconnect-cancel`
+
+</td>
+<td>
+
+Enables the nostrconnect_cancel command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-nostrconnect-cancel`
+
+</td>
+<td>
+
+Denies the nostrconnect_cancel command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-nostrconnect-poll`
+
+</td>
+<td>
+
+Enables the nostrconnect_poll command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-nostrconnect-poll`
+
+</td>
+<td>
+
+Denies the nostrconnect_poll command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-nostrconnect-start`
+
+</td>
+<td>
+
+Enables the nostrconnect_start command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-nostrconnect-start`
+
+</td>
+<td>
+
+Denies the nostrconnect_start command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `nostrnative:allow-npub-to-hex`
 
 </td>
@@ -1285,6 +1468,32 @@ Enables the npub_to_hex command without any pre-configured scope.
 <td>
 
 Denies the npub_to_hex command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:allow-nsec-to-hex`
+
+</td>
+<td>
+
+Enables the nsec_to_hex command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`nostrnative:deny-nsec-to-hex`
+
+</td>
+<td>
+
+Denies the nsec_to_hex command without any pre-configured scope.
 
 </td>
 </tr>

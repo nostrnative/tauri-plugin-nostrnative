@@ -6,6 +6,7 @@ permissions = [
     "allow-generate-new-nsec",
     "allow-parse-pubkey",
     "allow-verify-nsec",
+    "allow-derive-calendar-keys",
     "allow-fetch-calendar-events",
     "allow-publish-batch-calendar-events",
     "allow-publish-calendar-event",

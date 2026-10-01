@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-bunker-disconnect"
+description = "Enables the bunker_disconnect command without any pre-configured scope."
+commands.allow = ["bunker_disconnect"]
+
+[[permission]]
+identifier = "deny-bunker-disconnect"
+description = "Denies the bunker_disconnect command without any pre-configured scope."
+commands.deny = ["bunker_disconnect"]

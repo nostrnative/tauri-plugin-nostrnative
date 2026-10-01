@@ -114,6 +114,10 @@ export async function npubToHex(npub: string): Promise<string> {
   return await invoke("plugin:nostrnative|npub_to_hex", { npub });
 }
 
+export async function nsecToHex(nsec: string): Promise<string> {
+  return await invoke("plugin:nostrnative|nsec_to_hex", { nsec });
+}
+
 export async function generateNewNsec(): Promise<string> {
   return await invoke("plugin:nostrnative|generate_new_nsec");
 }
@@ -132,12 +136,95 @@ export async function verifyNsec(
   });
 }
 
+// ---------- NIP-46 remote signer (bunker / nostrconnect) ----------
+
+export interface BunkerConnection {
+  /** Hex public key of the user the signer controls. */
+  user_pubkey: string;
+  /** Canonical bunker:// URI without the one-time secret. Persist this. */
+  bunker_uri: string;
+  /** Client key (nsec) that identifies this app to the signer. Persist this. */
+  client_nsec: string;
+}
+
+export interface NostrConnectPairing {
+  token: string;
+  /** nostrconnect:// URI to render as a QR code or deep link. */
+  uri: string;
+  client_nsec: string;
+}
+
+export type PairingStatus =
+  | { status: "pending" }
+  | ({ status: "connected" } & BunkerConnection)
+  | { status: "failed"; error: string }
+  | { status: "unknown" };
+
+export function isBunkerUri(value: string): boolean {
+  return value.trim().startsWith("bunker://");
+}
+
+export function isNostrConnectUri(value: string): boolean {
+  return value.trim().startsWith("nostrconnect://");
+}
+
+/** Connect to a bunker:// signer (or reuse the cached session). */
+export async function bunkerConnect(
+  uri: string,
+  clientNsec?: string,
+): Promise<BunkerConnection> {
+  return await invoke("plugin:nostrnative|bunker_connect", { uri, clientNsec });
+}
+
+/** Tear down the cached session for this bunker (e.g. on logout). */
+export async function bunkerDisconnect(
+  uri: string,
+  clientNsec?: string,
+): Promise<boolean> {
+  return await invoke("plugin:nostrnative|bunker_disconnect", { uri, clientNsec });
+}
+
+/**
+ * Drain https auth_url challenges the signer asked the user to open, for a
+ * pairing (`token`) or a bunker login (`clientNsec`).
+ */
+export async function bunkerTakeAuthUrls(scope: {
+  token?: string;
+  clientNsec?: string;
+}): Promise<string[]> {
+  return await invoke("plugin:nostrnative|bunker_take_auth_urls", scope);
+}
+
+/** Start a client-initiated (QR code) pairing. */
+export async function nostrConnectStart(
+  relays: string[],
+  appName?: string,
+): Promise<NostrConnectPairing> {
+  return await invoke("plugin:nostrnative|nostrconnect_start", { relays, appName });
+}
+
+export async function nostrConnectPoll(token: string): Promise<PairingStatus> {
+  return await invoke("plugin:nostrnative|nostrconnect_poll", { token });
+}
+
+export async function nostrConnectCancel(token: string): Promise<void> {
+  return await invoke("plugin:nostrnative|nostrconnect_cancel", { token });
+}
+
 // Calendar
+export async function deriveCalendarKeys(
+  deviceKeyHex: string,
+): Promise<PnsDerivedKeys> {
+  return await invoke("plugin:nostrnative|derive_calendar_keys", {
+    deviceKeyHex,
+  });
+}
+
 export async function fetchCalendarEvents(
   pubkey: string,
   relays: string[],
   options?: {
-    nsec?: string;
+    key?: string;
     rangeStart?: number;
     rangeEnd?: number;
     authors?: string[];
@@ -147,7 +234,7 @@ export async function fetchCalendarEvents(
 ): Promise<EventResponse[]> {
   return await invoke("plugin:nostrnative|fetch_calendar_events", {
     pubkey,
-    nsec: options?.nsec,
+    key: options?.key,
     relays,
     rangeStart: options?.rangeStart,
     rangeEnd: options?.rangeEnd,
@@ -158,13 +245,13 @@ export async function fetchCalendarEvents(
 }
 
 export async function publishBatchCalendarEvents(
-  nsec: string,
+  key: string,
   relays: string[],
   events: CalendarEventRequest[],
   clientNsec?: string,
 ): Promise<string[]> {
   return await invoke("plugin:nostrnative|publish_batch_calendar_events", {
-    nsec,
+    key,
     relays,
     events,
     clientNsec,
@@ -196,13 +283,13 @@ export async function getNostrRelayEvents(): Promise<EventResponse[]> {
 }
 
 export async function publishCalendarEvent(
-  nsec: string,
+  key: string,
   relays: string[],
   eventData: CalendarEventRequest,
   clientNsec?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|publish_calendar_event", {
-    nsec,
+    key,
     relays,
     eventData,
     clientNsec,
@@ -210,13 +297,13 @@ export async function publishCalendarEvent(
 }
 
 export async function deleteCalendarEvent(
-  nsec: string,
+  key: string,
   relays: string[],
   eventIds: string[],
   clientNsec?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|delete_calendar_event", {
-    nsec,
+    key,
     relays,
     eventIds,
     clientNsec,
@@ -234,13 +321,13 @@ export async function fetchCalendars(
 }
 
 export async function publishCalendar(
-  nsec: string,
+  key: string,
   relays: string[],
   calendar: CalendarRequest,
   clientNsec?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|publish_calendar", {
-    nsec,
+    key,
     relays,
     calendar,
     clientNsec,
@@ -248,13 +335,13 @@ export async function publishCalendar(
 }
 
 export async function deleteCalendar(
-  nsec: string,
+  key: string,
   relays: string[],
   identifier: string,
   clientNsec?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|delete_calendar", {
-    nsec,
+    key,
     relays,
     identifier,
     clientNsec,
@@ -264,24 +351,24 @@ export async function deleteCalendar(
 export async function fetchCalendarContactLists(
   pubkey: string,
   relays: string[],
-  options?: { nsec?: string; clientNsec?: string },
+  options?: { key?: string; clientNsec?: string },
 ): Promise<EventResponse[]> {
   return await invoke("plugin:nostrnative|fetch_calendar_contact_lists", {
     pubkey,
     relays,
-    nsec: options?.nsec,
+    key: options?.key,
     clientNsec: options?.clientNsec,
   });
 }
 
 export async function publishCalendarContactList(
-  nsec: string,
+  key: string,
   relays: string[],
   request: CalendarContactListRequest,
   clientNsec?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|publish_calendar_contact_list", {
-    nsec,
+    key,
     relays,
     request,
     clientNsec,
@@ -290,7 +377,7 @@ export async function publishCalendarContactList(
 
 // Decrypt private events
 export async function decryptPrivateEvents(
-  nsec: string,
+  key: string,
   relays: string[],
   events: Array<{
     id: string;
@@ -300,9 +387,11 @@ export async function decryptPrivateEvents(
     encrypted_location?: string;
   }>,
   clientNsec?: string,
-): Promise<Array<{ id: string; title?: string; description?: string; location?: string }>> {
+): Promise<
+  Array<{ id: string; title?: string; description?: string; location?: string }>
+> {
   return await invoke("plugin:nostrnative|decrypt_private_events", {
-    nsec,
+    key,
     relays,
     events,
     clientNsec,
@@ -341,7 +430,7 @@ export async function fetchReceivedRsvps(
 }
 
 export async function publishRsvp(
-  nsec: string,
+  key: string,
   relays: string[],
   eventCoordinate: string,
   status: string,
@@ -351,7 +440,7 @@ export async function publishRsvp(
   content?: string,
 ): Promise<string> {
   return await invoke("plugin:nostrnative|publish_rsvp", {
-    nsec,
+    key,
     relays,
     eventCoordinate,
     status,

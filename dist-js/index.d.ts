@@ -93,36 +93,80 @@ export interface RoutstrProvider {
 }
 export declare function hexToNpub(hex: string): Promise<string>;
 export declare function npubToHex(npub: string): Promise<string>;
+export declare function nsecToHex(nsec: string): Promise<string>;
 export declare function generateNewNsec(): Promise<string>;
 export declare function parsePubkey(pubkey: string): Promise<string>;
 export declare function verifyNsec(nsec: string, options?: {
     clientNsec?: string;
 }): Promise<string>;
+export interface BunkerConnection {
+    /** Hex public key of the user the signer controls. */
+    user_pubkey: string;
+    /** Canonical bunker:// URI without the one-time secret. Persist this. */
+    bunker_uri: string;
+    /** Client key (nsec) that identifies this app to the signer. Persist this. */
+    client_nsec: string;
+}
+export interface NostrConnectPairing {
+    token: string;
+    /** nostrconnect:// URI to render as a QR code or deep link. */
+    uri: string;
+    client_nsec: string;
+}
+export type PairingStatus = {
+    status: "pending";
+} | ({
+    status: "connected";
+} & BunkerConnection) | {
+    status: "failed";
+    error: string;
+} | {
+    status: "unknown";
+};
+export declare function isBunkerUri(value: string): boolean;
+export declare function isNostrConnectUri(value: string): boolean;
+/** Connect to a bunker:// signer (or reuse the cached session). */
+export declare function bunkerConnect(uri: string, clientNsec?: string): Promise<BunkerConnection>;
+/** Tear down the cached session for this bunker (e.g. on logout). */
+export declare function bunkerDisconnect(uri: string, clientNsec?: string): Promise<boolean>;
+/**
+ * Drain https auth_url challenges the signer asked the user to open, for a
+ * pairing (`token`) or a bunker login (`clientNsec`).
+ */
+export declare function bunkerTakeAuthUrls(scope: {
+    token?: string;
+    clientNsec?: string;
+}): Promise<string[]>;
+/** Start a client-initiated (QR code) pairing. */
+export declare function nostrConnectStart(relays: string[], appName?: string): Promise<NostrConnectPairing>;
+export declare function nostrConnectPoll(token: string): Promise<PairingStatus>;
+export declare function nostrConnectCancel(token: string): Promise<void>;
+export declare function deriveCalendarKeys(deviceKeyHex: string): Promise<PnsDerivedKeys>;
 export declare function fetchCalendarEvents(pubkey: string, relays: string[], options?: {
-    nsec?: string;
+    key?: string;
     rangeStart?: number;
     rangeEnd?: number;
     authors?: string[];
     clientNsec?: string;
     filters?: unknown[];
 }): Promise<EventResponse[]>;
-export declare function publishBatchCalendarEvents(nsec: string, relays: string[], events: CalendarEventRequest[], clientNsec?: string): Promise<string[]>;
+export declare function publishBatchCalendarEvents(key: string, relays: string[], events: CalendarEventRequest[], clientNsec?: string): Promise<string[]>;
 export declare function startNostrRelay(port: number, dbPath: string): Promise<void>;
 export declare function stopNostrRelay(): Promise<void>;
 export declare function getNostrRelayStatus(): Promise<boolean>;
 export declare function getNostrEventCounts(): Promise<Record<number, number>>;
 export declare function getNostrRelayEvents(): Promise<EventResponse[]>;
-export declare function publishCalendarEvent(nsec: string, relays: string[], eventData: CalendarEventRequest, clientNsec?: string): Promise<string>;
-export declare function deleteCalendarEvent(nsec: string, relays: string[], eventIds: string[], clientNsec?: string): Promise<string>;
+export declare function publishCalendarEvent(key: string, relays: string[], eventData: CalendarEventRequest, clientNsec?: string): Promise<string>;
+export declare function deleteCalendarEvent(key: string, relays: string[], eventIds: string[], clientNsec?: string): Promise<string>;
 export declare function fetchCalendars(pubkey: string, relays: string[]): Promise<EventResponse[]>;
-export declare function publishCalendar(nsec: string, relays: string[], calendar: CalendarRequest, clientNsec?: string): Promise<string>;
-export declare function deleteCalendar(nsec: string, relays: string[], identifier: string, clientNsec?: string): Promise<string>;
+export declare function publishCalendar(key: string, relays: string[], calendar: CalendarRequest, clientNsec?: string): Promise<string>;
+export declare function deleteCalendar(key: string, relays: string[], identifier: string, clientNsec?: string): Promise<string>;
 export declare function fetchCalendarContactLists(pubkey: string, relays: string[], options?: {
-    nsec?: string;
+    key?: string;
     clientNsec?: string;
 }): Promise<EventResponse[]>;
-export declare function publishCalendarContactList(nsec: string, relays: string[], request: CalendarContactListRequest, clientNsec?: string): Promise<string>;
-export declare function decryptPrivateEvents(nsec: string, relays: string[], events: Array<{
+export declare function publishCalendarContactList(key: string, relays: string[], request: CalendarContactListRequest, clientNsec?: string): Promise<string>;
+export declare function decryptPrivateEvents(key: string, relays: string[], events: Array<{
     id: string;
     pubkey: string;
     encrypted_title?: string;
@@ -137,7 +181,7 @@ export declare function decryptPrivateEvents(nsec: string, relays: string[], eve
 export declare function fetchRsvps(eventCoordinate: string, relays: string[]): Promise<EventResponse[]>;
 export declare function fetchUserRsvps(pubkey: string, relays: string[]): Promise<EventResponse[]>;
 export declare function fetchReceivedRsvps(pubkey: string, relays: string[]): Promise<EventResponse[]>;
-export declare function publishRsvp(nsec: string, relays: string[], eventCoordinate: string, status: string, eventAuthor?: string, clientNsec?: string, fb?: string, content?: string): Promise<string>;
+export declare function publishRsvp(key: string, relays: string[], eventCoordinate: string, status: string, eventAuthor?: string, clientNsec?: string, fb?: string, content?: string): Promise<string>;
 export declare function fetchProfiles(pubkeys: string[], relays: string[]): Promise<UserProfile[]>;
 export declare function fetchContactList(pubkey: string, relays: string[]): Promise<Contact[]>;
 export declare function updateContactList(nsec: string, relays: string[], contacts: Contact[], clientNsec?: string): Promise<string>;

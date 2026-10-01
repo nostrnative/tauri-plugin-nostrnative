@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-nsec-to-hex"
+description = "Enables the nsec_to_hex command without any pre-configured scope."
+commands.allow = ["nsec_to_hex"]
+
+[[permission]]
+identifier = "deny-nsec-to-hex"
+description = "Denies the nsec_to_hex command without any pre-configured scope."
+commands.deny = ["nsec_to_hex"]
